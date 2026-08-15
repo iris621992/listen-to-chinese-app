@@ -230,7 +230,7 @@ async function executeDiscovery(actual) {
     authSessionDependentRounds: snapshot.authSessionDependentRounds,
     authSessionDurationMs: snapshot.authSessionDurationMs,
     rows: safeRows(snapshot),
-    applicationDataBytes: utf8Bytes(deterministicJson(result.page)),
+    applicationDataBytes: Buffer.byteLength(JSON.stringify(result.page), "utf8"),
   };
 }
 

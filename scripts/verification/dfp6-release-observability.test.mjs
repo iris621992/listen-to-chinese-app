@@ -282,7 +282,7 @@ test("implementation stays public-safe and bound to actual production surfaces",
   const packageDocument = JSON.parse(packageSource);
   assert.equal(
     packageDocument.scripts["test:dfp6"],
-    "node --test scripts/verification/dfp6-release-observability.test.mjs",
+    "node --experimental-vm-modules --test scripts/verification/dfp6-release-observability.test.mjs",
   );
   assert.equal(
     packageDocument.scripts["measure:dfp6:release"],
