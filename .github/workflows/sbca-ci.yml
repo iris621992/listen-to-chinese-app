@@ -1,0 +1,282 @@
+name: SBCA CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+
+concurrency:
+  group: sbca-ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    name: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout exact PR commit
+        id: checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # releases/v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact PR head checkout
+        id: verify_head
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+
+      - name: Set up Node.js 24
+        id: setup_node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # releases/v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install locked dependencies
+        id: install
+        if: ${{ always() && steps.verify_head.outcome == 'success' && steps.setup_node.outcome == 'success' }}
+        run: npm ci
+
+      - name: Dependency review - checkout exact base
+        id: dependency_base_checkout
+        if: ${{ always() && steps.verify_head.outcome == 'success' }}
+        shell: bash
+        run: |
+          git checkout -f "${{ github.event.pull_request.base.sha }}"
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.base.sha }}"
+
+      - name: Dependency review - scan exact base
+        id: dependency_base_scan
+        if: ${{ always() && steps.dependency_base_checkout.outcome == 'success' }}
+        uses: google/osv-scanner-action/osv-scanner-action@8dc09193bb540e09b23da07ad7e30bd33bf87018 # v2.3.8
+        continue-on-error: true
+        with:
+          scan-args: |-
+            --format=json
+            --output=osv-base.json
+            --lockfile=package-lock.json
+
+      - name: Dependency review - restore exact PR head
+        id: dependency_head_checkout
+        if: ${{ always() && steps.verify_head.outcome == 'success' }}
+        shell: bash
+        run: |
+          git checkout -f "${{ github.event.pull_request.head.sha }}"
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+
+      - name: Dependency review - scan exact PR head
+        id: dependency_head_scan
+        if: ${{ always() && steps.dependency_head_checkout.outcome == 'success' }}
+        uses: google/osv-scanner-action/osv-scanner-action@8dc09193bb540e09b23da07ad7e30bd33bf87018 # v2.3.8
+        continue-on-error: true
+        with:
+          scan-args: |-
+            --format=json
+            --output=osv-head.json
+            --lockfile=package-lock.json
+
+      - name: Review dependency changes
+        id: dependency_review
+        if: ${{ always() && steps.dependency_head_checkout.outcome == 'success' }}
+        uses: google/osv-scanner-action/osv-reporter-action@8dc09193bb540e09b23da07ad7e30bd33bf87018 # v2.3.8
+        with:
+          scan-args: |-
+            --output=osv-dependency-review.sarif
+            --old=osv-base.json
+            --new=osv-head.json
+            --gh-annotations=true
+            --fail-on-vuln=true
+
+      - name: Upload dependency review evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # releases/v4
+        with:
+          name: sbca-dependency-review
+          path: |
+            osv-base.json
+            osv-head.json
+            osv-dependency-review.sarif
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Verify exact PR head after dependency review
+        id: verify_head_after_dependency_review
+        if: ${{ always() && steps.dependency_head_checkout.outcome == 'success' }}
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+
+      - name: Audit dependency vulnerabilities
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm audit --audit-level=high
+
+      - name: Generate CycloneDX SBOM
+        id: sbom
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm sbom --sbom-format cyclonedx > sbom.cdx.json
+
+      - name: Upload SBOM evidence
+        if: ${{ always() && steps.sbom.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # releases/v4
+        with:
+          name: sbca-sbom
+          path: sbom.cdx.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Scan repository history for secrets
+        if: ${{ always() && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITLEAKS_ENABLE_COMMENTS: "false"
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+
+      - name: Lint
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm run lint
+
+      - name: TypeScript
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npx tsc --noEmit
+
+      - name: Production build
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm run build
+
+      - name: DB application cutover gate
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm run test:db001
+
+      - name: Supabase public config gate
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm run test:supabase-config
+
+      - name: DFP-0 gate
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm run test:dfp0
+
+      - name: DFP-1 gate
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm run test:dfp1
+
+      - name: DFP-2 gate
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm run test:dfp2
+
+      - name: DFP-3 gate
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm run test:dfp3
+
+      - name: DFP-4 gate
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm run test:dfp4
+
+      - name: DFP-5 gate
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        timeout-minutes: 5
+        run: npm run test:dfp5
+
+      - name: SBCA-2 regression gate
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm run test:sbca2
+
+      - name: Set up Python 3.12 for Semgrep CE
+        id: setup_python
+        if: ${{ always() && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        with:
+          python-version: "3.12"
+
+      - name: Install pinned Semgrep CE
+        id: semgrep_install
+        if: ${{ always() && steps.setup_python.outcome == 'success' }}
+        run: |
+          python -m pip install --disable-pip-version-check "semgrep==1.172.0"
+          test "$(semgrep --version)" = "1.172.0"
+
+      - name: Fetch pinned Semgrep CE rules
+        id: semgrep_rules
+        if: ${{ always() && steps.semgrep_install.outcome == 'success' }}
+        shell: bash
+        env:
+          SEMGREP_RULES_SHA: 40b8c63f75dc7c22c8a77482d73bfb864b146f7e
+        run: |
+          rm -rf "${RUNNER_TEMP}/semgrep-rules"
+          git init "${RUNNER_TEMP}/semgrep-rules"
+          git -C "${RUNNER_TEMP}/semgrep-rules" remote add origin https://github.com/semgrep/semgrep-rules.git
+          git -C "${RUNNER_TEMP}/semgrep-rules" fetch --depth=1 origin "${SEMGREP_RULES_SHA}"
+          git -C "${RUNNER_TEMP}/semgrep-rules" checkout --detach FETCH_HEAD
+          test "$(git -C "${RUNNER_TEMP}/semgrep-rules" rev-parse HEAD)" = "${SEMGREP_RULES_SHA}"
+
+      - name: Semgrep CE SAST
+        id: semgrep_scan
+        if: ${{ always() && steps.semgrep_rules.outcome == 'success' }}
+        shell: bash
+        run: |
+          semgrep scan \
+            --metrics=off \
+            --config "${RUNNER_TEMP}/semgrep-rules/javascript" \
+            --config "${RUNNER_TEMP}/semgrep-rules/typescript" \
+            --exclude=node_modules \
+            --exclude=.next \
+            --exclude=coverage \
+            --json \
+            --output semgrep-results.json \
+            .
+
+      - name: Enforce Semgrep high-impact security findings
+        id: semgrep_policy
+        if: ${{ always() && steps.semgrep_scan.outcome == 'success' }}
+        shell: bash
+        run: |
+          if ! jq -e '.results | type == "array"' semgrep-results.json >/dev/null; then
+            echo "Semgrep produced invalid or missing JSON results." >&2
+            exit 1
+          fi
+
+          security_count="$(jq '[.results[] | select(.extra.metadata.category == "security")] | length' semgrep-results.json)"
+          high_count="$(jq '[.results[] | select(.extra.metadata.category == "security" and .extra.metadata.impact == "HIGH")] | length' semgrep-results.json)"
+          medium_count="$(jq '[.results[] | select(.extra.metadata.category == "security" and .extra.metadata.impact == "MEDIUM")] | length' semgrep-results.json)"
+          low_count="$(jq '[.results[] | select(.extra.metadata.category == "security" and .extra.metadata.impact == "LOW")] | length' semgrep-results.json)"
+          unknown_impact_count="$(jq '[.results[] | (.extra.metadata.impact // "") as $impact | select(.extra.metadata.category == "security" and $impact != "HIGH" and $impact != "MEDIUM" and $impact != "LOW")] | length' semgrep-results.json)"
+
+          echo "Semgrep security findings: ${security_count}"
+          echo "Semgrep HIGH impact: ${high_count}"
+          echo "Semgrep MEDIUM impact: ${medium_count}"
+          echo "Semgrep LOW impact: ${low_count}"
+          echo "Semgrep unknown impact: ${unknown_impact_count}"
+
+          jq -r '
+            .results[]
+            | select(.extra.metadata.category == "security")
+            | (.extra.metadata.impact // "UNKNOWN") as $impact
+            | "impact=\($impact)\truleId=\(.check_id)\tpath=\(.path)\tline=\(.start.line)"
+          ' semgrep-results.json
+
+          if (( unknown_impact_count > 0 )); then
+            echo "Semgrep security finding has unknown impact; fail closed." >&2
+            exit 1
+          fi
+
+          if (( high_count > 0 )); then
+            echo "Semgrep detected HIGH-impact security findings." >&2
+            exit 1
+          fi
+
+      - name: Upload Semgrep evidence
+        if: ${{ always() && steps.semgrep_scan.outcome == 'success' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # releases/v4
+        with:
+          name: sbca-semgrep
+          path: semgrep-results.json
+          if-no-files-found: error
+          retention-days: 14

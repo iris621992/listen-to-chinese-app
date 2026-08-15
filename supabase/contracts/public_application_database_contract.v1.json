@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "public-application-database-contract.v1",
+  "purpose": "Non-executable learner-facing database/API contract for the public application repository.",
+  "nonExecutable": true,
+  "learnerRoles": ["anon", "authenticated"],
+  "lessonVisibility": {
+    "status": "published",
+    "quality_status": "published",
+    "access_level": "free",
+    "published_at": "not_null",
+    "published_at_lte": "now"
+  },
+  "directReadSurfaces": [
+    "languages",
+    "libraries",
+    "level_systems",
+    "levels",
+    "lessons",
+    "lesson_segments",
+    "segment_translations",
+    "practice_targets",
+    "practice_target_translations",
+    "exercise_targets"
+  ],
+  "protectedAnswerSurfaces": [
+    "exercises",
+    "exercise_options",
+    "exercise_translations",
+    "exercise_option_translations",
+    "exercise_media"
+  ],
+  "rpcInternalSurfaces": [
+    "exercises",
+    "exercise_options",
+    "exercise_translations",
+    "exercise_option_translations",
+    "exercise_media",
+    "audio_assets"
+  ],
+  "preSubmitRpc": {
+    "name": "get_lesson_pre_submit_exercises",
+    "arguments": [
+      { "name": "p_lesson_slug", "type": "text" },
+      { "name": "p_locale_code", "type": "text" }
+    ],
+    "returns": [
+      { "name": "outcome_code", "type": "text" },
+      { "name": "requested_locale_code", "type": "text" },
+      { "name": "exercises", "type": "jsonb" }
+    ],
+    "supportedLocales": ["en", "vi", "ar"],
+    "security": {
+      "mode": "security_definer",
+      "volatility": "stable",
+      "searchPath": "pg_catalog",
+      "executeRoles": ["anon", "authenticated"],
+      "forbiddenExecuteRoles": ["public", "service_role"],
+      "grantOption": false,
+      "dynamicSql": false
+    },
+    "bounds": {
+      "lessonSlugCharacters": 200,
+      "exerciseCount": 100,
+      "optionsPerExercise": 50,
+      "mediaPerExercise": 20,
+      "promptCharacters": 4000,
+      "optionTextCharacters": 1000,
+      "mediaUrlCharacters": 2048,
+      "responseBytes": 1048576
+    },
+    "answerFreeKeys": {
+      "wrapper": ["outcome_code", "requested_locale_code", "exercises"],
+      "exercise": ["exercise_id", "exercise_type", "prompt", "media", "options", "locale_code"],
+      "option": ["option_id", "text"],
+      "media": ["media_id", "media_type", "url"]
+    }
+  },
+  "answerBoundary": {
+    "directSelectByLearnerRoles": false,
+    "forbiddenResponseConcepts": [
+      "answer",
+      "correctness",
+      "correct_answer",
+      "is_correct",
+      "explanation",
+      "hint",
+      "solution",
+      "private_storage_path"
+    ]
+  },
+  "excluded": [
+    "production project identifiers",
+    "runtime execution evidence",
+    "containment procedures",
+    "operational verifier identities",
+    "private Git provenance",
+    "admin and service-role workflows",
+    "learner-owned private data schemas"
+  ]
+}

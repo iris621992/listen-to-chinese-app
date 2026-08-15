@@ -1,0 +1,118 @@
+{
+  "measurementSpec": "DFP-MSPEC-1",
+  "fixtureSchemaVersion": "dfp-fixture-schema-1",
+  "fixtureGeneratorVersion": "dfp-fixture-generator-1",
+  "fixtures": [
+    {
+      "id": "discovery-minimum",
+      "kind": "discovery",
+      "sizeClass": "minimum",
+      "rows": 1,
+      "locale": "vi",
+      "sha256": "be70eabfbd6109b81b42670ac893309347d64072326bb3dbed3abe65c2809adc",
+      "bytes": 629
+    },
+    {
+      "id": "discovery-representative",
+      "kind": "discovery",
+      "sizeClass": "representative",
+      "rows": 24,
+      "locale": "vi",
+      "sha256": "d62d72b7025f70bd71382974c4528b70d17691dbd1e73b1bf08583779a5e2d73",
+      "bytes": 9316
+    },
+    {
+      "id": "discovery-maximum-approved",
+      "kind": "discovery",
+      "sizeClass": "maximum-approved",
+      "rows": 50,
+      "locale": "vi",
+      "sha256": "c3809de466bb63f6be06e64183942f6db0d17af1fc64092598cd6f090801f4f2",
+      "bytes": 19120
+    },
+    {
+      "id": "detail-minimum",
+      "kind": "detail",
+      "sizeClass": "minimum",
+      "segments": 1,
+      "locale": "vi",
+      "sha256": "1f044a1c2b4ace63c48ede4d61dae9f539c7b854c34634dda6b8ff29ac99fa7d",
+      "bytes": 997
+    },
+    {
+      "id": "detail-representative",
+      "kind": "detail",
+      "sizeClass": "representative",
+      "segments": 120,
+      "locale": "vi",
+      "sha256": "387643039d005f947da77253d0d6a35614a2d23bc477ec3e8d55ef59632a6f64",
+      "bytes": 36598
+    },
+    {
+      "id": "detail-maximum-approved",
+      "kind": "detail",
+      "sizeClass": "maximum-approved",
+      "segments": 300,
+      "locale": "vi",
+      "sha256": "9eb2a68304da0f8022a11c5ed86f9f92d27ce96e61cd64155353e3d70b68b9e4",
+      "bytes": 90600
+    },
+    {
+      "id": "practice-minimum",
+      "kind": "practice",
+      "sizeClass": "minimum",
+      "exercises": 1,
+      "options": 2,
+      "media": 0,
+      "locale": "vi",
+      "sha256": "b824a56a2d59f97688e87aa979f40c930570f9fd7d213d8f15ed60c1e3e1787e",
+      "bytes": 533
+    },
+    {
+      "id": "practice-representative",
+      "kind": "practice",
+      "sizeClass": "representative",
+      "exercises": 10,
+      "options": 4,
+      "media": 1,
+      "locale": "vi",
+      "sha256": "f56d892a7f5515ba5650095a8527880bb5792143e1569fb71c19f5155e03c102",
+      "bytes": 5223
+    },
+    {
+      "id": "practice-maximum-approved",
+      "kind": "practice",
+      "sizeClass": "maximum-approved",
+      "exercises": 25,
+      "options": 12,
+      "media": 8,
+      "locale": "vi",
+      "sha256": "42d16e6e6272714d5f68cd13aa0f8282c7179457b8e6ff25481e599cea206177",
+      "bytes": 43500
+    },
+    {
+      "id": "locale-registry-minimum",
+      "kind": "localeRegistry",
+      "sizeClass": "minimum",
+      "locales": 1,
+      "sha256": "2ffb2789a0972a221698239706f8a71f3514d04630c4bbf02568ea296edfa3d3",
+      "bytes": 308
+    },
+    {
+      "id": "locale-registry-representative",
+      "kind": "localeRegistry",
+      "sizeClass": "representative",
+      "locales": 3,
+      "sha256": "b1481514617d9437d6e69d3c9071b394721cdda570db5415148083709a1c90f0",
+      "bytes": 501
+    },
+    {
+      "id": "locale-registry-maximum-approved",
+      "kind": "localeRegistry",
+      "sizeClass": "maximum-approved",
+      "locales": 15,
+      "sha256": "04add0e6c095cab7e075a549efb3d185472d76a664f76811803eaa8b91af6e31",
+      "bytes": 1568
+    }
+  ]
+}

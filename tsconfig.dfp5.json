@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "noEmit": true
+  },
+  "include": [
+    "app/lessons/[slug]/IntentYouTubePlayer.tsx",
+    "app/lessons/[slug]/LessonMediaColumn.tsx",
+    "app/lessons/[slug]/SupabaseLessonPage.tsx",
+    "scripts/dfp/dfp5/fixture-app/**/*.ts",
+    "scripts/dfp/dfp5/fixture-app/**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

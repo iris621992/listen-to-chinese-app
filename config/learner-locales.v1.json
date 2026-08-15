@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "learner-locale-registry.v1",
+  "registryVersion": 1,
+  "defaultLocaleCode": "en",
+  "locales": [
+    {
+      "code": "en",
+      "label": "English",
+      "direction": "ltr",
+      "enabled": true,
+      "fallbackLocaleCode": null
+    },
+    {
+      "code": "vi",
+      "label": "Tiếng Việt",
+      "direction": "ltr",
+      "enabled": true,
+      "fallbackLocaleCode": "en"
+    },
+    {
+      "code": "ar",
+      "label": "العربية",
+      "direction": "rtl",
+      "enabled": true,
+      "fallbackLocaleCode": "en"
+    }
+  ]
+}
