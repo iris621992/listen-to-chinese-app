@@ -185,6 +185,24 @@ jobs:
         timeout-minutes: 5
         run: npm run test:dfp5
 
+      - name: DFP-6 gate
+        id: dfp6_gate
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        timeout-minutes: 8
+        shell: bash
+        run: |
+          npm run test:dfp6
+          npm run --silent measure:dfp6:release > "${RUNNER_TEMP}/dfp6-release-evidence.json"
+
+      - name: Upload DFP-6 release evidence
+        if: ${{ always() && steps.dfp6_gate.outcome != 'skipped' }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # releases/v4
+        with:
+          name: dfp6-release-evidence
+          path: ${{ runner.temp }}/dfp6-release-evidence.json
+          if-no-files-found: error
+          retention-days: 14
+
       - name: SBCA-2 regression gate
         if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
         run: npm run test:sbca2
