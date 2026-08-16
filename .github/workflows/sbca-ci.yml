@@ -185,9 +185,24 @@ jobs:
         timeout-minutes: 5
         run: npm run test:dfp5
 
+      - name: Normalize exact PR head workspace for DFP-6
+        id: dfp6_workspace
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        shell: bash
+        run: |
+          git reset --hard "${{ github.event.pull_request.head.sha }}"
+          rm -f \
+            osv-base.json \
+            osv-head.json \
+            osv-dependency-review.sarif \
+            sbom.cdx.json \
+            results.sarif
+          test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
+          test -z "$(git status --porcelain=v1 --untracked-files=all)"
+
       - name: DFP-6 gate
         id: dfp6_gate
-        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' && steps.dfp6_workspace.outcome == 'success' }}
         timeout-minutes: 8
         shell: bash
         run: |
