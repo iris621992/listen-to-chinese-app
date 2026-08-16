@@ -142,6 +142,7 @@ test("sanitized evidence rejects secrets, answer material, and unbounded values"
 test("actual DFP-2/3 production flow functions produce stable bounded telemetry", async () => {
   const evidence = await measureActualServerFlows();
 
+  assert.doesNotThrow(() => assertSanitizedTelemetry(evidence));
   assert.equal(evidence.discovery.sampleCount, 30);
   assert.equal(evidence.detail.sampleCount, 30);
   assert.equal(evidence.practice.sampleCount, 30);
@@ -159,6 +160,8 @@ test("actual DFP-2/3 production flow functions produce stable bounded telemetry"
     assert.equal(sample.dataStoreDependentRounds, 3);
     assert.equal(sample.authSessionOperations, 0);
     assert.equal(sample.outcomeCode, "FOUND");
+    assert.equal(sample.rows.localized_segments, 2);
+    assert.equal(Object.hasOwn(sample.rows, "segment_translations"), false);
   }
   for (const sample of evidence.practice.samples) {
     assert.equal(sample.status, "ok");

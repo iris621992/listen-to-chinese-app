@@ -246,7 +246,7 @@ async function executeDetail(actual) {
     loadSegments: () =>
       query("lesson_segments", [{ id: "segment-1" }, { id: "segment-2" }]),
     loadSegmentTranslations: () =>
-      query("segment_translations", [
+      query("localized_segments", [
         { segment_id: "segment-1", language_code: "en" },
         { segment_id: "segment-2", language_code: "en" },
       ]),
