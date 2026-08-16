@@ -28,6 +28,7 @@ const FIXTURE_ROOT = path.resolve("scripts/dfp/dfp5/fixture-app");
 const NEXT_CLI = path.resolve("node_modules/next/dist/bin/next");
 const START_TIMEOUT_MS = 60_000;
 const CDP_TIMEOUT_MS = 30_000;
+const BUILD_DIAGNOSTIC_MAX_CHARS = 8_192;
 
 const delay = (milliseconds) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -104,20 +105,45 @@ async function stopProcess(child) {
   await exited;
 }
 
+function boundedBuildDiagnostic(value) {
+  let text = "";
+  if (typeof value === "string") text = value;
+  else if (value !== undefined && value !== null) text = String(value);
+  if (text.length <= BUILD_DIAGNOSTIC_MAX_CHARS) return text;
+  return `${text.slice(0, BUILD_DIAGNOSTIC_MAX_CHARS)}\n...[truncated]`;
+}
+
 async function buildFixture() {
-  await execFileAsync(
-    process.execPath,
-    [NEXT_CLI, "build", FIXTURE_ROOT],
-    {
-      cwd: process.cwd(),
-      env: {
-        ...process.env,
-        NEXT_TELEMETRY_DISABLED: "1",
+  try {
+    await execFileAsync(
+      process.execPath,
+      [NEXT_CLI, "build", FIXTURE_ROOT],
+      {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          NEXT_TELEMETRY_DISABLED: "1",
+        },
+        timeout: 180_000,
+        maxBuffer: 8 * 1024 * 1024,
       },
-      timeout: 180_000,
-      maxBuffer: 8 * 1024 * 1024,
-    },
-  );
+    );
+  } catch (error) {
+    const message = boundedBuildDiagnostic(
+      error instanceof Error ? error.message : error,
+    );
+    const stdout = boundedBuildDiagnostic(error?.stdout);
+    const stderr = boundedBuildDiagnostic(error?.stderr);
+    throw new Error(
+      [
+        "DFP-6 fixture build failed.",
+        message ? `message:\n${message}` : "",
+        stdout ? `stdout:\n${stdout}` : "",
+        stderr ? `stderr:\n${stderr}` : "",
+      ].filter(Boolean).join("\n"),
+      { cause: error },
+    );
+  }
 }
 
 async function startFixture() {
