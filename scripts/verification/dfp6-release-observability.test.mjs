@@ -155,6 +155,23 @@ test("missing browser vitals diagnostic uses only bounded enum labels", () => {
   );
 });
 
+test("INP observer retains event timing and adds first-input fallback", async () => {
+  const source = await readFile(
+    "scripts/dfp/dfp6/browser-release-gate.mjs",
+    "utf8",
+  );
+  assert.match(
+    source,
+    /observe\(\{ type: "event", buffered: true, durationThreshold: 0 \}\)/,
+  );
+  assert.match(
+    source,
+    /observe\(\{ type: "first-input", buffered: true \}\)/,
+  );
+  assert.equal((source.match(/await delay\(500\);/g) ?? []).length, 2);
+  assert.equal((source.match(/Input\.dispatchMouseEvent/g) ?? []).length, 2);
+});
+
 test("RSC request role classifier exposes only bounded role labels", () => {
   assert.equal(browserRscRequestRole({
     headers: { "Next-Router-Prefetch": "1" },
@@ -473,6 +490,7 @@ test("implementation stays public-safe and bound to actual production surfaces",
   assert.match(browserSource, /sanitizeBrowserSampleDiagnostic/);
   assert.match(browserSource, /browserMissingVitalsDiagnostic/);
   assert.match(browserSource, /missingVitals=/);
+  assert.match(browserSource, /type: "first-input"/);
   assert.match(browserSource, /Network\.loadingFinished/);
   assert.match(browserSource, /Network\.loadingFailed/);
   assert.match(browserSource, /createBrowserResponseCompletionTracker/);

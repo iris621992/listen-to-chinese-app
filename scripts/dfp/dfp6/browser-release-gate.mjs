@@ -567,6 +567,14 @@ const VITALS_BOOTSTRAP = `(() => {
       }
     }).observe({ type: "event", buffered: true, durationThreshold: 0 });
   } catch {}
+  try {
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        state.inp = Math.max(state.inp, entry.duration || 0);
+        state.inpObserved = true;
+      }
+    }).observe({ type: "first-input", buffered: true });
+  } catch {}
 })();`;
 
 async function waitForFixturePage(client) {
