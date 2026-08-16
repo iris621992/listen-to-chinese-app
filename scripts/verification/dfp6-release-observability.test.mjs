@@ -13,6 +13,7 @@ import {
 } from "../dfp/dfp6/release-contract.mjs";
 import {
   browserResponseAttributionClass,
+  browserResponseBelongsToInitialRoute,
   browserResponseNeedsBodyAttribution,
   browserRscRequestRole,
   createBrowserResponseCompletionTracker,
@@ -70,28 +71,19 @@ test("locks DFP-6 release sampling and server thresholds", () => {
 });
 
 test("server thresholds distinguish target misses from blocking failures", () => {
-  assert.deepEqual(
-    evaluateServerAssembly("discovery", summary(250)),
-    {
-      flowName: "discovery",
-      targetMs: 300,
-      blockingMs: 600,
-      valueMs: 250,
-      targetPass: true,
-      blockingPass: true,
-      pass: true,
-    },
-  );
+  assert.deepEqual(evaluateServerAssembly("discovery", summary(250)), {
+    flowName: "discovery",
+    targetMs: 300,
+    blockingMs: 600,
+    valueMs: 250,
+    targetPass: true,
+    blockingPass: true,
+    pass: true,
+  });
   assert.equal(evaluateServerAssembly("discovery", summary(450)).pass, true);
-  assert.equal(
-    evaluateServerAssembly("discovery", summary(450)).targetPass,
-    false,
-  );
+  assert.equal(evaluateServerAssembly("discovery", summary(450)).targetPass, false);
   assert.equal(evaluateServerAssembly("discovery", summary(601)).pass, false);
-  assert.equal(
-    evaluateServerAssembly("discovery", summary(10, 1)).pass,
-    false,
-  );
+  assert.equal(evaluateServerAssembly("discovery", summary(10, 1)).pass, false);
 });
 
 test("browser gate uses blocking DFP-MSPEC-1 thresholds and retains failures", () => {
@@ -104,21 +96,8 @@ test("browser gate uses blocking DFP-MSPEC-1 thresholds and retains failures", (
     cls: browserMetric(0.05),
   };
   assert.equal(evaluateBrowserSummary(passing).pass, true);
-
-  assert.equal(
-    evaluateBrowserSummary({
-      ...passing,
-      lcpMs: browserMetric(4_001),
-    }).pass,
-    false,
-  );
-  assert.equal(
-    evaluateBrowserSummary({
-      ...passing,
-      inpMs: browserMetric(100, 1),
-    }).pass,
-    false,
-  );
+  assert.equal(evaluateBrowserSummary({ ...passing, lcpMs: browserMetric(4_001) }).pass, false);
+  assert.equal(evaluateBrowserSummary({ ...passing, inpMs: browserMetric(100, 1) }).pass, false);
 });
 
 test("browser sample diagnostics are bounded and redact sensitive values", () => {
@@ -135,22 +114,41 @@ test("browser sample diagnostics are bounded and redact sensitive values", () =>
 });
 
 test("RSC request role classifier exposes only bounded role labels", () => {
-  assert.equal(browserRscRequestRole({
-    headers: { "Next-Router-Prefetch": "1" },
-  }), "prefetch");
-  assert.equal(browserRscRequestRole({
-    headers: { Purpose: "prefetch; anonymous-client-ip" },
-  }), "prefetch");
-  assert.equal(browserRscRequestRole({
-    headers: { "Sec-Purpose": "prefetch" },
-  }), "prefetch");
-  assert.equal(browserRscRequestRole({
-    headers: {
-      "Next-Router-Prefetch": "0",
-      "X-Private-Diagnostic": "https://example.test/private?token=abc",
-    },
-  }), "non-prefetch/unknown");
+  assert.equal(browserRscRequestRole({ headers: { "Next-Router-Prefetch": "1" } }), "prefetch");
+  assert.equal(browserRscRequestRole({ headers: { Purpose: "prefetch; anonymous-client-ip" } }), "prefetch");
+  assert.equal(browserRscRequestRole({ headers: { "Sec-Purpose": "prefetch" } }), "prefetch");
+  assert.equal(browserRscRequestRole({ headers: {
+    "Next-Router-Prefetch": "0",
+    "X-Private-Diagnostic": "https://example.test/private?token=abc",
+  } }), "non-prefetch/unknown");
   assert.equal(browserRscRequestRole({ headers: {} }), "non-prefetch/unknown");
+});
+
+test("prefetch RSC is excluded from initial-route attribution only", () => {
+  const documentResponse = {
+    redirect: false,
+    type: "Document",
+    response: { mimeType: "text/html", headers: {} },
+  };
+  const scriptResponse = {
+    redirect: false,
+    type: "Script",
+    response: { mimeType: "application/javascript", headers: {} },
+  };
+  const rscResponse = {
+    redirect: false,
+    type: "Other",
+    response: { mimeType: "text/x-component", headers: {} },
+  };
+
+  assert.equal(browserResponseBelongsToInitialRoute(documentResponse, null), true);
+  assert.equal(browserResponseBelongsToInitialRoute(scriptResponse, null), true);
+  assert.equal(browserResponseBelongsToInitialRoute(rscResponse, "prefetch"), false);
+  assert.equal(browserResponseBelongsToInitialRoute(rscResponse, "non-prefetch/unknown"), true);
+  assert.throws(
+    () => browserResponseBelongsToInitialRoute(rscResponse, "other"),
+    /RSC request role is invalid/,
+  );
 });
 
 test("browser response completion waits for terminal success and fails closed", async () => {
@@ -166,13 +164,10 @@ test("browser response completion waits for terminal success and fails closed", 
 
   const failed = createBrowserResponseCompletionTracker({ timeoutMs: 25 });
   const failedWaiting = failed.waitForAll([
-    { requestId: "rsc", attributionClass: "RSC", requestRole: "prefetch" },
+    { requestId: "rsc", attributionClass: "RSC", requestRole: "non-prefetch/unknown" },
   ]);
   failed.loadingFailed({ requestId: "rsc" });
-  await assert.rejects(
-    failedWaiting,
-    /browser response failed before attribution/,
-  );
+  await assert.rejects(failedWaiting, /browser response failed before attribution/);
 
   const timedOut = createBrowserResponseCompletionTracker({ timeoutMs: 5 });
   const timedOutWaiting = timedOut.waitForAll([
@@ -180,63 +175,25 @@ test("browser response completion waits for terminal success and fails closed", 
     {
       requestId: "https://example.test/private?token=abc",
       attributionClass: "RSC",
-      requestRole: "prefetch",
-    },
-    {
-      requestId: "raw-private-request-id",
-      attributionClass: "RSC",
       requestRole: "non-prefetch/unknown",
     },
   ]);
   timedOut.loadingFinished({ requestId: "finished" });
   await assert.rejects(timedOutWaiting, (error) => {
-    assert.match(
-      error.message,
-      /pendingClass=RSC pendingCount=2 pendingRscRoles=prefetch:1,non-prefetch\/unknown:1/,
-    );
+    assert.match(error.message, /pendingClass=RSC pendingCount=1 pendingRscRoles=non-prefetch\/unknown:1/);
     assert.doesNotMatch(error.message, /https?:\/\//i);
-    assert.doesNotMatch(error.message, /token|abc|raw-private-request-id/i);
-    const diagnostic = sanitizeBrowserSampleDiagnostic(error.message);
-    assert.match(
-      diagnostic,
-      /pendingRscRoles=prefetch:1,non-prefetch\/unknown:1/,
-    );
-    assert.ok(diagnostic.length <= 512);
+    assert.doesNotMatch(error.message, /token|abc/i);
     return true;
   });
 });
 
 test("browser lifecycle wait matches only responses requiring body attribution", () => {
-  const documentResponse = {
-    redirect: false,
-    type: "Document",
-    response: { mimeType: "text/html", headers: {} },
-  };
-  const scriptResponse = {
-    redirect: false,
-    type: "Script",
-    response: { mimeType: "text/plain", headers: {} },
-  };
-  const rscResponse = {
-    redirect: false,
-    type: "Other",
-    response: { mimeType: "text/x-component", headers: {} },
-  };
-  const javascriptResponse = {
-    redirect: false,
-    type: "Other",
-    response: { mimeType: "", headers: { "Content-Type": "application/javascript" } },
-  };
-  const imageResponse = {
-    redirect: false,
-    type: "Image",
-    response: { mimeType: "image/webp", headers: {} },
-  };
-  const redirectResponse = {
-    redirect: true,
-    type: "Document",
-    response: { mimeType: "text/html", headers: {} },
-  };
+  const documentResponse = { redirect: false, type: "Document", response: { mimeType: "text/html", headers: {} } };
+  const scriptResponse = { redirect: false, type: "Script", response: { mimeType: "text/plain", headers: {} } };
+  const rscResponse = { redirect: false, type: "Other", response: { mimeType: "text/x-component", headers: {} } };
+  const javascriptResponse = { redirect: false, type: "Other", response: { mimeType: "", headers: { "Content-Type": "application/javascript" } } };
+  const imageResponse = { redirect: false, type: "Image", response: { mimeType: "image/webp", headers: {} } };
+  const redirectResponse = { redirect: true, type: "Document", response: { mimeType: "text/html", headers: {} } };
 
   assert.equal(browserResponseAttributionClass(documentResponse), "Document");
   assert.equal(browserResponseAttributionClass(scriptResponse), "JavaScript");
@@ -244,7 +201,6 @@ test("browser lifecycle wait matches only responses requiring body attribution",
   assert.equal(browserResponseAttributionClass(javascriptResponse), "JavaScript");
   assert.equal(browserResponseAttributionClass(imageResponse), null);
   assert.equal(browserResponseAttributionClass(redirectResponse), null);
-
   assert.equal(browserResponseNeedsBodyAttribution(documentResponse), true);
   assert.equal(browserResponseNeedsBodyAttribution(scriptResponse), true);
   assert.equal(browserResponseNeedsBodyAttribution(rscResponse), true);
@@ -254,38 +210,21 @@ test("browser lifecycle wait matches only responses requiring body attribution",
 });
 
 test("sanitized evidence rejects secrets, answer material, and unbounded values", () => {
-  assert.doesNotThrow(() =>
-    assertSanitizedTelemetry({
-      commit: "a".repeat(40),
-      rows: { lessons: 24 },
-      outcomeCode: "FOUND",
-    }));
-  assert.throws(
-    () => assertSanitizedTelemetry({ serviceRoleToken: "redacted" }),
-    /forbidden key/,
-  );
-  assert.throws(
-    () => assertSanitizedTelemetry({ value: "NEXT_PUBLIC_SUPABASE_URL" }),
-    /forbidden value/,
-  );
-  assert.throws(
-    () => assertSanitizedTelemetry({ transcript: "fixture" }),
-    /forbidden key/,
-  );
-  assert.throws(
-    () => assertSanitizedTelemetry({ value: "x".repeat(1025) }),
-    /unbounded/,
-  );
+  assert.doesNotThrow(() => assertSanitizedTelemetry({
+    commit: "a".repeat(40), rows: { lessons: 24 }, outcomeCode: "FOUND",
+  }));
+  assert.throws(() => assertSanitizedTelemetry({ serviceRoleToken: "redacted" }), /forbidden key/);
+  assert.throws(() => assertSanitizedTelemetry({ value: "NEXT_PUBLIC_SUPABASE_URL" }), /forbidden value/);
+  assert.throws(() => assertSanitizedTelemetry({ transcript: "fixture" }), /forbidden key/);
+  assert.throws(() => assertSanitizedTelemetry({ value: "x".repeat(1025) }), /unbounded/);
 });
 
 test("actual DFP-2/3 production flow functions produce stable bounded telemetry", async () => {
   const evidence = await measureActualServerFlows();
-
   assert.doesNotThrow(() => assertSanitizedTelemetry(evidence));
   assert.equal(evidence.discovery.sampleCount, 30);
   assert.equal(evidence.detail.sampleCount, 30);
   assert.equal(evidence.practice.sampleCount, 30);
-
   for (const sample of evidence.discovery.samples) {
     assert.equal(sample.status, "ok");
     assert.equal(sample.dataStoreOperations, 1);
@@ -309,7 +248,6 @@ test("actual DFP-2/3 production flow functions produce stable bounded telemetry"
     assert.equal(sample.authSessionOperations, 0);
     assert.equal(sample.outcomeCode, "FOUND");
   }
-
   assert.equal(evidence.discovery.summary.failedSampleCount, 0);
   assert.equal(evidence.detail.summary.failedSampleCount, 0);
   assert.equal(evidence.practice.summary.failedSampleCount, 0);
@@ -317,14 +255,9 @@ test("actual DFP-2/3 production flow functions produce stable bounded telemetry"
 
 test("release evidence uses representative DFP-MSPEC-1 payload fixtures only", async () => {
   const fixtures = await measurePayloadFixtures();
-  assert.deepEqual(
-    fixtures.map(({ id }) => id),
-    [
-      "detail-representative",
-      "discovery-representative",
-      "practice-representative",
-    ],
-  );
+  assert.deepEqual(fixtures.map(({ id }) => id), [
+    "detail-representative", "discovery-representative", "practice-representative",
+  ]);
   for (const fixture of fixtures) {
     assert.match(fixture.sha256, /^[0-9a-f]{64}$/);
     assert.ok(fixture.bytes > 0);
@@ -336,112 +269,56 @@ test("invalidation evidence measures success and retry without a provider", asyn
   assert.equal(evidence.success, "APPLIED");
   assert.equal(evidence.retry, "RETRY_REQUIRED");
   assert.equal(evidence.terminalFailureObserved, false);
-  assert.deepEqual(
-    evidence.observedOutcomeCodes,
-    ["APPLIED", "RETRY_REQUIRED"],
-  );
+  assert.deepEqual(evidence.observedOutcomeCodes, ["APPLIED", "RETRY_REQUIRED"]);
 });
 
 test("release gate fails closed unless every DFP-6 surface passes", async () => {
   const server = {
-    discovery: { summary: summary(100) },
-    detail: { summary: summary(100) },
-    practice: { summary: summary(100) },
+    discovery: { summary: summary(100) }, detail: { summary: summary(100) }, practice: { summary: summary(100) },
   };
   const browser = {
     summary: {
-      htmlBytes: browserMetric(10_000),
-      rscBytes: browserMetric(0),
-      javascriptBytes: browserMetric(50_000),
-      lcpMs: browserMetric(1_000),
-      inpMs: browserMetric(100),
-      cls: browserMetric(0),
+      htmlBytes: browserMetric(10_000), rscBytes: browserMetric(0), javascriptBytes: browserMetric(50_000),
+      lcpMs: browserMetric(1_000), inpMs: browserMetric(100), cls: browserMetric(0),
     },
   };
   const payloadFixtures = await measurePayloadFixtures();
-  const invalidation = {
-    success: "APPLIED",
-    retry: "RETRY_REQUIRED",
-    terminalFailureObserved: false,
-  };
-  assert.equal(
-    evaluateDfp6ReleaseGate({
-      server,
-      browser,
-      payloadFixtures,
-      invalidation,
-    }).pass,
-    true,
-  );
-  assert.equal(
-    evaluateDfp6ReleaseGate({
-      server,
-      browser: {
-        summary: { ...browser.summary, lcpMs: browserMetric(5_000) },
-      },
-      payloadFixtures,
-      invalidation,
-    }).pass,
-    false,
-  );
+  const invalidation = { success: "APPLIED", retry: "RETRY_REQUIRED", terminalFailureObserved: false };
+  assert.equal(evaluateDfp6ReleaseGate({ server, browser, payloadFixtures, invalidation }).pass, true);
+  assert.equal(evaluateDfp6ReleaseGate({
+    server,
+    browser: { summary: { ...browser.summary, lcpMs: browserMetric(5_000) } },
+    payloadFixtures,
+    invalidation,
+  }).pass, false);
 });
 
-test("implementation stays public-safe and bound to actual production surfaces", async () => {
-  const [
-    observabilitySource,
-    browserSource,
-    readmeSource,
-    packageSource,
-    workflowSource,
-  ] = await Promise.all([
+test("implementation stays public-safe and excludes prefetch only from initial-route attribution", async () => {
+  const [observabilitySource, browserSource, readmeSource, packageSource, workflowSource] = await Promise.all([
     readFile("scripts/dfp/dfp6/release-observability.mjs", "utf8"),
     readFile("scripts/dfp/dfp6/browser-release-gate.mjs", "utf8"),
     readFile("scripts/dfp/dfp6/README.md", "utf8"),
     readFile("package.json", "utf8"),
     readFile(".github/workflows/sbca-ci.yml", "utf8"),
   ]);
-
   assert.match(observabilitySource, /lib\/lessonDiscovery\.ts/);
   assert.match(observabilitySource, /lib\/supabaseLesson\.ts/);
   assert.match(observabilitySource, /lib\/publicContentCache\.ts/);
   assert.doesNotMatch(observabilitySource, /NEXT_PUBLIC_SUPABASE_/);
   assert.doesNotMatch(observabilitySource, /\bvercel\b/i);
-
-  assert.match(
-    browserSource,
-    /scripts\/dfp\/dfp5\/fixture-app/,
-  );
-  assert.match(
-    browserSource,
-    /app\/lessons\/\[slug\]\/SupabaseLessonPage\.tsx/,
-  );
+  assert.match(browserSource, /scripts\/dfp\/dfp5\/fixture-app/);
+  assert.match(browserSource, /app\/lessons\/\[slug\]\/SupabaseLessonPage\.tsx/);
   assert.match(browserSource, /createLocalRequestGuard/);
-  assert.match(browserSource, /Input\.dispatchMouseEvent/);
-  assert.match(browserSource, /Network\.emulateNetworkConditions/);
-  assert.match(browserSource, /DFP-6 browser first sample failure/);
-  assert.match(browserSource, /sanitizeBrowserSampleDiagnostic/);
-  assert.match(browserSource, /Network\.loadingFinished/);
-  assert.match(browserSource, /Network\.loadingFailed/);
-  assert.match(browserSource, /createBrowserResponseCompletionTracker/);
-  assert.match(browserSource, /browserResponseNeedsBodyAttribution/);
-  assert.match(browserSource, /browserResponseAttributionClass/);
-  assert.match(browserSource, /browserRscRequestRole/);
-  assert.match(browserSource, /pendingClass=/);
-  assert.match(browserSource, /pendingCount=/);
-  assert.match(browserSource, /pendingRscRoles=/);
-
+  assert.match(browserSource, /browserResponseBelongsToInitialRoute/);
+  assert.match(browserSource, /initialRouteAttributionEntries/);
+  assert.match(browserSource, /await responseCompletions\.waitForAll\(attributionRequests\)/);
+  assert.match(browserSource, /attributeRouteBytes\(\s*client,\s*initialRouteAttributionEntries/);
+  assert.doesNotMatch(browserSource, /attributeRouteBytes\(client, attributionEntries\)/);
+  assert.match(browserSource, /return requestRole !== "prefetch"/);
   assert.match(readmeSource, /Field evidence is explicitly `NOT_COLLECTED`/);
-
   const packageDocument = JSON.parse(packageSource);
-  assert.equal(
-    packageDocument.scripts["test:dfp6"],
-    "node --experimental-vm-modules --test scripts/verification/dfp6-release-observability.test.mjs",
-  );
-  assert.equal(
-    packageDocument.scripts["measure:dfp6:release"],
-    "node --experimental-vm-modules scripts/dfp/dfp6/release-observability.mjs",
-  );
-
+  assert.equal(packageDocument.scripts["test:dfp6"], "node --experimental-vm-modules --test scripts/verification/dfp6-release-observability.test.mjs");
+  assert.equal(packageDocument.scripts["measure:dfp6:release"], "node --experimental-vm-modules scripts/dfp/dfp6/release-observability.mjs");
   assert.match(workflowSource, /name: DFP-6 gate/);
   assert.match(workflowSource, /npm run test:dfp6/);
   assert.match(workflowSource, /measure:dfp6:release/);

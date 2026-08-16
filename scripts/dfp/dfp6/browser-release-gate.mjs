@@ -187,6 +187,15 @@ export function browserResponseNeedsBodyAttribution(item) {
   return browserResponseAttributionClass(item) !== null;
 }
 
+export function browserResponseBelongsToInitialRoute(item, requestRole) {
+  const attributionClass = browserResponseAttributionClass(item);
+  if (attributionClass !== "RSC") return true;
+  if (!RSC_REQUEST_ROLE_SET.has(requestRole)) {
+    throw new Error("DFP-6 browser RSC request role is invalid");
+  }
+  return requestRole !== "prefetch";
+}
+
 export function createBrowserResponseCompletionTracker({
   timeoutMs = CDP_TIMEOUT_MS,
 } = {}) {
@@ -672,7 +681,14 @@ async function measureNavigation(client, requestGuard, route) {
     }
 
     const attributionEntries = ledger.entries();
-    const attributionRequests = attributionEntries
+    const initialRouteAttributionEntries = attributionEntries.filter((item) => {
+      const attributionClass = browserResponseAttributionClass(item);
+      const requestRole = attributionClass === "RSC"
+        ? requestRoles.get(item.requestId) ?? "non-prefetch/unknown"
+        : null;
+      return browserResponseBelongsToInitialRoute(item, requestRole);
+    });
+    const attributionRequests = initialRouteAttributionEntries
       .map((item) => {
         const attributionClass = browserResponseAttributionClass(item);
         return {
@@ -685,7 +701,10 @@ async function measureNavigation(client, requestGuard, route) {
       })
       .filter(({ attributionClass }) => attributionClass !== null);
     await responseCompletions.waitForAll(attributionRequests);
-    const { routeBytes } = await attributeRouteBytes(client, attributionEntries);
+    const { routeBytes } = await attributeRouteBytes(
+      client,
+      initialRouteAttributionEntries,
+    );
     return {
       routeBytes,
       vitals: {
