@@ -12,6 +12,7 @@ import {
   SERVER_ASSEMBLY_BUDGETS,
 } from "../dfp/dfp6/release-contract.mjs";
 import {
+  browserResponseNeedsBodyAttribution,
   createBrowserResponseCompletionTracker,
   sanitizeBrowserSampleDiagnostic,
 } from "../dfp/dfp6/browser-release-gate.mjs";
@@ -151,6 +152,39 @@ test("browser response completion waits for terminal success and fails closed", 
     timedOut.waitForAll(["unfinished"]),
     /browser response lifecycle did not complete/,
   );
+});
+
+test("browser lifecycle wait matches only responses requiring body attribution", () => {
+  assert.equal(browserResponseNeedsBodyAttribution({
+    redirect: false,
+    type: "Document",
+    response: { mimeType: "text/html", headers: {} },
+  }), true);
+  assert.equal(browserResponseNeedsBodyAttribution({
+    redirect: false,
+    type: "Script",
+    response: { mimeType: "text/plain", headers: {} },
+  }), true);
+  assert.equal(browserResponseNeedsBodyAttribution({
+    redirect: false,
+    type: "Other",
+    response: { mimeType: "text/x-component", headers: {} },
+  }), true);
+  assert.equal(browserResponseNeedsBodyAttribution({
+    redirect: false,
+    type: "Other",
+    response: { mimeType: "", headers: { "Content-Type": "application/javascript" } },
+  }), true);
+  assert.equal(browserResponseNeedsBodyAttribution({
+    redirect: false,
+    type: "Image",
+    response: { mimeType: "image/webp", headers: {} },
+  }), false);
+  assert.equal(browserResponseNeedsBodyAttribution({
+    redirect: true,
+    type: "Document",
+    response: { mimeType: "text/html", headers: {} },
+  }), false);
 });
 
 test("sanitized evidence rejects secrets, answer material, and unbounded values", () => {
@@ -323,6 +357,7 @@ test("implementation stays public-safe and bound to actual production surfaces",
   assert.match(browserSource, /Network\.loadingFinished/);
   assert.match(browserSource, /Network\.loadingFailed/);
   assert.match(browserSource, /createBrowserResponseCompletionTracker/);
+  assert.match(browserSource, /browserResponseNeedsBodyAttribution/);
 
   assert.match(readmeSource, /Field evidence is explicitly `NOT_COLLECTED`/);
 

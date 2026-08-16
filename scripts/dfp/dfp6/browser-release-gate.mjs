@@ -136,6 +136,22 @@ export function sanitizeBrowserSampleDiagnostic(value) {
   return `${text.slice(0, SAMPLE_DIAGNOSTIC_MAX_CHARS - suffix.length)}${suffix}`;
 }
 
+function responseContentType(response) {
+  const header = Object.entries(response?.headers ?? {}).find(
+    ([name]) => name.toLowerCase() === "content-type",
+  )?.[1];
+  return String(response?.mimeType || header || "").toLowerCase();
+}
+
+export function browserResponseNeedsBodyAttribution(item) {
+  if (item?.redirect) return false;
+  const contentType = responseContentType(item?.response);
+  return item?.type === "Document"
+    || item?.type === "Script"
+    || contentType.includes("text/x-component")
+    || contentType.includes("javascript");
+}
+
 export function createBrowserResponseCompletionTracker({
   timeoutMs = CDP_TIMEOUT_MS,
 } = {}) {
@@ -580,14 +596,10 @@ async function measureNavigation(client, requestGuard, route) {
 
     const attributionEntries = ledger.entries();
     const attributionRequestIds = attributionEntries
-      .filter((item) => !item.redirect)
+      .filter(browserResponseNeedsBodyAttribution)
       .map((item) => item.requestId);
     await responseCompletions.waitForAll(attributionRequestIds);
-    const completedRequestIds = new Set(attributionRequestIds);
-    const completedEntries = ledger.entries().filter(
-      (item) => item.redirect || completedRequestIds.has(item.requestId),
-    );
-    const { routeBytes } = await attributeRouteBytes(client, completedEntries);
+    const { routeBytes } = await attributeRouteBytes(client, attributionEntries);
     return {
       routeBytes,
       vitals: {
