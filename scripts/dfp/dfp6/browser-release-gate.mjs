@@ -136,6 +136,67 @@ export function sanitizeBrowserSampleDiagnostic(value) {
   return `${text.slice(0, SAMPLE_DIAGNOSTIC_MAX_CHARS - suffix.length)}${suffix}`;
 }
 
+export function createBrowserResponseCompletionTracker({
+  timeoutMs = CDP_TIMEOUT_MS,
+} = {}) {
+  const terminalOutcomes = new Map();
+  const waiters = new Map();
+
+  function settle(requestId, outcome) {
+    if (terminalOutcomes.has(requestId)) return;
+    terminalOutcomes.set(requestId, outcome);
+    const pending = waiters.get(requestId) ?? [];
+    waiters.delete(requestId);
+    for (const resolve of pending) resolve(outcome);
+  }
+
+  function waitForRequest(requestId) {
+    if (terminalOutcomes.has(requestId)) {
+      return Promise.resolve(terminalOutcomes.get(requestId));
+    }
+    return new Promise((resolve) => {
+      const pending = waiters.get(requestId) ?? [];
+      pending.push(resolve);
+      waiters.set(requestId, pending);
+    });
+  }
+
+  return {
+    loadingFinished({ requestId }) {
+      settle(requestId, "finished");
+    },
+    loadingFailed({ requestId }) {
+      settle(requestId, "failed");
+    },
+    async waitForAll(requestIds) {
+      const uniqueRequestIds = [...new Set(requestIds)];
+      if (uniqueRequestIds.length === 0) return;
+
+      let timeoutHandle;
+      try {
+        const outcomes = await Promise.race([
+          Promise.all(uniqueRequestIds.map(waitForRequest)),
+          new Promise((_, reject) => {
+            timeoutHandle = setTimeout(
+              () => reject(new Error(
+                "DFP-6 browser response lifecycle did not complete",
+              )),
+              timeoutMs,
+            );
+          }),
+        ]);
+        if (outcomes.some((outcome) => outcome !== "finished")) {
+          throw new Error(
+            "DFP-6 browser response failed before attribution",
+          );
+        }
+      } finally {
+        clearTimeout(timeoutHandle);
+      }
+    },
+  };
+}
+
 async function buildFixture() {
   try {
     await execFileAsync(
@@ -456,6 +517,7 @@ async function clickPinyinToggle(client) {
 
 async function measureNavigation(client, requestGuard, route) {
   const ledger = createNetworkLedger();
+  const responseCompletions = createBrowserResponseCompletionTracker();
   const removeRequestListener = client.on(
     "Network.requestWillBeSent",
     (event) => ledger.requestWillBeSent(event),
@@ -467,6 +529,14 @@ async function measureNavigation(client, requestGuard, route) {
   const removeDataListener = client.on(
     "Network.dataReceived",
     (event) => ledger.dataReceived(event),
+  );
+  const removeLoadingFinishedListener = client.on(
+    "Network.loadingFinished",
+    (event) => responseCompletions.loadingFinished(event),
+  );
+  const removeLoadingFailedListener = client.on(
+    "Network.loadingFailed",
+    (event) => responseCompletions.loadingFailed(event),
   );
 
   try {
@@ -508,7 +578,16 @@ async function measureNavigation(client, requestGuard, route) {
       throw new Error("DFP-6 browser sample did not observe required LCP/INP");
     }
 
-    const { routeBytes } = await attributeRouteBytes(client, ledger.entries());
+    const attributionEntries = ledger.entries();
+    const attributionRequestIds = attributionEntries
+      .filter((item) => !item.redirect)
+      .map((item) => item.requestId);
+    await responseCompletions.waitForAll(attributionRequestIds);
+    const completedRequestIds = new Set(attributionRequestIds);
+    const completedEntries = ledger.entries().filter(
+      (item) => item.redirect || completedRequestIds.has(item.requestId),
+    );
+    const { routeBytes } = await attributeRouteBytes(client, completedEntries);
     return {
       routeBytes,
       vitals: {
@@ -521,6 +600,8 @@ async function measureNavigation(client, requestGuard, route) {
     removeRequestListener();
     removeResponseListener();
     removeDataListener();
+    removeLoadingFinishedListener();
+    removeLoadingFailedListener();
   }
 }
 

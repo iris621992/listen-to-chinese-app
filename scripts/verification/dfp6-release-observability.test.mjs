@@ -12,6 +12,7 @@ import {
   SERVER_ASSEMBLY_BUDGETS,
 } from "../dfp/dfp6/release-contract.mjs";
 import {
+  createBrowserResponseCompletionTracker,
   sanitizeBrowserSampleDiagnostic,
 } from "../dfp/dfp6/browser-release-gate.mjs";
 import {
@@ -128,6 +129,28 @@ test("browser sample diagnostics are bounded and redact sensitive values", () =>
   assert.doesNotMatch(diagnostic, /abc/);
   assert.doesNotMatch(diagnostic, /NEXT_PUBLIC_SUPABASE_/);
   assert.match(diagnostic, /\[REDACTED/);
+});
+
+test("browser response completion waits for terminal success and fails closed", async () => {
+  const tracker = createBrowserResponseCompletionTracker({ timeoutMs: 25 });
+  const waiting = tracker.waitForAll(["doc", "script", "doc"]);
+  tracker.loadingFinished({ requestId: "doc" });
+  tracker.loadingFinished({ requestId: "script" });
+  await assert.doesNotReject(waiting);
+
+  const failed = createBrowserResponseCompletionTracker({ timeoutMs: 25 });
+  const failedWaiting = failed.waitForAll(["rsc"]);
+  failed.loadingFailed({ requestId: "rsc" });
+  await assert.rejects(
+    failedWaiting,
+    /browser response failed before attribution/,
+  );
+
+  const timedOut = createBrowserResponseCompletionTracker({ timeoutMs: 5 });
+  await assert.rejects(
+    timedOut.waitForAll(["unfinished"]),
+    /browser response lifecycle did not complete/,
+  );
 });
 
 test("sanitized evidence rejects secrets, answer material, and unbounded values", () => {
@@ -297,6 +320,9 @@ test("implementation stays public-safe and bound to actual production surfaces",
   assert.match(browserSource, /Network\.emulateNetworkConditions/);
   assert.match(browserSource, /DFP-6 browser first sample failure/);
   assert.match(browserSource, /sanitizeBrowserSampleDiagnostic/);
+  assert.match(browserSource, /Network\.loadingFinished/);
+  assert.match(browserSource, /Network\.loadingFailed/);
+  assert.match(browserSource, /createBrowserResponseCompletionTracker/);
 
   assert.match(readmeSource, /Field evidence is explicitly `NOT_COLLECTED`/);
 
