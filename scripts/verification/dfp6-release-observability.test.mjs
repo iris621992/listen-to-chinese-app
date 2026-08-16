@@ -14,6 +14,7 @@ import {
 import {
   browserResponseAttributionClass,
   browserResponseNeedsBodyAttribution,
+  browserRscRequestRole,
   createBrowserResponseCompletionTracker,
   sanitizeBrowserSampleDiagnostic,
 } from "../dfp/dfp6/browser-release-gate.mjs";
@@ -133,12 +134,31 @@ test("browser sample diagnostics are bounded and redact sensitive values", () =>
   assert.match(diagnostic, /\[REDACTED/);
 });
 
+test("RSC request role classifier exposes only bounded role labels", () => {
+  assert.equal(browserRscRequestRole({
+    headers: { "Next-Router-Prefetch": "1" },
+  }), "prefetch");
+  assert.equal(browserRscRequestRole({
+    headers: { Purpose: "prefetch; anonymous-client-ip" },
+  }), "prefetch");
+  assert.equal(browserRscRequestRole({
+    headers: { "Sec-Purpose": "prefetch" },
+  }), "prefetch");
+  assert.equal(browserRscRequestRole({
+    headers: {
+      "Next-Router-Prefetch": "0",
+      "X-Private-Diagnostic": "https://example.test/private?token=abc",
+    },
+  }), "non-prefetch/unknown");
+  assert.equal(browserRscRequestRole({ headers: {} }), "non-prefetch/unknown");
+});
+
 test("browser response completion waits for terminal success and fails closed", async () => {
   const tracker = createBrowserResponseCompletionTracker({ timeoutMs: 25 });
   const waiting = tracker.waitForAll([
-    { requestId: "doc", attributionClass: "Document" },
-    { requestId: "script", attributionClass: "JavaScript" },
-    { requestId: "doc", attributionClass: "Document" },
+    { requestId: "doc", attributionClass: "Document", requestRole: null },
+    { requestId: "script", attributionClass: "JavaScript", requestRole: null },
+    { requestId: "doc", attributionClass: "Document", requestRole: null },
   ]);
   tracker.loadingFinished({ requestId: "doc" });
   tracker.loadingFinished({ requestId: "script" });
@@ -146,7 +166,7 @@ test("browser response completion waits for terminal success and fails closed", 
 
   const failed = createBrowserResponseCompletionTracker({ timeoutMs: 25 });
   const failedWaiting = failed.waitForAll([
-    { requestId: "rsc", attributionClass: "RSC" },
+    { requestId: "rsc", attributionClass: "RSC", requestRole: "prefetch" },
   ]);
   failed.loadingFailed({ requestId: "rsc" });
   await assert.rejects(
@@ -156,23 +176,31 @@ test("browser response completion waits for terminal success and fails closed", 
 
   const timedOut = createBrowserResponseCompletionTracker({ timeoutMs: 5 });
   const timedOutWaiting = timedOut.waitForAll([
-    { requestId: "finished", attributionClass: "Document" },
+    { requestId: "finished", attributionClass: "Document", requestRole: null },
     {
       requestId: "https://example.test/private?token=abc",
-      attributionClass: "JavaScript",
+      attributionClass: "RSC",
+      requestRole: "prefetch",
     },
-    { requestId: "pending-rsc", attributionClass: "RSC" },
+    {
+      requestId: "raw-private-request-id",
+      attributionClass: "RSC",
+      requestRole: "non-prefetch/unknown",
+    },
   ]);
   timedOut.loadingFinished({ requestId: "finished" });
   await assert.rejects(timedOutWaiting, (error) => {
     assert.match(
       error.message,
-      /pendingClass=JavaScript pendingCount=2/,
+      /pendingClass=RSC pendingCount=2 pendingRscRoles=prefetch:1,non-prefetch\/unknown:1/,
     );
     assert.doesNotMatch(error.message, /https?:\/\//i);
-    assert.doesNotMatch(error.message, /token|abc/i);
+    assert.doesNotMatch(error.message, /token|abc|raw-private-request-id/i);
     const diagnostic = sanitizeBrowserSampleDiagnostic(error.message);
-    assert.match(diagnostic, /pendingClass=JavaScript pendingCount=2/);
+    assert.match(
+      diagnostic,
+      /pendingRscRoles=prefetch:1,non-prefetch\/unknown:1/,
+    );
     assert.ok(diagnostic.length <= 512);
     return true;
   });
@@ -397,8 +425,10 @@ test("implementation stays public-safe and bound to actual production surfaces",
   assert.match(browserSource, /createBrowserResponseCompletionTracker/);
   assert.match(browserSource, /browserResponseNeedsBodyAttribution/);
   assert.match(browserSource, /browserResponseAttributionClass/);
+  assert.match(browserSource, /browserRscRequestRole/);
   assert.match(browserSource, /pendingClass=/);
   assert.match(browserSource, /pendingCount=/);
+  assert.match(browserSource, /pendingRscRoles=/);
 
   assert.match(readmeSource, /Field evidence is explicitly `NOT_COLLECTED`/);
 

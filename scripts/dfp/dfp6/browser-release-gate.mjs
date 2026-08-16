@@ -36,6 +36,8 @@ const DIAGNOSTIC_SENSITIVE_FRAGMENT =
 const DIAGNOSTIC_PROVIDER_VALUE =
   /(?:service_role|NEXT_PUBLIC_SUPABASE_|SUPABASE_(?:URL|KEY)|postgres(?:ql)?:\/\/)[^\s,;]*/gi;
 const BODY_ATTRIBUTION_CLASSES = new Set(["Document", "RSC", "JavaScript"]);
+const RSC_REQUEST_ROLES = ["prefetch", "non-prefetch/unknown"];
+const RSC_REQUEST_ROLE_SET = new Set(RSC_REQUEST_ROLES);
 
 const delay = (milliseconds) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -144,6 +146,32 @@ function responseContentType(response) {
   return String(response?.mimeType || header || "").toLowerCase();
 }
 
+function requestHeaderValue(headers, headerName) {
+  const target = headerName.toLowerCase();
+  return Object.entries(headers ?? {}).find(
+    ([name]) => name.toLowerCase() === target,
+  )?.[1];
+}
+
+export function browserRscRequestRole(request) {
+  const headers = request?.headers ?? {};
+  const routerPrefetch = String(
+    requestHeaderValue(headers, "next-router-prefetch") ?? "",
+  ).trim().toLowerCase();
+  const purpose = String(
+    requestHeaderValue(headers, "purpose") ?? "",
+  ).toLowerCase();
+  const secPurpose = String(
+    requestHeaderValue(headers, "sec-purpose") ?? "",
+  ).toLowerCase();
+  return routerPrefetch === "1"
+    || routerPrefetch === "true"
+    || purpose.includes("prefetch")
+    || secPurpose.includes("prefetch")
+    ? "prefetch"
+    : "non-prefetch/unknown";
+}
+
 export function browserResponseAttributionClass(item) {
   if (item?.redirect) return null;
   const contentType = responseContentType(item?.response);
@@ -195,13 +223,19 @@ export function createBrowserResponseCompletionTracker({
       const uniqueRequests = [...new Map(requests.map((request) => {
         const requestId = request?.requestId;
         const attributionClass = request?.attributionClass;
+        const requestRole = attributionClass === "RSC"
+          ? request?.requestRole
+          : null;
         if (typeof requestId !== "string" || requestId.length === 0) {
           throw new Error("DFP-6 browser response request identity is invalid");
         }
         if (!BODY_ATTRIBUTION_CLASSES.has(attributionClass)) {
           throw new Error("DFP-6 browser response attribution class is invalid");
         }
-        return [requestId, { requestId, attributionClass }];
+        if (attributionClass === "RSC" && !RSC_REQUEST_ROLE_SET.has(requestRole)) {
+          throw new Error("DFP-6 browser RSC request role is invalid");
+        }
+        return [requestId, { requestId, attributionClass, requestRole }];
       })).values()];
       if (uniqueRequests.length === 0) return;
 
@@ -216,10 +250,26 @@ export function createBrowserResponseCompletionTracker({
               );
               const firstPendingClass =
                 pendingRequests[0]?.attributionClass ?? "UNKNOWN";
+              const roleCounts = Object.fromEntries(
+                RSC_REQUEST_ROLES.map((role) => [role, 0]),
+              );
+              for (const request of pendingRequests) {
+                if (request.attributionClass === "RSC") {
+                  roleCounts[request.requestRole] += 1;
+                }
+              }
+              const pendingRscRoles = RSC_REQUEST_ROLES
+                .filter((role) => roleCounts[role] > 0)
+                .map((role) => `${role}:${roleCounts[role]}`)
+                .join(",");
+              const rscRoleDiagnostic = pendingRscRoles
+                ? ` pendingRscRoles=${pendingRscRoles}`
+                : "";
               reject(new Error(
                 "DFP-6 browser response lifecycle did not complete: "
                 + `pendingClass=${firstPendingClass} `
-                + `pendingCount=${pendingRequests.length}`,
+                + `pendingCount=${pendingRequests.length}`
+                + rscRoleDiagnostic,
               ));
             }, timeoutMs);
           }),
@@ -557,9 +607,13 @@ async function clickPinyinToggle(client) {
 async function measureNavigation(client, requestGuard, route) {
   const ledger = createNetworkLedger();
   const responseCompletions = createBrowserResponseCompletionTracker();
+  const requestRoles = new Map();
   const removeRequestListener = client.on(
     "Network.requestWillBeSent",
-    (event) => ledger.requestWillBeSent(event),
+    (event) => {
+      ledger.requestWillBeSent(event);
+      requestRoles.set(event.requestId, browserRscRequestRole(event.request));
+    },
   );
   const removeResponseListener = client.on(
     "Network.responseReceived",
@@ -619,10 +673,16 @@ async function measureNavigation(client, requestGuard, route) {
 
     const attributionEntries = ledger.entries();
     const attributionRequests = attributionEntries
-      .map((item) => ({
-        requestId: item.requestId,
-        attributionClass: browserResponseAttributionClass(item),
-      }))
+      .map((item) => {
+        const attributionClass = browserResponseAttributionClass(item);
+        return {
+          requestId: item.requestId,
+          attributionClass,
+          requestRole: attributionClass === "RSC"
+            ? requestRoles.get(item.requestId) ?? "non-prefetch/unknown"
+            : null,
+        };
+      })
       .filter(({ attributionClass }) => attributionClass !== null);
     await responseCompletions.waitForAll(attributionRequests);
     const { routeBytes } = await attributeRouteBytes(client, attributionEntries);
