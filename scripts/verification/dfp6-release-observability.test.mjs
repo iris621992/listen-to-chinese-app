@@ -286,7 +286,7 @@ test("implementation stays public-safe and bound to actual production surfaces",
   );
   assert.equal(
     packageDocument.scripts["measure:dfp6:release"],
-    "node scripts/dfp/dfp6/release-observability.mjs",
+    "node --experimental-vm-modules scripts/dfp/dfp6/release-observability.mjs",
   );
 
   assert.match(workflowSource, /name: DFP-6 gate/);
