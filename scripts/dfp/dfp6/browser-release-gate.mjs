@@ -35,6 +35,7 @@ const DIAGNOSTIC_SENSITIVE_FRAGMENT =
   /\b(?:secret|token|password|credential|service.?role|publishable.?key|anon.?key|answer|correctness|grading|transcript|translation|raw.?content|database.?url)\b(?:\s*[:=]\s*|\s+)[^\s,;]+/gi;
 const DIAGNOSTIC_PROVIDER_VALUE =
   /(?:service_role|NEXT_PUBLIC_SUPABASE_|SUPABASE_(?:URL|KEY)|postgres(?:ql)?:\/\/)[^\s,;]*/gi;
+const BODY_ATTRIBUTION_CLASSES = new Set(["Document", "RSC", "JavaScript"]);
 
 const delay = (milliseconds) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -143,13 +144,19 @@ function responseContentType(response) {
   return String(response?.mimeType || header || "").toLowerCase();
 }
 
-export function browserResponseNeedsBodyAttribution(item) {
-  if (item?.redirect) return false;
+export function browserResponseAttributionClass(item) {
+  if (item?.redirect) return null;
   const contentType = responseContentType(item?.response);
-  return item?.type === "Document"
-    || item?.type === "Script"
-    || contentType.includes("text/x-component")
-    || contentType.includes("javascript");
+  if (item?.type === "Document") return "Document";
+  if (contentType.includes("text/x-component")) return "RSC";
+  if (item?.type === "Script" || contentType.includes("javascript")) {
+    return "JavaScript";
+  }
+  return null;
+}
+
+export function browserResponseNeedsBodyAttribution(item) {
+  return browserResponseAttributionClass(item) !== null;
 }
 
 export function createBrowserResponseCompletionTracker({
@@ -184,21 +191,37 @@ export function createBrowserResponseCompletionTracker({
     loadingFailed({ requestId }) {
       settle(requestId, "failed");
     },
-    async waitForAll(requestIds) {
-      const uniqueRequestIds = [...new Set(requestIds)];
-      if (uniqueRequestIds.length === 0) return;
+    async waitForAll(requests) {
+      const uniqueRequests = [...new Map(requests.map((request) => {
+        const requestId = request?.requestId;
+        const attributionClass = request?.attributionClass;
+        if (typeof requestId !== "string" || requestId.length === 0) {
+          throw new Error("DFP-6 browser response request identity is invalid");
+        }
+        if (!BODY_ATTRIBUTION_CLASSES.has(attributionClass)) {
+          throw new Error("DFP-6 browser response attribution class is invalid");
+        }
+        return [requestId, { requestId, attributionClass }];
+      })).values()];
+      if (uniqueRequests.length === 0) return;
 
       let timeoutHandle;
       try {
         const outcomes = await Promise.race([
-          Promise.all(uniqueRequestIds.map(waitForRequest)),
+          Promise.all(uniqueRequests.map(({ requestId }) => waitForRequest(requestId))),
           new Promise((_, reject) => {
-            timeoutHandle = setTimeout(
-              () => reject(new Error(
-                "DFP-6 browser response lifecycle did not complete",
-              )),
-              timeoutMs,
-            );
+            timeoutHandle = setTimeout(() => {
+              const pendingRequests = uniqueRequests.filter(
+                ({ requestId }) => !terminalOutcomes.has(requestId),
+              );
+              const firstPendingClass =
+                pendingRequests[0]?.attributionClass ?? "UNKNOWN";
+              reject(new Error(
+                "DFP-6 browser response lifecycle did not complete: "
+                + `pendingClass=${firstPendingClass} `
+                + `pendingCount=${pendingRequests.length}`,
+              ));
+            }, timeoutMs);
           }),
         ]);
         if (outcomes.some((outcome) => outcome !== "finished")) {
@@ -595,10 +618,13 @@ async function measureNavigation(client, requestGuard, route) {
     }
 
     const attributionEntries = ledger.entries();
-    const attributionRequestIds = attributionEntries
-      .filter(browserResponseNeedsBodyAttribution)
-      .map((item) => item.requestId);
-    await responseCompletions.waitForAll(attributionRequestIds);
+    const attributionRequests = attributionEntries
+      .map((item) => ({
+        requestId: item.requestId,
+        attributionClass: browserResponseAttributionClass(item),
+      }))
+      .filter(({ attributionClass }) => attributionClass !== null);
+    await responseCompletions.waitForAll(attributionRequests);
     const { routeBytes } = await attributeRouteBytes(client, attributionEntries);
     return {
       routeBytes,

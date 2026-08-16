@@ -12,6 +12,7 @@ import {
   SERVER_ASSEMBLY_BUDGETS,
 } from "../dfp/dfp6/release-contract.mjs";
 import {
+  browserResponseAttributionClass,
   browserResponseNeedsBodyAttribution,
   createBrowserResponseCompletionTracker,
   sanitizeBrowserSampleDiagnostic,
@@ -134,13 +135,19 @@ test("browser sample diagnostics are bounded and redact sensitive values", () =>
 
 test("browser response completion waits for terminal success and fails closed", async () => {
   const tracker = createBrowserResponseCompletionTracker({ timeoutMs: 25 });
-  const waiting = tracker.waitForAll(["doc", "script", "doc"]);
+  const waiting = tracker.waitForAll([
+    { requestId: "doc", attributionClass: "Document" },
+    { requestId: "script", attributionClass: "JavaScript" },
+    { requestId: "doc", attributionClass: "Document" },
+  ]);
   tracker.loadingFinished({ requestId: "doc" });
   tracker.loadingFinished({ requestId: "script" });
   await assert.doesNotReject(waiting);
 
   const failed = createBrowserResponseCompletionTracker({ timeoutMs: 25 });
-  const failedWaiting = failed.waitForAll(["rsc"]);
+  const failedWaiting = failed.waitForAll([
+    { requestId: "rsc", attributionClass: "RSC" },
+  ]);
   failed.loadingFailed({ requestId: "rsc" });
   await assert.rejects(
     failedWaiting,
@@ -148,43 +155,74 @@ test("browser response completion waits for terminal success and fails closed", 
   );
 
   const timedOut = createBrowserResponseCompletionTracker({ timeoutMs: 5 });
-  await assert.rejects(
-    timedOut.waitForAll(["unfinished"]),
-    /browser response lifecycle did not complete/,
-  );
+  const timedOutWaiting = timedOut.waitForAll([
+    { requestId: "finished", attributionClass: "Document" },
+    {
+      requestId: "https://example.test/private?token=abc",
+      attributionClass: "JavaScript",
+    },
+    { requestId: "pending-rsc", attributionClass: "RSC" },
+  ]);
+  timedOut.loadingFinished({ requestId: "finished" });
+  await assert.rejects(timedOutWaiting, (error) => {
+    assert.match(
+      error.message,
+      /pendingClass=JavaScript pendingCount=2/,
+    );
+    assert.doesNotMatch(error.message, /https?:\/\//i);
+    assert.doesNotMatch(error.message, /token|abc/i);
+    const diagnostic = sanitizeBrowserSampleDiagnostic(error.message);
+    assert.match(diagnostic, /pendingClass=JavaScript pendingCount=2/);
+    assert.ok(diagnostic.length <= 512);
+    return true;
+  });
 });
 
 test("browser lifecycle wait matches only responses requiring body attribution", () => {
-  assert.equal(browserResponseNeedsBodyAttribution({
+  const documentResponse = {
     redirect: false,
     type: "Document",
     response: { mimeType: "text/html", headers: {} },
-  }), true);
-  assert.equal(browserResponseNeedsBodyAttribution({
+  };
+  const scriptResponse = {
     redirect: false,
     type: "Script",
     response: { mimeType: "text/plain", headers: {} },
-  }), true);
-  assert.equal(browserResponseNeedsBodyAttribution({
+  };
+  const rscResponse = {
     redirect: false,
     type: "Other",
     response: { mimeType: "text/x-component", headers: {} },
-  }), true);
-  assert.equal(browserResponseNeedsBodyAttribution({
+  };
+  const javascriptResponse = {
     redirect: false,
     type: "Other",
     response: { mimeType: "", headers: { "Content-Type": "application/javascript" } },
-  }), true);
-  assert.equal(browserResponseNeedsBodyAttribution({
+  };
+  const imageResponse = {
     redirect: false,
     type: "Image",
     response: { mimeType: "image/webp", headers: {} },
-  }), false);
-  assert.equal(browserResponseNeedsBodyAttribution({
+  };
+  const redirectResponse = {
     redirect: true,
     type: "Document",
     response: { mimeType: "text/html", headers: {} },
-  }), false);
+  };
+
+  assert.equal(browserResponseAttributionClass(documentResponse), "Document");
+  assert.equal(browserResponseAttributionClass(scriptResponse), "JavaScript");
+  assert.equal(browserResponseAttributionClass(rscResponse), "RSC");
+  assert.equal(browserResponseAttributionClass(javascriptResponse), "JavaScript");
+  assert.equal(browserResponseAttributionClass(imageResponse), null);
+  assert.equal(browserResponseAttributionClass(redirectResponse), null);
+
+  assert.equal(browserResponseNeedsBodyAttribution(documentResponse), true);
+  assert.equal(browserResponseNeedsBodyAttribution(scriptResponse), true);
+  assert.equal(browserResponseNeedsBodyAttribution(rscResponse), true);
+  assert.equal(browserResponseNeedsBodyAttribution(javascriptResponse), true);
+  assert.equal(browserResponseNeedsBodyAttribution(imageResponse), false);
+  assert.equal(browserResponseNeedsBodyAttribution(redirectResponse), false);
 });
 
 test("sanitized evidence rejects secrets, answer material, and unbounded values", () => {
@@ -358,6 +396,9 @@ test("implementation stays public-safe and bound to actual production surfaces",
   assert.match(browserSource, /Network\.loadingFailed/);
   assert.match(browserSource, /createBrowserResponseCompletionTracker/);
   assert.match(browserSource, /browserResponseNeedsBodyAttribution/);
+  assert.match(browserSource, /browserResponseAttributionClass/);
+  assert.match(browserSource, /pendingClass=/);
+  assert.match(browserSource, /pendingCount=/);
 
   assert.match(readmeSource, /Field evidence is explicitly `NOT_COLLECTED`/);
 
