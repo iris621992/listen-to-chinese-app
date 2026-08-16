@@ -15,8 +15,10 @@
     "test:dfp3": "node --experimental-vm-modules --test scripts/verification/dfp3-discovery-pagination.test.mjs",
     "test:dfp4": "node --experimental-vm-modules --test scripts/verification/dfp4-public-cache-invalidation.test.mjs",
     "test:dfp5": "node --test scripts/verification/dfp5-media-layout.test.mjs",
+    "test:dfp6": "node --experimental-vm-modules --test scripts/verification/dfp6-release-observability.test.mjs",
     "measure:dfp0:fixtures": "node scripts/dfp/mspec-1/measure-fixtures.mjs",
     "measure:dfp0:browser": "node scripts/dfp/mspec-1/browser-runner.mjs",
+    "measure:dfp6:release": "node --experimental-vm-modules scripts/dfp/dfp6/release-observability.mjs",
     "test:sbca2": "node --test scripts/verification/sbca2-public-invariants.test.mjs"
   },
   "dependencies": {
