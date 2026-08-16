@@ -12,6 +12,7 @@ import {
   SERVER_ASSEMBLY_BUDGETS,
 } from "../dfp/dfp6/release-contract.mjs";
 import {
+  browserMissingVitalsDiagnostic,
   browserResponseAttributionClass,
   browserResponseBelongsToInitialRoute,
   browserResponseNeedsBodyAttribution,
@@ -133,6 +134,25 @@ test("browser sample diagnostics are bounded and redact sensitive values", () =>
   assert.doesNotMatch(diagnostic, /abc/);
   assert.doesNotMatch(diagnostic, /NEXT_PUBLIC_SUPABASE_/);
   assert.match(diagnostic, /\[REDACTED/);
+});
+
+test("missing browser vitals diagnostic uses only bounded enum labels", () => {
+  assert.equal(
+    browserMissingVitalsDiagnostic({ lcpObserved: false, inpObserved: true }),
+    "lcp",
+  );
+  assert.equal(
+    browserMissingVitalsDiagnostic({ lcpObserved: true, inpObserved: false }),
+    "inp",
+  );
+  assert.equal(
+    browserMissingVitalsDiagnostic({ lcpObserved: false, inpObserved: false }),
+    "lcp+inp",
+  );
+  assert.equal(
+    browserMissingVitalsDiagnostic({ lcpObserved: true, inpObserved: true }),
+    null,
+  );
 });
 
 test("RSC request role classifier exposes only bounded role labels", () => {
@@ -451,6 +471,8 @@ test("implementation stays public-safe and bound to actual production surfaces",
   assert.match(browserSource, /Network\.emulateNetworkConditions/);
   assert.match(browserSource, /DFP-6 browser first sample failure/);
   assert.match(browserSource, /sanitizeBrowserSampleDiagnostic/);
+  assert.match(browserSource, /browserMissingVitalsDiagnostic/);
+  assert.match(browserSource, /missingVitals=/);
   assert.match(browserSource, /Network\.loadingFinished/);
   assert.match(browserSource, /Network\.loadingFailed/);
   assert.match(browserSource, /createBrowserResponseCompletionTracker/);

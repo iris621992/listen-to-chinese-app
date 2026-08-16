@@ -139,6 +139,13 @@ export function sanitizeBrowserSampleDiagnostic(value) {
   return `${text.slice(0, SAMPLE_DIAGNOSTIC_MAX_CHARS - suffix.length)}${suffix}`;
 }
 
+export function browserMissingVitalsDiagnostic(observed) {
+  const missing = [];
+  if (!observed?.lcpObserved) missing.push("lcp");
+  if (!observed?.inpObserved) missing.push("inp");
+  return missing.length > 0 ? missing.join("+") : null;
+}
+
 function responseContentType(response) {
   const header = Object.entries(response?.headers ?? {}).find(
     ([name]) => name.toLowerCase() === "content-type",
@@ -676,8 +683,12 @@ async function measureNavigation(client, requestGuard, route) {
       returnByValue: true,
     });
     const observed = vitals.result.value ?? {};
-    if (!observed.lcpObserved || !observed.inpObserved) {
-      throw new Error("DFP-6 browser sample did not observe required LCP/INP");
+    const missingVitals = browserMissingVitalsDiagnostic(observed);
+    if (missingVitals) {
+      throw new Error(
+        "DFP-6 browser sample did not observe required LCP/INP: "
+        + `missingVitals=${missingVitals}`,
+      );
     }
 
     const attributionEntries = ledger.entries();
