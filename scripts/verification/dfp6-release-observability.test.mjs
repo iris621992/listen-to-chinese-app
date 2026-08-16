@@ -12,6 +12,9 @@ import {
   SERVER_ASSEMBLY_BUDGETS,
 } from "../dfp/dfp6/release-contract.mjs";
 import {
+  sanitizeBrowserSampleDiagnostic,
+} from "../dfp/dfp6/browser-release-gate.mjs";
+import {
   measureActualServerFlows,
   measureInvalidationOutcomes,
   measurePayloadFixtures,
@@ -112,6 +115,19 @@ test("browser gate uses blocking DFP-MSPEC-1 thresholds and retains failures", (
     }).pass,
     false,
   );
+});
+
+test("browser sample diagnostics are bounded and redact sensitive values", () => {
+  const diagnostic = sanitizeBrowserSampleDiagnostic(
+    `request failed at https://example.test/private?token=abc `
+      + `token=abc NEXT_PUBLIC_SUPABASE_URL=https://project.supabase.co `
+      + "x".repeat(1024),
+  );
+  assert.ok(diagnostic.length <= 512);
+  assert.doesNotMatch(diagnostic, /https?:\/\//i);
+  assert.doesNotMatch(diagnostic, /abc/);
+  assert.doesNotMatch(diagnostic, /NEXT_PUBLIC_SUPABASE_/);
+  assert.match(diagnostic, /\[REDACTED/);
 });
 
 test("sanitized evidence rejects secrets, answer material, and unbounded values", () => {
@@ -279,6 +295,8 @@ test("implementation stays public-safe and bound to actual production surfaces",
   assert.match(browserSource, /createLocalRequestGuard/);
   assert.match(browserSource, /Input\.dispatchMouseEvent/);
   assert.match(browserSource, /Network\.emulateNetworkConditions/);
+  assert.match(browserSource, /DFP-6 browser first sample failure/);
+  assert.match(browserSource, /sanitizeBrowserSampleDiagnostic/);
 
   assert.match(readmeSource, /Field evidence is explicitly `NOT_COLLECTED`/);
 

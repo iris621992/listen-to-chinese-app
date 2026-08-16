@@ -29,6 +29,12 @@ const NEXT_CLI = path.resolve("node_modules/next/dist/bin/next");
 const START_TIMEOUT_MS = 60_000;
 const CDP_TIMEOUT_MS = 30_000;
 const BUILD_DIAGNOSTIC_MAX_CHARS = 8_192;
+const SAMPLE_DIAGNOSTIC_MAX_CHARS = 512;
+const DIAGNOSTIC_URL = /\b(?:https?|wss?):\/\/[^\s"'`]+/gi;
+const DIAGNOSTIC_SENSITIVE_FRAGMENT =
+  /\b(?:secret|token|password|credential|service.?role|publishable.?key|anon.?key|answer|correctness|grading|transcript|translation|raw.?content|database.?url)\b(?:\s*[:=]\s*|\s+)[^\s,;]+/gi;
+const DIAGNOSTIC_PROVIDER_VALUE =
+  /(?:service_role|NEXT_PUBLIC_SUPABASE_|SUPABASE_(?:URL|KEY)|postgres(?:ql)?:\/\/)[^\s,;]*/gi;
 
 const delay = (milliseconds) =>
   new Promise((resolve) => setTimeout(resolve, milliseconds));
@@ -111,6 +117,23 @@ function boundedBuildDiagnostic(value) {
   else if (value !== undefined && value !== null) text = String(value);
   if (text.length <= BUILD_DIAGNOSTIC_MAX_CHARS) return text;
   return `${text.slice(0, BUILD_DIAGNOSTIC_MAX_CHARS)}\n...[truncated]`;
+}
+
+export function sanitizeBrowserSampleDiagnostic(value) {
+  let text = "";
+  if (typeof value === "string") text = value;
+  else if (value !== undefined && value !== null) text = String(value);
+  text = text
+    .replace(DIAGNOSTIC_PROVIDER_VALUE, "[REDACTED]")
+    .replace(DIAGNOSTIC_SENSITIVE_FRAGMENT, "[REDACTED]")
+    .replace(DIAGNOSTIC_URL, "[REDACTED_URL]")
+    .replace(/[\r\n\t]+/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  if (!text) return "UNKNOWN_BROWSER_SAMPLE_FAILURE";
+  if (text.length <= SAMPLE_DIAGNOSTIC_MAX_CHARS) return text;
+  const suffix = "...[truncated]";
+  return `${text.slice(0, SAMPLE_DIAGNOSTIC_MAX_CHARS - suffix.length)}${suffix}`;
 }
 
 async function buildFixture() {
@@ -557,6 +580,16 @@ export async function measureDfp6BrowserRelease({ commit }) {
       summarize: false,
       run: () => measureNavigation(client, requestGuard, route),
     });
+    const firstFailedSample = sampleSet.samples.find(
+      (sample) => sample.status !== "ok",
+    );
+    if (firstFailedSample) {
+      process.stderr.write(
+        `DFP-6 browser first sample failure: ${
+          sanitizeBrowserSampleDiagnostic(firstFailedSample.error)
+        }\n`,
+      );
+    }
 
     const summary = {
       htmlBytes: metricSummary(
