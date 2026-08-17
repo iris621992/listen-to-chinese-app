@@ -58,9 +58,11 @@ const resolveMatrix = (uiLang, legacyLang) => {
   );
   const normalize = (value) =>
     typeof value === "string" ? value.trim().toLowerCase() : null;
+  const hasExplicitUiLang = uiLang !== undefined && uiLang !== null;
   const explicit = enabled.get(normalize(uiLang));
   const legacy = enabled.get(normalize(legacyLang));
-  return explicit ?? legacy ?? enabled.get(interfaceRegistry.defaultLocaleCode);
+  const fallback = enabled.get(interfaceRegistry.defaultLocaleCode);
+  return hasExplicitUiLang ? explicit ?? fallback : legacy ?? fallback;
 };
 
 test("interface locale registry is distinct and versioned", () => {
@@ -86,7 +88,22 @@ test("interface locale registry is distinct and versioned", () => {
   );
 
   assert.match(interfaceRegistrySource, /resolveInterfaceLocale/);
-  assert.match(interfaceRegistrySource, /source:\s*explicit \? "uiLang" : legacy \? "legacy-lang" : "default"/);
+  assert.match(
+    interfaceRegistrySource,
+    /const hasExplicitUiLang = uiLang !== null && uiLang !== undefined/,
+  );
+  assert.match(
+    interfaceRegistrySource,
+    /const selected = hasExplicitUiLang[\s\S]*?explicit \?\? fallback[\s\S]*?: legacy \?\? fallback/,
+  );
+  assert.match(
+    interfaceRegistrySource,
+    /if \(hasExplicitUiLang && explicit\)[\s\S]*?source = "uiLang"/,
+  );
+  assert.match(
+    interfaceRegistrySource,
+    /else if \(!hasExplicitUiLang && legacy\)[\s\S]*?source = "legacy-lang"/,
+  );
 });
 
 test("legacy and split URL semantics resolve independently", () => {
@@ -99,7 +116,7 @@ test("legacy and split URL semantics resolve independently", () => {
     ["vi", "ltr"],
   );
   assert.deepEqual(
-    [resolveMatrix(undefined, "ar").code, resolveMatrix(undefined, "ar").direction],
+    [resolveMatrix(null, "ar").code, resolveMatrix(null, "ar").direction],
     ["ar", "rtl"],
   );
   assert.deepEqual(
@@ -110,7 +127,9 @@ test("legacy and split URL semantics resolve independently", () => {
     [resolveMatrix("ar", "vi").code, resolveMatrix("ar", "vi").direction],
     ["ar", "rtl"],
   );
-  assert.equal(resolveMatrix("unsupported", "vi").code, "vi");
+  assert.equal(resolveMatrix("unsupported", "vi").code, "en");
+  assert.equal(resolveMatrix("", "vi").code, "en");
+  assert.equal(resolveMatrix("   ", "ar").code, "en");
   assert.equal(resolveMatrix("unsupported", "unsupported").code, "en");
 });
 

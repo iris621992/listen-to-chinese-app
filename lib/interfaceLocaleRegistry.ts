@@ -97,19 +97,29 @@ export function resolveInterfaceLocale(
   uiLang: string | null | undefined,
   legacyLang: string | null | undefined,
 ): InterfaceLocaleResolution {
-  const explicit = getInterfaceLocale(uiLang);
+  const hasExplicitUiLang = uiLang !== null && uiLang !== undefined;
+  const explicit = hasExplicitUiLang ? getInterfaceLocale(uiLang) : null;
   const legacy = getInterfaceLocale(legacyLang);
   const fallback = getInterfaceLocale(defaultInterfaceLocaleCode);
   if (!fallback) {
     throw new Error("The default interface locale is unavailable.");
   }
 
-  const selected = explicit ?? legacy ?? fallback;
+  const selected = hasExplicitUiLang
+    ? explicit ?? fallback
+    : legacy ?? fallback;
+  let source: InterfaceLocaleResolution["source"] = "default";
+  if (hasExplicitUiLang && explicit) {
+    source = "uiLang";
+  } else if (!hasExplicitUiLang && legacy) {
+    source = "legacy-lang";
+  }
+
   return Object.freeze({
     registryVersion: interfaceLocaleRegistry.registryVersion,
     code: selected.code,
     label: selected.label,
     direction: selected.direction,
-    source: explicit ? "uiLang" : legacy ? "legacy-lang" : "default",
+    source,
   });
 }
