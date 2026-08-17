@@ -94,7 +94,7 @@ test("reads actual 390x844 LTR and RTL DOM overflow from production components",
     readFile(cssSourcePath, "utf8"),
   ]);
   assert.match(pageSource, /className="lesson-workspace"/);
-  assert.match(pageSource, /data-direction=\{lesson\.selectedDirection\}/);
+  assert.match(pageSource, /data-direction=\{interfaceDirection\}/);
   assert.match(css, /@media \(max-width: 767px\)/);
   assert.match(
     css,
