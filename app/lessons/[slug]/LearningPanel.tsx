@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { InterfaceTextDirection } from "@/lib/interfaceLocaleRegistry";
 import type { SupabaseLessonDetail } from "@/lib/supabaseLesson";
 import { ScriptTabContent } from "./ScriptTabContent";
 import { VocabularyTabContent } from "./VocabularyTabContent";
@@ -66,9 +67,20 @@ function learningTabHref(
   return `/lessons/${slug}?${query.toString()}`;
 }
 
-function PlaceholderTabContent({ message, localizedTextAlign, direction }: { message: string; localizedTextAlign: string; direction: string }) {
+function PlaceholderTabContent({
+  message,
+  interfaceTextAlign,
+  interfaceDirection,
+}: {
+  message: string;
+  interfaceTextAlign: string;
+  interfaceDirection: InterfaceTextDirection;
+}) {
   return (
-    <div className={`rounded-3xl bg-cream p-5 text-sm leading-6 text-stone-600 ${localizedTextAlign}`} dir={direction}>
+    <div
+      className={`rounded-3xl bg-cream p-5 text-sm leading-6 text-stone-600 ${interfaceTextAlign}`}
+      dir={interfaceDirection}
+    >
       {message}
     </div>
   );
@@ -77,7 +89,9 @@ function PlaceholderTabContent({ message, localizedTextAlign, direction }: { mes
 export function LearningPanel({
   lesson,
   labels,
-  localizedTextAlign,
+  interfaceDirection,
+  interfaceTextAlign,
+  supportTextAlign,
   segmentBlockLayout,
   segmentTextStyle,
   activeTab,
@@ -85,13 +99,17 @@ export function LearningPanel({
 }: {
   lesson: SupabaseLessonDetail;
   labels: LearningPanelLabels;
-  localizedTextAlign: string;
+  interfaceDirection: InterfaceTextDirection;
+  interfaceTextAlign: string;
+  supportTextAlign: string;
   segmentBlockLayout: string;
   segmentTextStyle: { textAlign: "right" } | undefined;
   activeTab: LearningTab;
   learnerContextQuery: Record<string, string>;
 }) {
-  const toolbarAlignment = lesson.selectedDirection === "rtl" ? "justify-end" : "justify-start";
+  const toolbarAlignment = interfaceDirection === "rtl"
+    ? "justify-end"
+    : "justify-start";
   const tabButtonClassName = (tab: LearningTab) =>
     `learning-tab-button cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold shadow-sm ${
       activeTab === tab ? "border-orange-200 bg-cinnabar text-white" : "border-orange-200 bg-white text-stone-700"
@@ -99,8 +117,8 @@ export function LearningPanel({
 
   return (
     <section
-      className={`flex w-full flex-col overscroll-contain rounded-[2rem] bg-paper p-5 pr-3 shadow-soft sm:p-6 sm:pr-4 ${localizedTextAlign}`}
-      dir={lesson.selectedDirection}
+      className={`flex w-full flex-col overscroll-contain rounded-[2rem] bg-paper p-5 pr-3 shadow-soft sm:p-6 sm:pr-4 ${interfaceTextAlign}`}
+      dir={interfaceDirection}
       style={{
         height: "calc(100vh - 7rem)",
         maxHeight: "calc(100vh - 7rem)",
@@ -148,14 +166,37 @@ export function LearningPanel({
           <ScriptTabContent
             lesson={lesson}
             labels={labels}
-            localizedTextAlign={localizedTextAlign}
+            interfaceDirection={interfaceDirection}
+            interfaceTextAlign={interfaceTextAlign}
+            supportTextAlign={supportTextAlign}
             segmentBlockLayout={segmentBlockLayout}
             segmentTextStyle={segmentTextStyle}
           />
         ) : null}
-        {activeTab === "vocabulary" ? <VocabularyTabContent lesson={lesson} labels={labels} localizedTextAlign={localizedTextAlign} /> : null}
-        {activeTab === "grammar" ? <PlaceholderTabContent message={labels.grammarComingSoon} localizedTextAlign={localizedTextAlign} direction={lesson.selectedDirection} /> : null}
-        {activeTab === "practice" ? <PracticeTabContent lesson={lesson} labels={labels} localizedTextAlign={localizedTextAlign} /> : null}
+        {activeTab === "vocabulary" ? (
+          <VocabularyTabContent
+            lesson={lesson}
+            labels={labels}
+            interfaceDirection={interfaceDirection}
+            interfaceTextAlign={interfaceTextAlign}
+            supportTextAlign={supportTextAlign}
+          />
+        ) : null}
+        {activeTab === "grammar" ? (
+          <PlaceholderTabContent
+            message={labels.grammarComingSoon}
+            interfaceTextAlign={interfaceTextAlign}
+            interfaceDirection={interfaceDirection}
+          />
+        ) : null}
+        {activeTab === "practice" ? (
+          <PracticeTabContent
+            lesson={lesson}
+            labels={labels}
+            interfaceDirection={interfaceDirection}
+            interfaceTextAlign={interfaceTextAlign}
+          />
+        ) : null}
       </div>
 
       <style>{`

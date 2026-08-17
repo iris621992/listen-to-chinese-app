@@ -7,7 +7,12 @@ import {
 } from "@/lib/proficiencyContext";
 
 type Props = {
-  searchParams: Promise<{ lang?: string; levelSystem?: string; level?: string }>;
+  searchParams: Promise<{
+    uiLang?: string;
+    lang?: string;
+    levelSystem?: string;
+    level?: string;
+  }>;
 };
 
 export default async function Home({ searchParams }: Props) {

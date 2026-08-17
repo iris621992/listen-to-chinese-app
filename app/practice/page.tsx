@@ -2,7 +2,12 @@ import Link from "next/link";
 import { preservedLearnerContextQuery } from "@/lib/proficiencyContext";
 
 type Props = {
-  searchParams: Promise<{ lang?: string; levelSystem?: string; level?: string }>;
+  searchParams: Promise<{
+    uiLang?: string;
+    lang?: string;
+    levelSystem?: string;
+    level?: string;
+  }>;
 };
 
 export default async function PracticePage({ searchParams }: Props) {

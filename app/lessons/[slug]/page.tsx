@@ -4,6 +4,7 @@ import {
   getSupabaseLessonPractice,
   getSupabaseLessonVocabulary,
 } from "@/lib/supabaseLesson";
+import { resolveInterfaceLocale } from "@/lib/interfaceLocaleRegistry";
 import { preservedLearnerContextQuery } from "@/lib/proficiencyContext";
 import { learningTabFor } from "./LearningPanel";
 import { SupabaseLessonPage } from "./SupabaseLessonPage";
@@ -12,6 +13,7 @@ import { labelsFor } from "./lessonUiLabels";
 type Props = {
   params: Promise<{ slug: string }>;
   searchParams?: Promise<{
+    uiLang?: string;
     lang?: string;
     tab?: string;
     levelSystem?: string;
@@ -23,7 +25,9 @@ export default async function LessonPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const query = await searchParams;
   const activeTab = learningTabFor(query?.tab);
+  const interfaceLocale = resolveInterfaceLocale(query?.uiLang, query?.lang);
   const learnerContextQuery = preservedLearnerContextQuery({
+    uiLang: query?.uiLang,
     lang: query?.lang,
     levelSystem: query?.levelSystem,
     level: query?.level,
@@ -61,6 +65,8 @@ export default async function LessonPage({ params, searchParams }: Props) {
         lesson={lesson}
         activeTab={activeTab}
         learnerContextQuery={learnerContextQuery}
+        interfaceLocaleCode={interfaceLocale.code}
+        interfaceDirection={interfaceLocale.direction}
       />
     );
   }
@@ -72,9 +78,15 @@ export default async function LessonPage({ params, searchParams }: Props) {
     notFound();
   }
 
-  const labels = labelsFor(query?.lang ?? "en");
+  const labels = labelsFor(interfaceLocale.code);
+  const interfaceTextAlign = interfaceLocale.direction === "rtl"
+    ? "text-right"
+    : "text-left";
   return (
-    <main className="mx-auto max-w-3xl px-4 py-16 sm:px-6">
+    <main
+      className={`mx-auto max-w-3xl px-4 py-16 sm:px-6 ${interfaceTextAlign}`}
+      dir={interfaceLocale.direction}
+    >
       <p className="rounded-3xl border border-orange-200 bg-orange-50 p-6 text-stone-700">
         {labels.lessonUnavailable}
       </p>
