@@ -7,7 +7,7 @@ type VocabularyTabLabels = {
   details: string;
   hanzi: string;
   meaning: string;
-  pinyin: string;
+  pronunciation: string;
   usage: string;
   grammarPattern: string;
   partOfSpeech: string;
@@ -140,7 +140,7 @@ export function VocabularyTabContent({
                       </VocabularyDetailRow>
                     ) : null}
                     {item.phoneticText ? (
-                      <VocabularyDetailRow label={labels.pinyin} interfaceDirection={interfaceDirection} interfaceTextAlign={interfaceTextAlign} contentDirection="ltr" contentTextAlign="text-left">
+                      <VocabularyDetailRow label={labels.pronunciation} interfaceDirection={interfaceDirection} interfaceTextAlign={interfaceTextAlign} contentDirection="ltr" contentTextAlign="text-left">
                         <span dir="ltr" style={{ unicodeBidi: "isolate" }}>{item.phoneticText}</span>
                       </VocabularyDetailRow>
                     ) : null}

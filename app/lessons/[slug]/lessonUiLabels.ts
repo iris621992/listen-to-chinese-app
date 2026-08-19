@@ -7,7 +7,7 @@ export type LessonUiLabels = {
   segment: string;
   practice: string;
   exercise: string;
-  showPinyin: string;
+  showPronunciation: string;
   showTranslation: string;
   scriptTab: string;
   vocabularyTab: string;
@@ -18,7 +18,7 @@ export type LessonUiLabels = {
   details: string;
   hanzi: string;
   meaning: string;
-  pinyin: string;
+  pronunciation: string;
   usage: string;
   grammarPattern: string;
   example: string;
@@ -49,7 +49,7 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     segment: "Segment",
     practice: "Practice",
     exercise: "Exercise",
-    showPinyin: "Pinyin",
+    showPronunciation: "Pronunciation",
     showTranslation: "Translation",
     scriptTab: "Script",
     vocabularyTab: "Vocabulary",
@@ -60,7 +60,7 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     details: "Details",
     hanzi: "Hanzi",
     meaning: "Meaning",
-    pinyin: "Pinyin",
+    pronunciation: "Pronunciation",
     usage: "Usage",
     grammarPattern: "Related grammar pattern",
     example: "Example",
@@ -89,7 +89,7 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     segment: "Dòng",
     practice: "Bài tập",
     exercise: "Câu",
-    showPinyin: "Pinyin",
+    showPronunciation: "Phiên âm",
     showTranslation: "Bản dịch",
     scriptTab: "Nội dung",
     vocabularyTab: "Từ vựng",
@@ -100,7 +100,7 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     details: "Chi tiết",
     hanzi: "Hán tự",
     meaning: "Nghĩa",
-    pinyin: "Pinyin",
+    pronunciation: "Phiên âm",
     usage: "Cách dùng",
     grammarPattern: "Mẫu ngữ pháp liên quan",
     example: "Ví dụ",
@@ -129,7 +129,7 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     segment: "مقطع",
     practice: "تدريب",
     exercise: "سؤال",
-    showPinyin: "Pinyin",
+    showPronunciation: "النطق",
     showTranslation: "الترجمة",
     scriptTab: "النص",
     vocabularyTab: "المفردات",
@@ -140,7 +140,7 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     details: "التفاصيل",
     hanzi: "الحروف الصينية",
     meaning: "المعنى",
-    pinyin: "Pinyin",
+    pronunciation: "النطق",
     usage: "طريقة الاستخدام",
     grammarPattern: "النمط النحوي المرتبط",
     example: "مثال",

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   enabledInterfaceLocales,
@@ -9,22 +9,16 @@ import {
   type InterfaceTextDirection,
 } from "@/lib/interfaceLocaleRegistry";
 import {
+  getPublicProficiencyOptions,
+  type PublicProficiencyOption,
+} from "@/lib/proficiencyCatalog";
+import {
   formatProficiencyLabel,
   INTERFACE_LOCALE_PARAM,
   parseProficiencyContext,
   PROFICIENCY_LEVEL_PARAM,
   PROFICIENCY_LEVEL_SYSTEM_PARAM,
 } from "@/lib/proficiencyContext";
-
-const levelOptions = Array.from({ length: 9 }, (_, index) => {
-  const levelCode = `HSK${index + 1}`;
-  return {
-    value: `HSK:${levelCode}`,
-    systemCode: "HSK",
-    levelCode,
-    label: `Level: HSK ${index + 1}`,
-  };
-});
 
 type HeaderLabels = { resources: string; practice: string };
 const HEADER_LABELS: Record<string, HeaderLabels> = {
@@ -52,11 +46,34 @@ function contextHref(path: string, params: string) {
   return query ? `${path}?${query}` : path;
 }
 
+function groupedLevelOptions(options: readonly PublicProficiencyOption[]) {
+  const groups = new Map<string, {
+    systemCode: string;
+    systemName: string;
+    options: PublicProficiencyOption[];
+  }>();
+
+  for (const option of options) {
+    const group = groups.get(option.systemCode);
+    if (group) {
+      group.options.push(option);
+      continue;
+    }
+    groups.set(option.systemCode, {
+      systemCode: option.systemCode,
+      systemName: option.systemName,
+      options: [option],
+    });
+  }
+  return [...groups.values()];
+}
+
 function HeaderContent({
   interfaceLocaleCode,
   interfaceDirection,
   levelValue,
   levelLabel,
+  proficiencyOptions,
   hrefFor,
   onLanguageChange,
   onLevelChange,
@@ -65,13 +82,15 @@ function HeaderContent({
   interfaceDirection: InterfaceTextDirection;
   levelValue: string;
   levelLabel: string | null;
+  proficiencyOptions: readonly PublicProficiencyOption[];
   hrefFor: (path: string) => string;
   onLanguageChange?: (interfaceLocaleCode: string) => void;
   onLevelChange?: (value: string) => void;
 }) {
   const labels = headerLabelsFor(interfaceLocaleCode);
   const isRtl = interfaceDirection === "rtl";
-  const knownLevel = levelOptions.some((option) => option.value === levelValue);
+  const knownLevel = proficiencyOptions.some((option) => option.value === levelValue);
+  const levelGroups = groupedLevelOptions(proficiencyOptions);
 
   return (
     <header dir={interfaceDirection} className="sticky top-0 z-10 border-b border-orange-100 bg-cream/90 backdrop-blur">
@@ -89,7 +108,13 @@ function HeaderContent({
           <select aria-label="Level" className="rounded-full border border-orange-200 bg-white px-4 py-2.5 text-base font-semibold text-stone-700" onChange={(event) => onLevelChange?.(event.target.value)} value={levelValue}>
             <option value="all">Level: All</option>
             {!knownLevel && levelValue !== "all" ? <option value={levelValue}>{levelLabel ?? "Level: unavailable"}</option> : null}
-            {levelOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+            {levelGroups.map((group) => (
+              <optgroup key={group.systemCode} label={group.systemName}>
+                {group.options.map((option) => (
+                  <option key={option.value} value={option.value}>{option.levelName}</option>
+                ))}
+              </optgroup>
+            ))}
           </select>
           <select aria-label="Change language" className="rounded-full border border-orange-200 bg-white px-4 py-2.5 text-base font-semibold text-stone-700" onChange={(event) => onLanguageChange?.(event.target.value)} value={interfaceLocaleCode}>
             {enabledInterfaceLocales.map((locale) => <option key={locale.code} value={locale.code}>{locale.label}</option>)}
@@ -104,6 +129,9 @@ function LocalizedHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [proficiencyOptions, setProficiencyOptions] = useState<
+    readonly PublicProficiencyOption[]
+  >([]);
   const interfaceLocale = resolveInterfaceLocale(
     searchParams.get(INTERFACE_LOCALE_PARAM),
     searchParams.get("lang"),
@@ -125,6 +153,16 @@ function LocalizedHeader() {
   const hrefFor = (path: string) => contextHref(path, searchParams.toString());
 
   useEffect(() => {
+    let active = true;
+    void getPublicProficiencyOptions().then((options) => {
+      if (active) setProficiencyOptions(options);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
     document.documentElement.lang = interfaceLocale.code;
     document.documentElement.dir = interfaceLocale.direction;
   }, [interfaceLocale.code, interfaceLocale.direction]);
@@ -135,6 +173,7 @@ function LocalizedHeader() {
   }
 
   function handleLanguageChange(nextInterfaceLocaleCode: string) {
+    if (!enabledInterfaceLocales.some((locale) => locale.code === nextInterfaceLocaleCode)) return;
     const nextSearchParams = new URLSearchParams(searchParams.toString());
     nextSearchParams.set(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode);
     nextSearchParams.set("lang", nextInterfaceLocaleCode);
@@ -151,7 +190,7 @@ function LocalizedHeader() {
       pushParams(nextSearchParams);
       return;
     }
-    const selected = levelOptions.find((option) => option.value === nextValue);
+    const selected = proficiencyOptions.find((option) => option.value === nextValue);
     if (!selected) return;
     nextSearchParams.set(PROFICIENCY_LEVEL_SYSTEM_PARAM, selected.systemCode);
     nextSearchParams.set(PROFICIENCY_LEVEL_PARAM, selected.levelCode);
@@ -164,6 +203,7 @@ function LocalizedHeader() {
       interfaceDirection={interfaceLocale.direction}
       levelValue={levelValue}
       levelLabel={levelLabel}
+      proficiencyOptions={proficiencyOptions}
       hrefFor={hrefFor}
       onLanguageChange={handleLanguageChange}
       onLevelChange={handleLevelChange}
@@ -183,6 +223,7 @@ export function Header() {
           interfaceDirection={fallbackInterfaceLocale.direction}
           levelValue="all"
           levelLabel={null}
+          proficiencyOptions={[]}
           hrefFor={fallbackHref}
         />
       )}

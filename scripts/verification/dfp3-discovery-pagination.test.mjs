@@ -10,10 +10,10 @@ import {
 
 const discoverySource = await readFile("lib/lessonDiscovery.ts", "utf8");
 const proficiencySource = await readFile("lib/proficiencyContext.ts", "utf8");
+const catalogSource = await readFile("lib/proficiencyCatalog.ts", "utf8");
 const homeSource = await readFile("app/page.tsx", "utf8");
 const resourcesSource = await readFile("app/resources/page.tsx", "utf8");
 const practiceSource = await readFile("app/practice/page.tsx", "utf8");
-const hskSource = await readFile("components/HskPage.tsx", "utf8");
 const headerSource = await readFile("components/Header.tsx", "utf8");
 const cardSource = await readFile("components/LessonCard.tsx", "utf8");
 const detailPageSource = await readFile("app/lessons/[slug]/page.tsx", "utf8");
@@ -88,8 +88,24 @@ async function loadProficiencyExports() {
   return proficiencyModule.namespace;
 }
 
+async function loadCatalogExports() {
+  const context = vm.createContext({ process: { env: {} }, URLSearchParams });
+  const proficiencyModule = compiledModule(proficiencySource, context);
+  await proficiencyModule.link(async (specifier) => {
+    throw new Error(`Unexpected proficiency import: ${specifier}`);
+  });
+  const catalogModule = compiledModule(catalogSource, context);
+  await catalogModule.link(async (specifier) => {
+    if (specifier === "@/lib/proficiencyContext") return proficiencyModule;
+    throw new Error(`Unexpected catalog import: ${specifier}`);
+  });
+  await catalogModule.evaluate();
+  return catalogModule.namespace;
+}
+
 const actual = await loadActualExports();
 const proficiencyActual = await loadProficiencyExports();
+const catalogActual = await loadCatalogExports();
 const snapshotAt = "2026-07-29T00:00:00.000Z";
 const uuidFor = (number) =>
   `00000000-0000-4000-8000-${number.toString(16).padStart(12, "0")}`;
@@ -183,6 +199,127 @@ test("proficiency context is generic, pair-bound, and fail closed", () => {
   ]) {
     assert.equal(proficiencyActual.parseProficiencyContext(...args).kind, "INVALID");
   }
+});
+
+test("public proficiency catalog is generic and deterministic across frameworks", () => {
+  const parsed = catalogActual.parsePublicProficiencyCatalog([
+    {
+      code: "FRAME_B",
+      name: "Beta Framework",
+      is_active: true,
+      library: [{ slug: "listen-to-chinese", is_active: true }],
+      levels: [
+        { code: "B2", name: "Beta 2", sort_order: 2, is_active: true },
+        { code: "B1", name: "Beta 1", sort_order: 1, is_active: true },
+        { code: "B0", name: "Inactive Beta", sort_order: 0, is_active: false },
+      ],
+    },
+    {
+      code: "FRAME_A",
+      name: "Alpha Framework",
+      is_active: true,
+      library: { slug: "listen-to-chinese", is_active: true },
+      levels: [
+        { code: "A2", name: "Alpha 2", sort_order: 2, is_active: true },
+        { code: "A1", name: "Alpha 1", sort_order: 1, is_active: true },
+      ],
+    },
+  ]);
+
+  assert.deepEqual(JSON.parse(JSON.stringify(parsed)), [
+    {
+      value: "FRAME_A:A1",
+      systemCode: "FRAME_A",
+      systemName: "Alpha Framework",
+      levelCode: "A1",
+      levelName: "Alpha 1",
+      sortOrder: 1,
+    },
+    {
+      value: "FRAME_A:A2",
+      systemCode: "FRAME_A",
+      systemName: "Alpha Framework",
+      levelCode: "A2",
+      levelName: "Alpha 2",
+      sortOrder: 2,
+    },
+    {
+      value: "FRAME_B:B1",
+      systemCode: "FRAME_B",
+      systemName: "Beta Framework",
+      levelCode: "B1",
+      levelName: "Beta 1",
+      sortOrder: 1,
+    },
+    {
+      value: "FRAME_B:B2",
+      systemCode: "FRAME_B",
+      systemName: "Beta Framework",
+      levelCode: "B2",
+      levelName: "Beta 2",
+      sortOrder: 2,
+    },
+  ]);
+});
+
+test("public proficiency catalog fails closed on malformed, duplicate, and oversized taxonomies", () => {
+  const baseSystem = {
+    code: "FRAME",
+    name: "Framework",
+    is_active: true,
+    library: { slug: "listen-to-chinese", is_active: true },
+    levels: [{ code: "L1", name: "Level 1", sort_order: 1, is_active: true }],
+  };
+
+  assert.equal(
+    catalogActual.parsePublicProficiencyCatalog([
+      {
+        ...baseSystem,
+        levels: [
+          { code: "L1", name: "Level 1", sort_order: 1, is_active: true },
+          { code: "L1", name: "Duplicate", sort_order: 2, is_active: true },
+        ],
+      },
+    ]),
+    null,
+  );
+  assert.equal(
+    catalogActual.parsePublicProficiencyCatalog([
+      { ...baseSystem, library: { slug: "wrong-library", is_active: true } },
+    ]),
+    null,
+  );
+  assert.equal(
+    catalogActual.parsePublicProficiencyCatalog([
+      { ...baseSystem, code: "bad value" },
+    ]),
+    null,
+  );
+  assert.equal(
+    catalogActual.parsePublicProficiencyCatalog(
+      Array.from({ length: 33 }, (_, index) => ({
+        ...baseSystem,
+        code: `FRAME${index}`,
+        name: `Framework ${index}`,
+        levels: [],
+      })),
+    ),
+    null,
+  );
+  assert.equal(
+    catalogActual.parsePublicProficiencyCatalog([
+      {
+        ...baseSystem,
+        levels: Array.from({ length: 65 }, (_, index) => ({
+          code: `L${index}`,
+          name: `Level ${index}`,
+          sort_order: index,
+          is_active: true,
+        })),
+      },
+    ]),
+    null,
+  );
 });
 
 test("actual discovery flow uses one bounded store operation", async () => {
@@ -451,17 +588,21 @@ test("production query is summary-only, publication-aware, and exact-pair source
 });
 
 test("global Level is consumed only where discovery exists and otherwise preserved", () => {
-  for (const source of [homeSource, resourcesSource, hskSource, cardSource]) {
+  for (const source of [homeSource, resourcesSource, cardSource]) {
     assert.doesNotMatch(source, /@\/lib\/lessons/);
     assert.doesNotMatch(source, /\.script|\.exercises|\.vocabulary|transcript/i);
   }
   assert.match(homeSource, /getLessonDiscoveryPage/);
   assert.match(resourcesSource, /getLessonDiscoveryPage/);
-  assert.match(hskSource, /levelSystemCode:\s*"HSK"/);
+  assert.match(resourcesSource, /parseProficiencyContext\(query\.levelSystem,\s*query\.level\)/);
+  assert.match(resourcesSource, /levelSystemCode:\s*query\.levelSystem/);
+  assert.match(resourcesSource, /levelCode:\s*query\.level/);
   assert.doesNotMatch(resourcesSource, /\bhsk\??:|query\.hsk|hskLevels|Filter resources by HSK level/);
   assert.match(headerSource, /aria-label="Level"/);
   assert.match(headerSource, /Level: All/);
   assert.match(headerSource, /delete\("cursor"\)/);
+  assert.doesNotMatch(headerSource, /\bsystemCode:\s*"HSK"/);
+  assert.doesNotMatch(headerSource, /Array\.from\(\{\s*length:\s*9/);
   assert.match(practiceSource, /preservedLearnerContextQuery/);
   assert.doesNotMatch(practiceSource, /getLessonDiscoveryPage/);
   assert.match(cardSource, /learnerContextQuery/);
