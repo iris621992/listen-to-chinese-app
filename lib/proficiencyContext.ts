@@ -63,11 +63,20 @@ const preservedQueryValue = (value: string | null | undefined) => {
     : INVALID_PRESERVED_QUERY_VALUE;
 };
 
+const preservedUiLangValue = (value: string | null | undefined) => {
+  if (value === null || value === undefined) return null;
+  const normalized = value.trim();
+  if (normalized.length === 0) return "";
+  return normalized.length <= PRESERVED_QUERY_VALUE_MAX_LENGTH
+    ? normalized
+    : INVALID_PRESERVED_QUERY_VALUE;
+};
+
 export function preservedLearnerContextQuery(
   input: LearnerContextQueryInput,
 ): Record<string, string> {
   const query: Record<string, string> = {};
-  const uiLang = preservedQueryValue(input.uiLang);
+  const uiLang = preservedUiLangValue(input.uiLang);
   const lang = preservedQueryValue(input.lang);
   const levelSystem = preservedQueryValue(input.levelSystem);
   const level = preservedQueryValue(input.level);

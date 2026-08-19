@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import vm from "node:vm";
+import ts from "typescript";
 
 const read = (path) => readFile(path, "utf8");
 
@@ -43,6 +45,29 @@ const [
   read("package.json"),
   read(".github/workflows/sbca-ci.yml"),
 ]);
+
+function compiledModule(source, context) {
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: {
+      module: ts.ModuleKind.ESNext,
+      target: ts.ScriptTarget.ES2022,
+    },
+  }).outputText;
+  return new vm.SourceTextModule(compiled, { context });
+}
+
+async function loadProficiencyExports() {
+  const context = vm.createContext({ URLSearchParams });
+  const module = compiledModule(proficiencySource, context);
+  await module.link(async (specifier) => {
+    throw new Error(`Unexpected proficiency import: ${specifier}`);
+  });
+  await module.evaluate();
+  return module.namespace;
+}
+
+const proficiencyActual = await loadProficiencyExports();
+const plain = (value) => JSON.parse(JSON.stringify(value));
 
 const enabledCodes = (registry) =>
   registry.locales
@@ -136,9 +161,28 @@ test("legacy and split URL semantics resolve independently", () => {
 test("learner context preserves uiLang and lang as separate values", () => {
   assert.match(proficiencySource, /INTERFACE_LOCALE_PARAM = "uiLang"/);
   assert.match(proficiencySource, /uiLang\?: string \| null/);
-  assert.match(proficiencySource, /const uiLang = preservedQueryValue\(input\.uiLang\)/);
+  assert.match(proficiencySource, /const uiLang = preservedUiLangValue\(input\.uiLang\)/);
   assert.match(proficiencySource, /query\[INTERFACE_LOCALE_PARAM\] = uiLang/);
   assert.match(proficiencySource, /query\.lang = lang/);
+});
+
+test("explicit invalid uiLang presence survives learner-context navigation", () => {
+  assert.deepEqual(
+    plain(proficiencyActual.preservedLearnerContextQuery({ lang: "ar" })),
+    { lang: "ar" },
+  );
+  assert.deepEqual(
+    plain(proficiencyActual.preservedLearnerContextQuery({ uiLang: "", lang: "ar" })),
+    { uiLang: "", lang: "ar" },
+  );
+  assert.deepEqual(
+    plain(proficiencyActual.preservedLearnerContextQuery({ uiLang: "   ", lang: "vi" })),
+    { uiLang: "", lang: "vi" },
+  );
+  assert.deepEqual(
+    plain(proficiencyActual.preservedLearnerContextQuery({ uiLang: "unsupported", lang: "vi" })),
+    { uiLang: "unsupported", lang: "vi" },
+  );
 });
 
 test("header consumes interface registry and keeps temporary single-control compatibility", () => {
@@ -146,7 +190,9 @@ test("header consumes interface registry and keeps temporary single-control comp
   assert.match(headerSource, /resolveInterfaceLocale\(\s*searchParams\.get\(INTERFACE_LOCALE_PARAM\),\s*searchParams\.get\("lang"\)/s);
   assert.doesNotMatch(headerSource, /type HeaderLanguage =/);
   assert.doesNotMatch(headerSource, /const languageOptions/);
-  assert.match(headerSource, /next\.set\(INTERFACE_LOCALE_PARAM, uiLang\)/);
+  assert.match(headerSource, /const hasUiLang = current\.has\(INTERFACE_LOCALE_PARAM\)/);
+  assert.match(headerSource, /if \(hasUiLang\) next\.set\(INTERFACE_LOCALE_PARAM, uiLang \?\? ""\)/);
+  assert.doesNotMatch(headerSource, /if \(uiLang\) next\.set\(INTERFACE_LOCALE_PARAM, uiLang\)/);
   assert.match(headerSource, /next\.set\("lang", lang\)/);
   assert.match(headerSource, /nextSearchParams\.set\(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode\)/);
   assert.match(headerSource, /nextSearchParams\.set\("lang", nextInterfaceLocaleCode\)/);

@@ -39,11 +39,12 @@ const headerLabelsFor = (interfaceLocaleCode: string) =>
 function contextHref(path: string, params: string) {
   const current = new URLSearchParams(params);
   const next = new URLSearchParams();
+  const hasUiLang = current.has(INTERFACE_LOCALE_PARAM);
   const uiLang = current.get(INTERFACE_LOCALE_PARAM);
   const lang = current.get("lang");
   const levelSystem = current.get(PROFICIENCY_LEVEL_SYSTEM_PARAM);
   const level = current.get(PROFICIENCY_LEVEL_PARAM);
-  if (uiLang) next.set(INTERFACE_LOCALE_PARAM, uiLang);
+  if (hasUiLang) next.set(INTERFACE_LOCALE_PARAM, uiLang ?? "");
   if (lang) next.set("lang", lang);
   if (levelSystem) next.set(PROFICIENCY_LEVEL_SYSTEM_PARAM, levelSystem);
   if (level) next.set(PROFICIENCY_LEVEL_PARAM, level);
