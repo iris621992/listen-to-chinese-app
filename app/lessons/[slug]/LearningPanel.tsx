@@ -18,7 +18,7 @@ type LearningPanelLabels = {
   vocabularyTab: string;
   grammarTab: string;
   practiceTab: string;
-  showPinyin: string;
+  showPronunciation: string;
   showTranslation: string;
   grammarComingSoon: string;
   translationMissing: (languageCode: string) => string;
@@ -27,7 +27,7 @@ type LearningPanelLabels = {
   details: string;
   hanzi: string;
   meaning: string;
-  pinyin: string;
+  pronunciation: string;
   usage: string;
   grammarPattern: string;
   partOfSpeech: string;
@@ -141,7 +141,7 @@ export function LearningPanel({
         </div>
         <div className={`script-options mt-4 ${activeTab === "script" ? "flex" : "hidden"} flex-wrap gap-2 py-1 ${toolbarAlignment}`}>
           <label htmlFor="script-toggle-pinyin" className="script-option-button cursor-pointer rounded-full border border-orange-100 bg-white/70 px-3 py-1.5 text-xs font-medium text-stone-600 shadow-sm">
-            {labels.showPinyin}
+            {labels.showPronunciation}
           </label>
           <label htmlFor="script-toggle-translation" className="script-option-button cursor-pointer rounded-full border border-orange-100 bg-white/70 px-3 py-1.5 text-xs font-medium text-stone-600 shadow-sm">
             {labels.showTranslation}

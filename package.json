@@ -4,9 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "npm run test:architecture-direction && next build",
     "start": "next start",
     "lint": "eslint .",
+    "test:architecture-direction": "node --test scripts/verification/architecture-direction.test.mjs",
     "test:db001": "node --test scripts/verification/db001-application-cutover.test.mjs",
     "test:supabase-config": "node --test scripts/verification/supabase-public-config.test.mjs",
     "test:hc1": "node --test scripts/verification/hc1-locale-context-boundary.test.mjs",
