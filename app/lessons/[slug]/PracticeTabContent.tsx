@@ -1,3 +1,4 @@
+import type { InterfaceTextDirection } from "@/lib/interfaceLocaleRegistry";
 import type { SupabaseLessonDetail } from "@/lib/supabaseLesson";
 
 type PracticeTabLabels = {
@@ -11,11 +12,13 @@ type PracticeTabLabels = {
 export function PracticeTabContent({
   lesson,
   labels,
-  localizedTextAlign,
+  interfaceDirection,
+  interfaceTextAlign,
 }: {
   lesson: SupabaseLessonDetail;
   labels: PracticeTabLabels;
-  localizedTextAlign: string;
+  interfaceDirection: InterfaceTextDirection;
+  interfaceTextAlign: string;
 }) {
   if (lesson.exerciseOutcomeCode !== "FOUND") {
     const message = lesson.exerciseOutcomeCode === "EMPTY_EXERCISE_LIST"
@@ -24,8 +27,8 @@ export function PracticeTabContent({
 
     return (
       <p
-        className={`rounded-3xl bg-cream p-5 text-sm text-stone-600 ${localizedTextAlign}`}
-        dir={lesson.selectedDirection}
+        className={`rounded-3xl bg-cream p-5 text-sm text-stone-600 ${interfaceTextAlign}`}
+        dir={interfaceDirection}
       >
         {message}
       </p>
@@ -35,16 +38,21 @@ export function PracticeTabContent({
   return (
     <div className="space-y-4">
       {lesson.exercises.map((exercise, index) => {
-        const direction = exercise.localeCode === "ar" ? "rtl" : "ltr";
-        const textAlign = direction === "rtl" ? "text-right" : "text-left";
+        const exerciseDirection = exercise.localeCode === "ar" ? "rtl" : "ltr";
+        const exerciseTextAlign = exerciseDirection === "rtl"
+          ? "text-right"
+          : "text-left";
 
         return (
           <article
             key={exercise.id}
-            className={`rounded-3xl border border-stone-200 bg-white p-4 ${textAlign}`}
-            dir={direction}
+            className={`rounded-3xl border border-stone-200 bg-white p-4 ${exerciseTextAlign}`}
+            dir={exerciseDirection}
           >
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-stone-500">
+            <p
+              className={`text-xs font-bold uppercase tracking-[0.2em] text-stone-500 ${interfaceTextAlign}`}
+              dir={interfaceDirection}
+            >
               {labels.exercise} {index + 1}
             </p>
             <h3 className="mt-3 text-lg font-bold">{exercise.question}</h3>
@@ -54,13 +62,22 @@ export function PracticeTabContent({
                   {option.text}
                 </li>
               )) : (
-                <li className="rounded-2xl bg-cream p-3 text-sm">{labels.noOptions}</li>
+                <li
+                  className={`rounded-2xl bg-cream p-3 text-sm ${interfaceTextAlign}`}
+                  dir={interfaceDirection}
+                >
+                  {labels.noOptions}
+                </li>
               )}
             </ul>
             {exercise.media.length > 0 ? (
               <ul className="mt-4 space-y-2 text-sm">
                 {exercise.media.map((media, mediaIndex) => (
-                  <li key={media.id}>
+                  <li
+                    key={media.id}
+                    className={interfaceTextAlign}
+                    dir={interfaceDirection}
+                  >
                     <a
                       className="font-semibold text-cinnabar underline decoration-orange-200 underline-offset-4"
                       href={media.url}

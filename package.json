@@ -9,6 +9,7 @@
     "lint": "eslint .",
     "test:db001": "node --test scripts/verification/db001-application-cutover.test.mjs",
     "test:supabase-config": "node --test scripts/verification/supabase-public-config.test.mjs",
+    "test:hc1": "node --test scripts/verification/hc1-locale-context-boundary.test.mjs",
     "test:dfp0": "node --test scripts/verification/dfp-mspec-1.test.mjs",
     "test:dfp1": "node --test scripts/verification/dfp1-projection-locale.test.mjs",
     "test:dfp2": "node --experimental-vm-modules --test scripts/verification/dfp2-detail-boundary.test.mjs",

@@ -168,6 +168,10 @@ jobs:
         if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
         run: npm run test:dfp1
 
+      - name: HC-1 locale-context boundary gate
+        if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
+        run: npm run test:hc1
+
       - name: DFP-2 gate
         if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
         run: npm run test:dfp2

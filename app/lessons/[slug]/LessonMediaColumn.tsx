@@ -1,7 +1,7 @@
+import type { InterfaceTextDirection } from "@/lib/interfaceLocaleRegistry";
 import { IntentYouTubePlayer } from "./IntentYouTubePlayer";
 
 type LessonMedia = {
-  selectedDirection: "ltr" | "rtl";
   title: string;
   youtubeUrl: string | null;
   youtubeVideoId: string | null;
@@ -15,15 +15,17 @@ type LessonMediaColumnLabels = {
 function YouTubeMedia({
   lesson,
   labels,
+  interfaceDirection,
 }: {
   lesson: LessonMedia;
   labels: LessonMediaColumnLabels;
+  interfaceDirection: InterfaceTextDirection;
 }) {
   if (lesson.youtubeVideoId) {
     return (
       <IntentYouTubePlayer
         buttonLabel={labels.openYouTubeLesson}
-        direction={lesson.selectedDirection}
+        direction={interfaceDirection}
         title={lesson.title}
         videoId={lesson.youtubeVideoId}
       />
@@ -37,9 +39,10 @@ function YouTubeMedia({
         href={lesson.youtubeUrl}
         rel="noreferrer"
         target="_blank"
+        dir={interfaceDirection}
       >
         <span aria-hidden="true" className="intent-youtube-play">▶</span>
-        <span className="intent-youtube-label" dir={lesson.selectedDirection}>
+        <span className="intent-youtube-label">
           {labels.openYouTubeLesson}
         </span>
       </a>
@@ -47,9 +50,13 @@ function YouTubeMedia({
   }
 
   return (
-    <div className="intent-youtube-trigger" role="status">
+    <div
+      className="intent-youtube-trigger"
+      role="status"
+      dir={interfaceDirection}
+    >
       <span aria-hidden="true" className="intent-youtube-play">▶</span>
-      <span className="intent-youtube-label" dir={lesson.selectedDirection}>
+      <span className="intent-youtube-label">
         {labels.youtubeVideoComingSoon}
       </span>
     </div>
@@ -59,14 +66,20 @@ function YouTubeMedia({
 export function LessonMediaColumn({
   lesson,
   labels,
+  interfaceDirection,
 }: {
   lesson: LessonMedia;
   labels: LessonMediaColumnLabels;
+  interfaceDirection: InterfaceTextDirection;
 }) {
   return (
-    <div className="lesson-media-card" dir="ltr">
+    <div className="lesson-media-card" dir={interfaceDirection}>
       <div className="lesson-media-surface">
-        <YouTubeMedia lesson={lesson} labels={labels} />
+        <YouTubeMedia
+          lesson={lesson}
+          labels={labels}
+          interfaceDirection={interfaceDirection}
+        />
       </div>
     </div>
   );

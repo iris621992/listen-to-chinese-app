@@ -9,6 +9,7 @@ import {
 type Props = {
   searchParams: Promise<{
     cursor?: string;
+    uiLang?: string;
     lang?: string;
     levelSystem?: string;
     level?: string;

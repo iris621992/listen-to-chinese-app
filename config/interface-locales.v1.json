@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "interface-locale-registry.v1",
+  "registryVersion": 1,
+  "defaultLocaleCode": "en",
+  "locales": [
+    {
+      "code": "en",
+      "label": "🇺🇸 English",
+      "direction": "ltr",
+      "enabled": true
+    },
+    {
+      "code": "vi",
+      "label": "🇻🇳 Tiếng Việt",
+      "direction": "ltr",
+      "enabled": true
+    },
+    {
+      "code": "ar",
+      "label": "🇸🇦 العربية",
+      "direction": "rtl",
+      "enabled": true
+    }
+  ]
+}

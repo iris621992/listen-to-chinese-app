@@ -58,6 +58,8 @@ export default async function Dfp5FixturePage({
   return (
     <SupabaseLessonPage
       activeTab="script"
+      interfaceDirection={direction}
+      interfaceLocaleCode={direction === "rtl" ? "ar" : "en"}
       lesson={lessonFixture(direction)}
     />
   );

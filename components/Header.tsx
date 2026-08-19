@@ -1,22 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
+  enabledInterfaceLocales,
+  resolveInterfaceLocale,
+  type InterfaceTextDirection,
+} from "@/lib/interfaceLocaleRegistry";
+import {
   formatProficiencyLabel,
+  INTERFACE_LOCALE_PARAM,
   parseProficiencyContext,
   PROFICIENCY_LEVEL_PARAM,
   PROFICIENCY_LEVEL_SYSTEM_PARAM,
 } from "@/lib/proficiencyContext";
 
-type HeaderLanguage = "en" | "vi" | "ar";
-
-const languageOptions: { code: HeaderLanguage; label: string }[] = [
-  { code: "en", label: "🇺🇸 English" },
-  { code: "vi", label: "🇻🇳 Tiếng Việt" },
-  { code: "ar", label: "🇸🇦 العربية" },
-];
 const levelOptions = Array.from({ length: 9 }, (_, index) => {
   const levelCode = `HSK${index + 1}`;
   return {
@@ -28,22 +27,24 @@ const levelOptions = Array.from({ length: 9 }, (_, index) => {
 });
 
 type HeaderLabels = { resources: string; practice: string };
-const HEADER_LABELS: Record<HeaderLanguage, HeaderLabels> = {
+const HEADER_LABELS: Record<string, HeaderLabels> = {
   en: { resources: "Resources", practice: "Practice" },
   vi: { resources: "Học liệu", practice: "Bài tập" },
   ar: { resources: "الموارد", practice: "التدريب" },
 };
 
-function supportedHeaderLanguage(lang: string | null): HeaderLanguage | null {
-  return lang === "en" || lang === "vi" || lang === "ar" ? lang : null;
-}
+const headerLabelsFor = (interfaceLocaleCode: string) =>
+  HEADER_LABELS[interfaceLocaleCode] ?? HEADER_LABELS.en;
 
 function contextHref(path: string, params: string) {
   const current = new URLSearchParams(params);
   const next = new URLSearchParams();
+  const hasUiLang = current.has(INTERFACE_LOCALE_PARAM);
+  const uiLang = current.get(INTERFACE_LOCALE_PARAM);
   const lang = current.get("lang");
   const levelSystem = current.get(PROFICIENCY_LEVEL_SYSTEM_PARAM);
   const level = current.get(PROFICIENCY_LEVEL_PARAM);
+  if (hasUiLang) next.set(INTERFACE_LOCALE_PARAM, uiLang ?? "");
   if (lang) next.set("lang", lang);
   if (levelSystem) next.set(PROFICIENCY_LEVEL_SYSTEM_PARAM, levelSystem);
   if (level) next.set(PROFICIENCY_LEVEL_PARAM, level);
@@ -52,27 +53,28 @@ function contextHref(path: string, params: string) {
 }
 
 function HeaderContent({
-  langCode,
+  interfaceLocaleCode,
+  interfaceDirection,
   levelValue,
   levelLabel,
   hrefFor,
   onLanguageChange,
   onLevelChange,
 }: {
-  langCode: HeaderLanguage | null;
+  interfaceLocaleCode: string;
+  interfaceDirection: InterfaceTextDirection;
   levelValue: string;
   levelLabel: string | null;
   hrefFor: (path: string) => string;
-  onLanguageChange?: (langCode: HeaderLanguage) => void;
+  onLanguageChange?: (interfaceLocaleCode: string) => void;
   onLevelChange?: (value: string) => void;
 }) {
-  const selectedLangCode = langCode ?? "en";
-  const labels = HEADER_LABELS[selectedLangCode];
-  const isRtl = selectedLangCode === "ar";
+  const labels = headerLabelsFor(interfaceLocaleCode);
+  const isRtl = interfaceDirection === "rtl";
   const knownLevel = levelOptions.some((option) => option.value === levelValue);
 
   return (
-    <header dir={isRtl ? "rtl" : "ltr"} className="sticky top-0 z-10 border-b border-orange-100 bg-cream/90 backdrop-blur">
+    <header dir={interfaceDirection} className="sticky top-0 z-10 border-b border-orange-100 bg-cream/90 backdrop-blur">
       <div className={`mx-auto grid max-w-[98rem] grid-cols-1 gap-4 px-4 py-4 sm:px-6 lg:items-center lg:gap-8 ${isRtl ? "text-right lg:grid-cols-[1fr_auto]" : "text-left lg:grid-cols-[auto_1fr]"}`}>
         <Link href={hrefFor("/")} className={`leading-tight ${isRtl ? "justify-self-end lg:col-start-2 lg:row-start-1" : "justify-self-start"}`}>
           <div className="flex items-baseline gap-2 text-cinnabar">
@@ -89,8 +91,8 @@ function HeaderContent({
             {!knownLevel && levelValue !== "all" ? <option value={levelValue}>{levelLabel ?? "Level: unavailable"}</option> : null}
             {levelOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
           </select>
-          <select aria-label="Change language" className="rounded-full border border-orange-200 bg-white px-4 py-2.5 text-base font-semibold text-stone-700" onChange={(event) => onLanguageChange?.(event.target.value as HeaderLanguage)} value={selectedLangCode}>
-            {languageOptions.map((language) => <option key={language.code} value={language.code}>{language.label}</option>)}
+          <select aria-label="Change language" className="rounded-full border border-orange-200 bg-white px-4 py-2.5 text-base font-semibold text-stone-700" onChange={(event) => onLanguageChange?.(event.target.value)} value={interfaceLocaleCode}>
+            {enabledInterfaceLocales.map((locale) => <option key={locale.code} value={locale.code}>{locale.label}</option>)}
           </select>
         </nav>
       </div>
@@ -102,7 +104,10 @@ function LocalizedHeader() {
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const langCode = supportedHeaderLanguage(searchParams.get("lang"));
+  const interfaceLocale = resolveInterfaceLocale(
+    searchParams.get(INTERFACE_LOCALE_PARAM),
+    searchParams.get("lang"),
+  );
   const proficiency = parseProficiencyContext(
     searchParams.get(PROFICIENCY_LEVEL_SYSTEM_PARAM),
     searchParams.get(PROFICIENCY_LEVEL_PARAM),
@@ -119,14 +124,20 @@ function LocalizedHeader() {
       : null;
   const hrefFor = (path: string) => contextHref(path, searchParams.toString());
 
+  useEffect(() => {
+    document.documentElement.lang = interfaceLocale.code;
+    document.documentElement.dir = interfaceLocale.direction;
+  }, [interfaceLocale.code, interfaceLocale.direction]);
+
   function pushParams(nextSearchParams: URLSearchParams) {
     const query = nextSearchParams.toString();
     router.push(query ? `${pathname}?${query}` : pathname);
   }
 
-  function handleLanguageChange(nextLangCode: HeaderLanguage) {
+  function handleLanguageChange(nextInterfaceLocaleCode: string) {
     const nextSearchParams = new URLSearchParams(searchParams.toString());
-    nextSearchParams.set("lang", nextLangCode);
+    nextSearchParams.set(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode);
+    nextSearchParams.set("lang", nextInterfaceLocaleCode);
     nextSearchParams.delete("cursor");
     pushParams(nextSearchParams);
   }
@@ -147,13 +158,35 @@ function LocalizedHeader() {
     pushParams(nextSearchParams);
   }
 
-  return <HeaderContent langCode={langCode} levelValue={levelValue} levelLabel={levelLabel} hrefFor={hrefFor} onLanguageChange={handleLanguageChange} onLevelChange={handleLevelChange} />;
+  return (
+    <HeaderContent
+      interfaceLocaleCode={interfaceLocale.code}
+      interfaceDirection={interfaceLocale.direction}
+      levelValue={levelValue}
+      levelLabel={levelLabel}
+      hrefFor={hrefFor}
+      onLanguageChange={handleLanguageChange}
+      onLevelChange={handleLevelChange}
+    />
+  );
 }
 
 const fallbackHref = (path: string) => path;
+const fallbackInterfaceLocale = resolveInterfaceLocale(null, null);
+
 export function Header() {
   return (
-    <Suspense fallback={<HeaderContent langCode={null} levelValue="all" levelLabel={null} hrefFor={fallbackHref} />}>
+    <Suspense
+      fallback={(
+        <HeaderContent
+          interfaceLocaleCode={fallbackInterfaceLocale.code}
+          interfaceDirection={fallbackInterfaceLocale.direction}
+          levelValue="all"
+          levelLabel={null}
+          hrefFor={fallbackHref}
+        />
+      )}
+    >
       <LocalizedHeader />
     </Suspense>
   );

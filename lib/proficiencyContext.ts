@@ -1,3 +1,4 @@
+export const INTERFACE_LOCALE_PARAM = "uiLang" as const;
 export const PROFICIENCY_LEVEL_SYSTEM_PARAM = "levelSystem" as const;
 export const PROFICIENCY_LEVEL_PARAM = "level" as const;
 
@@ -11,6 +12,7 @@ export type ProficiencyContext =
   | { kind: "INVALID" };
 
 export type LearnerContextQueryInput = {
+  uiLang?: string | null;
   lang?: string | null;
   levelSystem?: string | null;
   level?: string | null;
@@ -61,14 +63,25 @@ const preservedQueryValue = (value: string | null | undefined) => {
     : INVALID_PRESERVED_QUERY_VALUE;
 };
 
+const preservedUiLangValue = (value: string | null | undefined) => {
+  if (value === null || value === undefined) return null;
+  const normalized = value.trim();
+  if (normalized.length === 0) return "";
+  return normalized.length <= PRESERVED_QUERY_VALUE_MAX_LENGTH
+    ? normalized
+    : INVALID_PRESERVED_QUERY_VALUE;
+};
+
 export function preservedLearnerContextQuery(
   input: LearnerContextQueryInput,
 ): Record<string, string> {
   const query: Record<string, string> = {};
+  const uiLang = preservedUiLangValue(input.uiLang);
   const lang = preservedQueryValue(input.lang);
   const levelSystem = preservedQueryValue(input.levelSystem);
   const level = preservedQueryValue(input.level);
 
+  if (uiLang !== null) query[INTERFACE_LOCALE_PARAM] = uiLang;
   if (lang !== null) query.lang = lang;
   if (levelSystem !== null) query[PROFICIENCY_LEVEL_SYSTEM_PARAM] = levelSystem;
   if (level !== null) query[PROFICIENCY_LEVEL_PARAM] = level;
