@@ -1,8 +1,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
-import vm from "node:vm";
-import ts from "typescript";
+import { preservedLearnerContextQuery } from "../../lib/proficiencyContext.ts";
 
 const read = (path) => readFile(path, "utf8");
 
@@ -46,27 +45,6 @@ const [
   read(".github/workflows/sbca-ci.yml"),
 ]);
 
-function compiledModule(source, context) {
-  const compiled = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.ESNext,
-      target: ts.ScriptTarget.ES2022,
-    },
-  }).outputText;
-  return new vm.SourceTextModule(compiled, { context });
-}
-
-async function loadProficiencyExports() {
-  const context = vm.createContext({ URLSearchParams });
-  const module = compiledModule(proficiencySource, context);
-  await module.link(async (specifier) => {
-    throw new Error(`Unexpected proficiency import: ${specifier}`);
-  });
-  await module.evaluate();
-  return module.namespace;
-}
-
-const proficiencyActual = await loadProficiencyExports();
 const plain = (value) => JSON.parse(JSON.stringify(value));
 
 const enabledCodes = (registry) =>
@@ -168,19 +146,19 @@ test("learner context preserves uiLang and lang as separate values", () => {
 
 test("explicit invalid uiLang presence survives learner-context navigation", () => {
   assert.deepEqual(
-    plain(proficiencyActual.preservedLearnerContextQuery({ lang: "ar" })),
+    plain(preservedLearnerContextQuery({ lang: "ar" })),
     { lang: "ar" },
   );
   assert.deepEqual(
-    plain(proficiencyActual.preservedLearnerContextQuery({ uiLang: "", lang: "ar" })),
+    plain(preservedLearnerContextQuery({ uiLang: "", lang: "ar" })),
     { uiLang: "", lang: "ar" },
   );
   assert.deepEqual(
-    plain(proficiencyActual.preservedLearnerContextQuery({ uiLang: "   ", lang: "vi" })),
+    plain(preservedLearnerContextQuery({ uiLang: "   ", lang: "vi" })),
     { uiLang: "", lang: "vi" },
   );
   assert.deepEqual(
-    plain(proficiencyActual.preservedLearnerContextQuery({ uiLang: "unsupported", lang: "vi" })),
+    plain(preservedLearnerContextQuery({ uiLang: "unsupported", lang: "vi" })),
     { uiLang: "unsupported", lang: "vi" },
   );
 });
