@@ -18,7 +18,7 @@
   --surface-subtle: #f2ead9;
   --text-primary: var(--brand-charcoal);
   --text-secondary: #5f6259;
-  --text-muted: #73766c;
+  --text-muted: #66695f;
   --border-subtle: #ddd2bb;
   --border-strong: #b9aa8e;
 
@@ -27,7 +27,7 @@
   --interactive-primary-hover: #44533d;
   --interactive-on-primary: #ffffff;
   --interactive-secondary: #8d5839;
-  --focus-ring: #365f7d;
+  --focus-ring: #4b7fa3;
   --focus-ring-offset: var(--surface-page);
 
   /* Status roles remain semantically independent from the brand palette. */
