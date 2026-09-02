@@ -1,22 +1,96 @@
 :root {
-  color: #2f241f;
-  background: #fff8ed;
+  color-scheme: light;
+
+  /* YunChinese brand foundation: Warm Earth × Living Green. */
+  --brand-ivory: #f7f3e8;
+  --brand-white: #ffffff;
+  --brand-sand: #e7d9bd;
+  --brand-earth: #a4653f;
+  --brand-growth: #596a4e;
+  --brand-growth-soft: #6f8062;
+  --brand-brown: #7b603b;
+  --brand-charcoal: #2d302a;
+
+  /* Semantic surfaces and text roles. */
+  --surface-page: var(--brand-ivory);
+  --surface-card: #fffdf8;
+  --surface-raised: var(--brand-white);
+  --surface-subtle: #f2ead9;
+  --text-primary: var(--brand-charcoal);
+  --text-secondary: #5f6259;
+  --text-muted: #73766c;
+  --border-subtle: #ddd2bb;
+  --border-strong: #b9aa8e;
+
+  /* Interaction roles. Brand colors are not status colors. */
+  --interactive-primary: #4f6046;
+  --interactive-primary-hover: #44533d;
+  --interactive-on-primary: #ffffff;
+  --interactive-secondary: #8d5839;
+  --focus-ring: #365f7d;
+  --focus-ring-offset: var(--surface-page);
+
+  /* Status roles remain semantically independent from the brand palette. */
+  --status-success: #2f6f57;
+  --status-warning: #8a5b11;
+  --status-danger: #9b3d3d;
+  --status-info: #365f7d;
+
+  /* Backward-compatible prototype aliases. */
   --cream: #fff8ed;
   --paper: #fffdf8;
   --cinnabar: #e85d3f;
+
+  color: var(--text-primary);
+  background: var(--surface-page);
 }
 
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
-  background: linear-gradient(180deg, #fff8ed 0%, #fffdf8 42%, #fff8ed 100%);
-  color: #2f241f;
+  background: linear-gradient(180deg, var(--surface-page) 0%, var(--surface-card) 42%, var(--surface-page) 100%);
+  color: var(--text-primary);
   font-family: var(--font-geist-sans), Inter, system-ui, sans-serif;
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
 }
 a { color: inherit; text-decoration: none; }
-button { font: inherit; cursor: pointer; }
-.chinese-text { letter-spacing: 0.03em; }
+button,
+input,
+select,
+textarea { font: inherit; }
+button,
+select { cursor: pointer; }
+button:disabled,
+select:disabled { cursor: not-allowed; }
+button,
+input,
+select,
+textarea { min-height: 44px; }
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+::selection {
+  background: #d7e0cf;
+  color: var(--text-primary);
+}
+.chinese-text {
+  letter-spacing: 0.025em;
+  line-height: 1.65;
+  font-family: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", var(--font-geist-sans), system-ui, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 
 .lesson-page-shell,
 .lesson-workspace,
@@ -87,7 +161,7 @@ button { font: inherit; cursor: pointer; }
 }
 
 .intent-youtube-trigger:focus-visible {
-  outline: 3px solid #fed7aa;
+  outline: 3px solid var(--focus-ring);
   outline-offset: 3px;
 }
 
