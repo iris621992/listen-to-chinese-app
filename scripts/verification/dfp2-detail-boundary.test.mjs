@@ -7,6 +7,10 @@ import { createMeasurementRecorder } from "../dfp/mspec-1/measurements.mjs";
 
 const lessonSource = await readFile("lib/supabaseLesson.ts", "utf8");
 const pageSource = await readFile("app/lessons/[slug]/page.tsx", "utf8");
+const practiceTabSource = await readFile("app/lessons/[slug]/PracticeTabContent.tsx", "utf8");
+const practiceActionsSource = await readFile("app/lessons/[slug]/practiceActions.ts", "utf8");
+const revisionBoundPracticeSource = await readFile("lib/practice/revisionBoundPractice.ts", "utf8");
+const lessonLabelsSource = await readFile("app/lessons/[slug]/lessonUiLabels.ts", "utf8");
 
 async function loadActualFlowExports() {
   const compiled = ts.transpileModule(lessonSource, {
@@ -255,4 +259,48 @@ test("detail and vocabulary hard caps remain fail-closed", () => {
   assert.match(lessonSource, /const MAX_VOCABULARY_RELATION_ROWS = 300;/);
   assert.match(lessonSource, /segmentOverflow \|\| flow\.translationOverflow/);
   assert.match(lessonSource, /exercise_targets:row_budget_exceeded/);
+});
+
+test("Phase F P3A practice serving is immutable-revision-bound and answer-free", () => {
+  assert.match(
+    lessonSource,
+    /getSupabaseLessonPractice[\s\S]*loadRevisionBoundPracticeSession/,
+  );
+  assert.doesNotMatch(
+    lessonSource,
+    /getSupabaseLessonPractice[\s\S]{0,1000}loadPreSubmitExercises/,
+  );
+  assert.match(pageSource, /publicationRevisionId:\s*section\.publicationRevisionId/);
+  assert.match(revisionBoundPracticeSource, /get_lesson_public_revision/);
+  assert.match(revisionBoundPracticeSource, /FORBIDDEN_KEY_PATTERN/);
+  assert.match(revisionBoundPracticeSource, /rejectForbiddenKeys\(row\.payload\)/);
+  assert.doesNotMatch(
+    revisionBoundPracticeSource,
+    /return\s+\{[^}]*(?:is_correct|correct_answer|answer_json)/i,
+  );
+});
+
+test("Phase F P3A grading stays server-side and revision-bound", () => {
+  assert.match(practiceTabSource, /^"use client";/);
+  assert.match(practiceTabSource, /exercise\.type === "multiple_choice"/);
+  assert.match(practiceTabSource, /publicationRevisionId:\s*lesson\.publicationRevisionId/);
+  assert.match(practiceTabSource, /checkMultipleChoiceCurrentRevision/);
+  assert.doesNotMatch(practiceTabSource, /@supabase\/supabase-js|createClient|\.rpc\(/);
+  assert.match(practiceActionsSource, /^"use server";/);
+  assert.match(practiceActionsSource, /grade_multiple_choice_current_revision_v1/);
+  assert.match(practiceActionsSource, /p_expected_revision_id:\s*publicationRevisionId/);
+  assert.doesNotMatch(practiceActionsSource, /service_role|SUPABASE_SERVICE/);
+});
+
+test("Phase F P3A feedback labels remain localized for all enabled interface locales", () => {
+  for (const key of [
+    "checkAnswer",
+    "checkingAnswer",
+    "answerCorrect",
+    "answerIncorrect",
+    "lessonUpdatedReload",
+    "answerCheckUnavailable",
+  ]) {
+    assert.equal((lessonLabelsSource.match(new RegExp(`${key}:`, "g")) ?? []).length, 4);
+  }
 });

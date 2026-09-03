@@ -34,6 +34,12 @@ export type LessonUiLabels = {
   noOptions: string;
   exercisesUnavailable: string;
   openExerciseMedia: string;
+  checkAnswer: string;
+  checkingAnswer: string;
+  answerCorrect: string;
+  answerIncorrect: string;
+  lessonUpdatedReload: string;
+  answerCheckUnavailable: string;
   lessonUnavailable: string;
   openYouTubeLesson: string;
   youtubeVideoComingSoon: string;
@@ -76,6 +82,12 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     noOptions: "No options are available for this exercise yet.",
     exercisesUnavailable: "Practice exercises are temporarily unavailable.",
     openExerciseMedia: "Open exercise media",
+    checkAnswer: "Check",
+    checkingAnswer: "Checking…",
+    answerCorrect: "Correct.",
+    answerIncorrect: "Incorrect. Try another option.",
+    lessonUpdatedReload: "This lesson was updated. Reload the page before checking again.",
+    answerCheckUnavailable: "Unable to check this answer right now.",
     lessonUnavailable: "This lesson is temporarily unavailable. Please try again later.",
     openYouTubeLesson: "Open YouTube lesson",
     youtubeVideoComingSoon: "YouTube video coming soon",
@@ -116,6 +128,12 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     noOptions: "Chưa có lựa chọn nào cho câu này.",
     exercisesUnavailable: "Phần bài tập hiện tạm thời chưa khả dụng.",
     openExerciseMedia: "Mở nội dung đa phương tiện",
+    checkAnswer: "Kiểm tra",
+    checkingAnswer: "Đang kiểm tra…",
+    answerCorrect: "Chính xác.",
+    answerIncorrect: "Chưa đúng. Hãy thử một lựa chọn khác.",
+    lessonUpdatedReload: "Bài học vừa được cập nhật. Hãy tải lại trang trước khi kiểm tra tiếp.",
+    answerCheckUnavailable: "Hiện chưa thể kiểm tra câu trả lời này.",
     lessonUnavailable: "Bài học hiện tạm thời chưa khả dụng. Vui lòng thử lại sau.",
     openYouTubeLesson: "Mở bài học YouTube",
     youtubeVideoComingSoon: "Video YouTube sắp có",
@@ -156,6 +174,12 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     noOptions: "لا توجد خيارات لهذا السؤال بعد.",
     exercisesUnavailable: "التدريبات غير متاحة مؤقتًا.",
     openExerciseMedia: "افتح وسائط التمرين",
+    checkAnswer: "تحقق",
+    checkingAnswer: "جارٍ التحقق…",
+    answerCorrect: "إجابة صحيحة.",
+    answerIncorrect: "الإجابة غير صحيحة. جرّب خيارًا آخر.",
+    lessonUpdatedReload: "تم تحديث الدرس. أعد تحميل الصفحة قبل التحقق مرة أخرى.",
+    answerCheckUnavailable: "يتعذر التحقق من هذه الإجابة الآن.",
     lessonUnavailable: "هذا الدرس غير متاح مؤقتًا. يرجى المحاولة مرة أخرى لاحقًا.",
     openYouTubeLesson: "افتح درس يوتيوب",
     youtubeVideoComingSoon: "فيديو يوتيوب قادم قريبًا",

@@ -54,6 +54,7 @@ export default async function LessonPage({ params, searchParams }: Props) {
       );
       lesson = {
         ...lesson,
+        publicationRevisionId: section.publicationRevisionId,
         exercises: section.exercises,
         exerciseOutcomeCode: section.exerciseOutcomeCode,
         errors: [...lesson.errors, ...section.errors],
