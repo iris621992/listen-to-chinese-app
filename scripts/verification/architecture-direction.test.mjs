@@ -149,7 +149,7 @@ test("active learner UI labels phonetic data with generic semantic APIs", async 
   const vocabulary = await readFile("app/lessons/[slug]/VocabularyTabContent.tsx", "utf8");
 
   for (const source of [labels, learningPanel, vocabulary]) {
-    assert.doesNotMatch(source, /\bshowPinyin\b|\blabels\.pinyin\b|\bpinyin:\s*string/);
+    assert.doesNotMatch(source, /\bshowPinyin\b|\blabels\.pinyin\b|pinyin:\s*string/);
   }
   assert.match(labels, /showPronunciation:\s*string/);
   assert.match(labels, /pronunciation:\s*string/);
@@ -158,6 +158,39 @@ test("active learner UI labels phonetic data with generic semantic APIs", async 
   assert.match(labels, /Pronunciation/);
   assert.match(labels, /Phiên âm/);
   assert.match(labels, /النطق/);
+});
+
+test("Phase F P2A learner shell preserves the approved learner-first IA", async () => {
+  const header = await readFile("components/Header.tsx", "utf8");
+  const knowledge = await readFile("app/knowledge/page.tsx", "utf8");
+
+  assert.match(header, /const PRIMARY_DESTINATIONS = \[/);
+  assert.match(header, /\{ key: "home", path: "\/" \}/);
+  assert.match(header, /\{ key: "library", path: "\/resources" \}/);
+  assert.match(header, /\{ key: "knowledge", path: "\/knowledge" \}/);
+  assert.match(header, /\{ key: "practice", path: "\/practice" \}/);
+  assert.match(header, /aria-label="Primary"/);
+  assert.match(header, /aria-current=\{active \? "page" : undefined\}/);
+  assert.match(header, /aria-label="Learning context"/);
+  assert.doesNotMatch(header, /Owner|Admin/);
+
+  assert.match(header, /const hasUiLang = current\.has\(INTERFACE_LOCALE_PARAM\)/);
+  assert.match(header, /if \(hasUiLang\) next\.set\(INTERFACE_LOCALE_PARAM, uiLang \?\? ""\)/);
+  assert.match(header, /if \(lang\) next\.set\("lang", lang\)/);
+  assert.match(header, /if \(levelSystem\) next\.set\(PROFICIENCY_LEVEL_SYSTEM_PARAM, levelSystem\)/);
+  assert.match(header, /if \(level\) next\.set\(PROFICIENCY_LEVEL_PARAM, level\)/);
+  assert.match(header, /nextSearchParams\.set\(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode\)/);
+  assert.match(header, /nextSearchParams\.set\("lang", nextInterfaceLocaleCode\)/);
+  assert.match(header, /enabledInterfaceLocales/);
+  assert.match(header, /getPublicProficiencyOptions/);
+
+  assert.match(knowledge, /Knowledge Hub/);
+  assert.match(knowledge, /Vocabulary/);
+  assert.match(knowledge, /Idioms/);
+  assert.match(knowledge, /Word Comparison/);
+  assert.match(knowledge, /Grammar/);
+  assert.match(knowledge, /preservedLearnerContextQuery/);
+  assert.doesNotMatch(knowledge, /supabase/i);
 });
 
 test("architecture direction gate is part of every production build", async () => {
