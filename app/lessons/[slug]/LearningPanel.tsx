@@ -42,6 +42,12 @@ type LearningPanelLabels = {
   noExercises: string;
   exercisesUnavailable: string;
   openExerciseMedia: string;
+  checkAnswer: string;
+  checkingAnswer: string;
+  answerCorrect: string;
+  answerIncorrect: string;
+  lessonUpdatedReload: string;
+  answerCheckUnavailable: string;
 };
 
 const hiddenInputStyle = {
