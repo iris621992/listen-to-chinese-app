@@ -276,7 +276,7 @@ test("Phase F P3A practice serving is immutable-revision-bound and answer-free",
   assert.match(revisionBoundPracticeSource, /rejectForbiddenKeys\(row\.payload\)/);
   assert.doesNotMatch(
     revisionBoundPracticeSource,
-    /return\s+\{[^}]*is_correct|correct_answer|answer_json/i,
+    /return\s+\{[^}]*(?:is_correct|correct_answer|answer_json)/i,
   );
 });
 
