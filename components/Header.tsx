@@ -20,15 +20,51 @@ import {
   PROFICIENCY_LEVEL_SYSTEM_PARAM,
 } from "@/lib/proficiencyContext";
 
-type HeaderLabels = { resources: string; practice: string };
+type HeaderLabels = {
+  home: string;
+  library: string;
+  knowledge: string;
+  practice: string;
+  level: string;
+  language: string;
+};
+
 const HEADER_LABELS: Record<string, HeaderLabels> = {
-  en: { resources: "Resources", practice: "Practice" },
-  vi: { resources: "Học liệu", practice: "Bài tập" },
-  ar: { resources: "الموارد", practice: "التدريب" },
+  en: {
+    home: "Home",
+    library: "Library",
+    knowledge: "Knowledge",
+    practice: "Practice",
+    level: "Level",
+    language: "Language",
+  },
+  vi: {
+    home: "Trang chủ",
+    library: "Thư viện",
+    knowledge: "Kiến thức",
+    practice: "Bài tập",
+    level: "Cấp độ",
+    language: "Ngôn ngữ",
+  },
+  ar: {
+    home: "الرئيسية",
+    library: "المكتبة",
+    knowledge: "المعرفة",
+    practice: "التدريب",
+    level: "المستوى",
+    language: "اللغة",
+  },
 };
 
 const headerLabelsFor = (interfaceLocaleCode: string) =>
   HEADER_LABELS[interfaceLocaleCode] ?? HEADER_LABELS.en;
+
+const PRIMARY_DESTINATIONS = [
+  { key: "home", path: "/" },
+  { key: "library", path: "/resources" },
+  { key: "knowledge", path: "/knowledge" },
+  { key: "practice", path: "/practice" },
+] as const;
 
 function contextHref(path: string, params: string) {
   const current = new URLSearchParams(params);
@@ -68,7 +104,16 @@ function groupedLevelOptions(options: readonly PublicProficiencyOption[]) {
   return [...groups.values()];
 }
 
+function isActiveDestination(pathname: string, destinationPath: string) {
+  if (destinationPath === "/") return pathname === "/";
+  if (destinationPath === "/resources") {
+    return pathname === "/resources" || pathname.startsWith("/lessons/");
+  }
+  return pathname === destinationPath || pathname.startsWith(`${destinationPath}/`);
+}
+
 function HeaderContent({
+  pathname,
   interfaceLocaleCode,
   interfaceDirection,
   levelValue,
@@ -78,6 +123,7 @@ function HeaderContent({
   onLanguageChange,
   onLevelChange,
 }: {
+  pathname: string;
   interfaceLocaleCode: string;
   interfaceDirection: InterfaceTextDirection;
   levelValue: string;
@@ -93,33 +139,68 @@ function HeaderContent({
   const levelGroups = groupedLevelOptions(proficiencyOptions);
 
   return (
-    <header dir={interfaceDirection} className="sticky top-0 z-10 border-b border-orange-100 bg-cream/90 backdrop-blur">
-      <div className={`mx-auto grid max-w-[98rem] grid-cols-1 gap-4 px-4 py-4 sm:px-6 lg:items-center lg:gap-8 ${isRtl ? "text-right lg:grid-cols-[1fr_auto]" : "text-left lg:grid-cols-[auto_1fr]"}`}>
-        <Link href={hrefFor("/")} className={`leading-tight ${isRtl ? "justify-self-end lg:col-start-2 lg:row-start-1" : "justify-self-start"}`}>
-          <div className="flex items-baseline gap-2 text-cinnabar">
-            <span className="chinese-text text-3xl font-bold" aria-hidden="true">芸</span>
-            <span className="text-2xl font-bold tracking-wide">YUN</span>
-          </div>
-          <div className="text-sm text-stone-500">Chinese Resources &amp; Practice</div>
-        </Link>
-        <nav className={`flex flex-wrap items-center gap-3 text-base font-semibold text-stone-700 ${isRtl ? "justify-start lg:col-start-1 lg:row-start-1" : "justify-start lg:justify-end"}`}>
-          <Link href={hrefFor("/resources")} className="rounded-full px-4 py-2.5 hover:bg-orange-100">{labels.resources}</Link>
-          <Link href={hrefFor("/practice")} className="rounded-full px-4 py-2.5 hover:bg-orange-100">{labels.practice}</Link>
-          <select aria-label="Level" className="rounded-full border border-orange-200 bg-white px-4 py-2.5 text-base font-semibold text-stone-700" onChange={(event) => onLevelChange?.(event.target.value)} value={levelValue}>
-            <option value="all">Level: All</option>
-            {!knownLevel && levelValue !== "all" ? <option value={levelValue}>{levelLabel ?? "Level: unavailable"}</option> : null}
-            {levelGroups.map((group) => (
-              <optgroup key={group.systemCode} label={group.systemName}>
-                {group.options.map((option) => (
-                  <option key={option.value} value={option.value}>{option.levelName}</option>
+    <header dir={interfaceDirection} className="learner-header sticky top-0 z-10 border-b border-orange-100 bg-cream/90 backdrop-blur">
+      <div className="learner-header-inner mx-auto max-w-[98rem] px-4 py-4 sm:px-6">
+        <div className="learner-header-brand-row">
+          <Link href={hrefFor("/")} className="learner-brand leading-tight">
+            <div className="flex items-baseline gap-2 text-cinnabar">
+              <span className="chinese-text text-3xl font-bold" aria-hidden="true">芸</span>
+              <span className="text-2xl font-bold tracking-wide">YUN</span>
+            </div>
+            <div className="text-sm text-stone-500">Chinese Resources &amp; Practice</div>
+          </Link>
+        </div>
+
+        <div className="learner-header-content">
+          <nav aria-label="Primary" className="learner-primary-nav text-base font-semibold text-stone-700">
+            {PRIMARY_DESTINATIONS.map((destination) => {
+              const active = isActiveDestination(pathname, destination.path);
+              return (
+                <Link
+                  key={destination.key}
+                  href={hrefFor(destination.path)}
+                  aria-current={active ? "page" : undefined}
+                  className="learner-primary-link rounded-full px-4 py-2.5"
+                >
+                  {labels[destination.key]}
+                </Link>
+              );
+            })}
+          </nav>
+
+          <div className="learner-header-utilities" aria-label="Learning context">
+            <label className="learner-context-control">
+              <span className="learner-context-label">{labels.level}</span>
+              <select
+                aria-label="Level"
+                className="rounded-full border border-orange-200 bg-white px-4 py-2.5 text-base font-semibold text-stone-700"
+                onChange={(event) => onLevelChange?.(event.target.value)}
+                value={levelValue}
+              >
+                <option value="all">Level: All</option>
+                {!knownLevel && levelValue !== "all" ? <option value={levelValue}>{levelLabel ?? "Level: unavailable"}</option> : null}
+                {levelGroups.map((group) => (
+                  <optgroup key={group.systemCode} label={group.systemName}>
+                    {group.options.map((option) => (
+                      <option key={option.value} value={option.value}>{option.levelName}</option>
+                    ))}
+                  </optgroup>
                 ))}
-              </optgroup>
-            ))}
-          </select>
-          <select aria-label="Change language" className="rounded-full border border-orange-200 bg-white px-4 py-2.5 text-base font-semibold text-stone-700" onChange={(event) => onLanguageChange?.(event.target.value)} value={interfaceLocaleCode}>
-            {enabledInterfaceLocales.map((locale) => <option key={locale.code} value={locale.code}>{locale.label}</option>)}
-          </select>
-        </nav>
+              </select>
+            </label>
+            <label className="learner-context-control">
+              <span className="learner-context-label">{labels.language}</span>
+              <select
+                aria-label="Change language"
+                className="rounded-full border border-orange-200 bg-white px-4 py-2.5 text-base font-semibold text-stone-700"
+                onChange={(event) => onLanguageChange?.(event.target.value)}
+                value={interfaceLocaleCode}
+              >
+                {enabledInterfaceLocales.map((locale) => <option key={locale.code} value={locale.code}>{locale.label}</option>)}
+              </select>
+            </label>
+          </div>
+        </div>
       </div>
     </header>
   );
@@ -199,6 +280,7 @@ function LocalizedHeader() {
 
   return (
     <HeaderContent
+      pathname={pathname}
       interfaceLocaleCode={interfaceLocale.code}
       interfaceDirection={interfaceLocale.direction}
       levelValue={levelValue}
@@ -219,6 +301,7 @@ export function Header() {
     <Suspense
       fallback={(
         <HeaderContent
+          pathname="/"
           interfaceLocaleCode={fallbackInterfaceLocale.code}
           interfaceDirection={fallbackInterfaceLocale.direction}
           levelValue="all"
