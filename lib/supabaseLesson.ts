@@ -61,6 +61,7 @@ export type SupabaseLessonVocabularyItem = {
 export type SupabaseLessonDetail = {
   title: string;
   slug: string;
+  publicationRevisionId?: string;
   youtubeVideoId: string | null;
   youtubeUrl: string | null;
   languages: SupabaseLanguage[];
@@ -89,6 +90,7 @@ export type SupabaseLessonVocabularyLoadResult = {
 };
 
 export type SupabaseLessonPracticeLoadResult = {
+  publicationRevisionId?: string;
   exercises: SupabaseLessonExercise[];
   exerciseOutcomeCode: PreSubmitExerciseOutcomeCode;
   errors: string[];
@@ -716,16 +718,24 @@ export async function getSupabaseLessonPractice(
   selectedCode: string,
 ): Promise<SupabaseLessonPracticeLoadResult> {
   const normalizedSlug = normalizedLessonSlug(slug);
-  const exerciseResult = await runDfp2PracticeFlow(() =>
-    loadPreSubmitExercises(normalizedSlug ?? "", selectedCode),
-  );
-  return {
-    exercises: exerciseResult.exercises,
-    exerciseOutcomeCode: exerciseResult.outcomeCode,
-    errors:
-      exerciseResult.outcomeCode === "FOUND"
-      || exerciseResult.outcomeCode === "EMPTY_EXERCISE_LIST"
-        ? []
-        : [`pre_submit_exercises:${exerciseResult.outcomeCode}`],
-  };
+  if (!normalizedSlug) {
+    return {
+      exercises: [],
+      exerciseOutcomeCode: "INVALID_INPUT",
+      errors: ["published_revision:INVALID_INPUT"],
+    };
+  }
+
+  try {
+    const { loadRevisionBoundPracticeSession } = await import(
+      "@/lib/practice/revisionBoundPractice"
+    );
+    return loadRevisionBoundPracticeSession(normalizedSlug, selectedCode);
+  } catch {
+    return {
+      exercises: [],
+      exerciseOutcomeCode: "DATABASE_ERROR",
+      errors: ["published_revision:unavailable"],
+    };
+  }
 }
