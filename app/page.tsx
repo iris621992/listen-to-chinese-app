@@ -251,7 +251,7 @@ export default async function Home({ searchParams }: Props) {
       <section className="home-section" data-home-section="growing">
         <div className="home-shell home-growing-grid">
           <div className="home-growing-art" aria-hidden="true">
-            <Image src="/brand/yunchinese-logo.png" alt="" width={240} height={240} className="home-brand-logo" />
+            <Image src="/brand/yunchinese-home-large.webp" alt="" width={240} height={240} className="home-brand-logo" />
           </div>
           <div>
             <p className="home-eyebrow">{copy.growing.eyebrow}</p>
