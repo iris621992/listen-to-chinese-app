@@ -193,6 +193,31 @@ test("Phase F P2A learner shell preserves the approved learner-first IA", async 
   assert.doesNotMatch(knowledge, /supabase/i);
 });
 
+test("Phase F PR-A learner shell keeps responsive, accessibility, and brand invariants", async () => {
+  const header = await readFile("components/Header.tsx", "utf8");
+  const styles = await readFile("app/globals.css", "utf8");
+
+  await access("public/brand/yunchinese-logo.png");
+  assert.match(header, /src="\/brand\/yunchinese-logo\.png"/);
+  assert.match(header, /ResizeObserver/);
+  assert.match(header, /viewportWidth <= 899/);
+  assert.match(header, /viewportWidth >= 1180/);
+  assert.match(header, /aria-expanded=\{drawerOpen\}/);
+  assert.match(header, /aria-controls=\{drawerId\}/);
+  assert.match(header, /event\.key === "Escape"/);
+  assert.match(header, /menuTriggerRef\.current\?\.focus\(\)/);
+  assert.doesNotMatch(header, /Sign in|Account/);
+  assert.doesNotMatch(header, /\/vocabulary|\/idioms|\/grammar|\/dictation|\/translation/);
+
+  assert.match(styles, /\.learner-header\[data-compact-nav="true"\]/);
+  assert.match(styles, /@media \(max-width: 899px\) and \(orientation: landscape\) and \(max-height: 520px\)/);
+  assert.match(styles, /@media \(max-width: 599px\)/);
+  assert.match(styles, /min-height: 44px/);
+  assert.match(styles, /\[dir="rtl"\] \.learner-brand-logo/);
+  assert.match(styles, /transform: none !important/);
+  assert.doesNotMatch(styles, /scaleX\(-1\)/);
+});
+
 test("architecture direction gate is part of every production build", async () => {
   const packageDocument = JSON.parse(await readFile("package.json", "utf8"));
   assert.equal(
