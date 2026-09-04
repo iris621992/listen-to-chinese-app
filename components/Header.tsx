@@ -1,7 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { Suspense, useEffect, useState } from "react";
+import {
+  Suspense,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   enabledInterfaceLocales,
@@ -27,6 +34,11 @@ type HeaderLabels = {
   practice: string;
   level: string;
   language: string;
+  levelAll: string;
+  levelUnavailable: string;
+  menu: string;
+  closeMenu: string;
+  brandTagline: string;
 };
 
 const HEADER_LABELS: Record<string, HeaderLabels> = {
@@ -37,14 +49,24 @@ const HEADER_LABELS: Record<string, HeaderLabels> = {
     practice: "Practice",
     level: "Level",
     language: "Language",
+    levelAll: "Level · All",
+    levelUnavailable: "Level unavailable",
+    menu: "Menu",
+    closeMenu: "Close menu",
+    brandTagline: "Chinese learning library",
   },
   vi: {
     home: "Trang chủ",
     library: "Thư viện",
     knowledge: "Kiến thức",
-    practice: "Bài tập",
+    practice: "Luyện tập",
     level: "Cấp độ",
     language: "Ngôn ngữ",
+    levelAll: "Cấp độ · Tất cả",
+    levelUnavailable: "Cấp độ không khả dụng",
+    menu: "Menu",
+    closeMenu: "Đóng menu",
+    brandTagline: "Thư viện học tiếng Trung",
   },
   ar: {
     home: "الرئيسية",
@@ -53,6 +75,11 @@ const HEADER_LABELS: Record<string, HeaderLabels> = {
     practice: "التدريب",
     level: "المستوى",
     language: "اللغة",
+    levelAll: "المستوى · الكل",
+    levelUnavailable: "المستوى غير متاح",
+    menu: "القائمة",
+    closeMenu: "إغلاق القائمة",
+    brandTagline: "مكتبة لتعلّم الصينية",
   },
 };
 
@@ -112,6 +139,37 @@ function isActiveDestination(pathname: string, destinationPath: string) {
   return pathname === destinationPath || pathname.startsWith(`${destinationPath}/`);
 }
 
+function ChevronDown() {
+  return (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 12 12" className="learner-chevron">
+      <path
+        d="M3 4.5 6 7.5 9 4.5"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.6"
+      />
+    </svg>
+  );
+}
+
+function MenuIcon() {
+  return (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+      <path d="M4 7h16M4 12h16M4 17h16" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24">
+      <path d="m6 6 12 12M18 6 6 18" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
 function HeaderContent({
   pathname,
   interfaceLocaleCode,
@@ -134,74 +192,271 @@ function HeaderContent({
   onLevelChange?: (value: string) => void;
 }) {
   const labels = headerLabelsFor(interfaceLocaleCode);
-  const isRtl = interfaceDirection === "rtl";
   const knownLevel = proficiencyOptions.some((option) => option.value === levelValue);
   const levelGroups = groupedLevelOptions(proficiencyOptions);
+  const headerInnerRef = useRef<HTMLDivElement>(null);
+  const measureRef = useRef<HTMLDivElement>(null);
+  const menuTriggerRef = useRef<HTMLButtonElement>(null);
+  const drawerPanelRef = useRef<HTMLDivElement>(null);
+  const [compactNav, setCompactNav] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerId = "learner-navigation-drawer";
+
+  const selectedLevelText = useMemo(() => {
+    if (levelValue === "all") return labels.levelAll;
+    if (levelValue === "invalid") return labels.levelUnavailable;
+    return levelLabel ?? labels.levelUnavailable;
+  }, [labels.levelAll, labels.levelUnavailable, levelLabel, levelValue]);
+
+  useEffect(() => {
+    function updateCompactMode() {
+      const viewportWidth = window.innerWidth;
+      if (viewportWidth <= 899) {
+        setCompactNav(true);
+        return;
+      }
+      if (viewportWidth >= 1180) {
+        setCompactNav(false);
+        return;
+      }
+
+      const availableWidth = headerInnerRef.current?.clientWidth ?? 0;
+      const requiredWidth = measureRef.current?.scrollWidth ?? Number.POSITIVE_INFINITY;
+      setCompactNav(requiredWidth + 8 > availableWidth);
+    }
+
+    updateCompactMode();
+    window.addEventListener("resize", updateCompactMode);
+    const observer = typeof ResizeObserver === "undefined"
+      ? null
+      : new ResizeObserver(updateCompactMode);
+    if (headerInnerRef.current) observer?.observe(headerInnerRef.current);
+    if (measureRef.current) observer?.observe(measureRef.current);
+
+    return () => {
+      window.removeEventListener("resize", updateCompactMode);
+      observer?.disconnect();
+    };
+  }, [interfaceLocaleCode, proficiencyOptions.length, selectedLevelText]);
+
+  useEffect(() => {
+    if (!compactNav) setDrawerOpen(false);
+  }, [compactNav]);
+
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    drawerPanelRef.current?.querySelector<HTMLElement>("button, a, select")?.focus();
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setDrawerOpen(false);
+        window.requestAnimationFrame(() => menuTriggerRef.current?.focus());
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const focusable = drawerPanelRef.current?.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable || focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [drawerOpen]);
+
+  function closeDrawerWithFocusReturn() {
+    setDrawerOpen(false);
+    window.requestAnimationFrame(() => menuTriggerRef.current?.focus());
+  }
+
+  function renderLevelOptions() {
+    return (
+      <>
+        <option value="all">{labels.levelAll}</option>
+        {!knownLevel && levelValue !== "all" ? (
+          <option value={levelValue}>{selectedLevelText}</option>
+        ) : null}
+        {levelGroups.map((group) => (
+          <optgroup key={group.systemCode} label={group.systemName}>
+            {group.options.map((option) => (
+              <option key={option.value} value={option.value}>{option.levelName}</option>
+            ))}
+          </optgroup>
+        ))}
+      </>
+    );
+  }
+
+  const primaryLinks = PRIMARY_DESTINATIONS.map((destination) => {
+    const active = isActiveDestination(pathname, destination.path);
+    return (
+      <Link
+        key={destination.key}
+        href={hrefFor(destination.path)}
+        aria-current={active ? "page" : undefined}
+        className="learner-primary-link"
+        onClick={() => setDrawerOpen(false)}
+      >
+        {labels[destination.key]}
+      </Link>
+    );
+  });
 
   return (
-    <header dir={interfaceDirection} className="learner-header sticky top-0 z-10 border-b border-orange-100 bg-cream/90 backdrop-blur">
-      <div className="learner-header-inner mx-auto max-w-[98rem] px-4 py-4 sm:px-6">
-        <div className="learner-header-brand-row">
-          <Link href={hrefFor("/")} className="learner-brand leading-tight">
-            <div className="flex items-baseline gap-2 text-cinnabar">
-              <span className="chinese-text text-3xl font-bold" aria-hidden="true">芸</span>
-              <span className="text-2xl font-bold tracking-wide">YUN</span>
-            </div>
-            <div className="text-sm text-stone-500">Chinese Resources &amp; Practice</div>
-          </Link>
-        </div>
+    <header dir={interfaceDirection} className="learner-header" data-compact-nav={compactNav ? "true" : "false"}>
+      <div ref={headerInnerRef} className="learner-header-inner">
+        <Link href={hrefFor("/")} className="learner-brand" aria-label="YunChinese home">
+          <span className="learner-brand-mark" aria-hidden="true">
+            <Image
+              src="/brand/yunchinese-logo.png"
+              alt=""
+              width={70}
+              height={70}
+              priority
+              className="learner-brand-logo"
+            />
+          </span>
+          <span className="learner-brand-copy">
+            <strong>YunChinese</strong>
+            <small>{labels.brandTagline}</small>
+          </span>
+        </Link>
 
-        <div className="learner-header-content">
-          <nav aria-label="Primary" className="learner-primary-nav text-base font-semibold text-stone-700">
-            {PRIMARY_DESTINATIONS.map((destination) => {
-              const active = isActiveDestination(pathname, destination.path);
-              return (
-                <Link
-                  key={destination.key}
-                  href={hrefFor(destination.path)}
-                  aria-current={active ? "page" : undefined}
-                  className="learner-primary-link rounded-full px-4 py-2.5"
-                >
-                  {labels[destination.key]}
-                </Link>
-              );
-            })}
+        <div className="learner-header-full" aria-hidden={compactNav ? true : undefined}>
+          <nav aria-label="Primary" className="learner-primary-nav">
+            {primaryLinks}
           </nav>
 
           <div className="learner-header-utilities" aria-label="Learning context">
-            <label className="learner-context-control">
+            <label className="learner-context-control learner-context-control--level">
               <span className="learner-context-label">{labels.level}</span>
-              <select
-                aria-label="Level"
-                className="rounded-full border border-orange-200 bg-white px-4 py-2.5 text-base font-semibold text-stone-700"
-                onChange={(event) => onLevelChange?.(event.target.value)}
-                value={levelValue}
-              >
-                <option value="all">Level: All</option>
-                {!knownLevel && levelValue !== "all" ? <option value={levelValue}>{levelLabel ?? "Level: unavailable"}</option> : null}
-                {levelGroups.map((group) => (
-                  <optgroup key={group.systemCode} label={group.systemName}>
-                    {group.options.map((option) => (
-                      <option key={option.value} value={option.value}>{option.levelName}</option>
-                    ))}
-                  </optgroup>
-                ))}
-              </select>
+              <span className="learner-select-shell">
+                <select
+                  aria-label={labels.level}
+                  onChange={(event) => onLevelChange?.(event.target.value)}
+                  value={levelValue}
+                >
+                  {renderLevelOptions()}
+                </select>
+                <ChevronDown />
+              </span>
             </label>
-            <label className="learner-context-control">
+            <label className="learner-context-control learner-context-control--language">
               <span className="learner-context-label">{labels.language}</span>
-              <select
-                aria-label="Change language"
-                className="rounded-full border border-orange-200 bg-white px-4 py-2.5 text-base font-semibold text-stone-700"
-                onChange={(event) => onLanguageChange?.(event.target.value)}
-                value={interfaceLocaleCode}
-              >
-                {enabledInterfaceLocales.map((locale) => <option key={locale.code} value={locale.code}>{locale.label}</option>)}
-              </select>
+              <span className="learner-select-shell">
+                <select
+                  aria-label={labels.language}
+                  onChange={(event) => onLanguageChange?.(event.target.value)}
+                  value={interfaceLocaleCode}
+                >
+                  {enabledInterfaceLocales.map((locale) => (
+                    <option key={locale.code} value={locale.code}>{locale.code.toUpperCase()}</option>
+                  ))}
+                </select>
+                <ChevronDown />
+              </span>
             </label>
           </div>
         </div>
+
+        <button
+          ref={menuTriggerRef}
+          type="button"
+          className="learner-menu-trigger"
+          aria-label={labels.menu}
+          aria-expanded={drawerOpen}
+          aria-controls={drawerId}
+          onClick={() => setDrawerOpen(true)}
+        >
+          <MenuIcon />
+        </button>
+
+        <div ref={measureRef} className="learner-header-measure" aria-hidden="true">
+          <span className="learner-brand-measure">
+            <span className="learner-brand-measure-mark" />
+            <span className="learner-brand-measure-copy">
+              <strong>YunChinese</strong>
+              <small>{labels.brandTagline}</small>
+            </span>
+          </span>
+          <span className="learner-nav-measure">
+            {PRIMARY_DESTINATIONS.map((destination) => (
+              <span key={destination.key}>{labels[destination.key]}</span>
+            ))}
+          </span>
+          <span className="learner-utility-measure learner-utility-measure--level">{selectedLevelText}</span>
+          <span className="learner-utility-measure learner-utility-measure--language">{interfaceLocaleCode.toUpperCase()}</span>
+        </div>
       </div>
+
+      {drawerOpen ? (
+        <div id={drawerId} className="learner-drawer" role="dialog" aria-modal="true" aria-label={labels.menu}>
+          <button type="button" className="learner-drawer-backdrop" aria-label={labels.closeMenu} onClick={closeDrawerWithFocusReturn} />
+          <div ref={drawerPanelRef} className="learner-drawer-panel">
+            <div className="learner-drawer-head">
+              <strong>YunChinese</strong>
+              <button type="button" className="learner-drawer-close" aria-label={labels.closeMenu} onClick={closeDrawerWithFocusReturn}>
+                <CloseIcon />
+              </button>
+            </div>
+
+            <nav aria-label={labels.menu} className="learner-drawer-nav">
+              {primaryLinks}
+            </nav>
+
+            <div className="learner-drawer-context" aria-label="Learning context">
+              <label className="learner-drawer-control">
+                <span>{labels.level}</span>
+                <span className="learner-select-shell">
+                  <select
+                    aria-label={labels.level}
+                    onChange={(event) => onLevelChange?.(event.target.value)}
+                    value={levelValue}
+                  >
+                    {renderLevelOptions()}
+                  </select>
+                  <ChevronDown />
+                </span>
+              </label>
+              <label className="learner-drawer-control">
+                <span>{labels.language}</span>
+                <span className="learner-select-shell">
+                  <select
+                    aria-label={labels.language}
+                    onChange={(event) => onLanguageChange?.(event.target.value)}
+                    value={interfaceLocaleCode}
+                  >
+                    {enabledInterfaceLocales.map((locale) => (
+                      <option key={locale.code} value={locale.code}>{locale.code.toUpperCase()}</option>
+                    ))}
+                  </select>
+                  <ChevronDown />
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </header>
   );
 }
@@ -227,10 +482,8 @@ function LocalizedHeader() {
       ? `${proficiency.systemCode}:${proficiency.levelCode}`
       : "invalid";
   const levelLabel = proficiency.kind === "EXACT"
-    ? `Level: ${formatProficiencyLabel(proficiency.systemCode, proficiency.levelCode)}`
-    : proficiency.kind === "INVALID"
-      ? "Level: unavailable"
-      : null;
+    ? formatProficiencyLabel(proficiency.systemCode, proficiency.levelCode)
+    : null;
   const hrefFor = (path: string) => contextHref(path, searchParams.toString());
 
   useEffect(() => {
