@@ -209,23 +209,28 @@ function HeaderContent({
   }, [labels.levelAll, labels.levelUnavailable, levelLabel, levelValue]);
 
   useEffect(() => {
+    function applyCompactMode(nextCompactNav: boolean) {
+      setCompactNav(nextCompactNav);
+      if (!nextCompactNav) setDrawerOpen(false);
+    }
+
     function updateCompactMode() {
       const viewportWidth = window.innerWidth;
       if (viewportWidth <= 899) {
-        setCompactNav(true);
+        applyCompactMode(true);
         return;
       }
       if (viewportWidth >= 1180) {
-        setCompactNav(false);
+        applyCompactMode(false);
         return;
       }
 
       const availableWidth = headerInnerRef.current?.clientWidth ?? 0;
       const requiredWidth = measureRef.current?.scrollWidth ?? Number.POSITIVE_INFINITY;
-      setCompactNav(requiredWidth + 8 > availableWidth);
+      applyCompactMode(requiredWidth + 8 > availableWidth);
     }
 
-    updateCompactMode();
+    const initialFrame = window.requestAnimationFrame(updateCompactMode);
     window.addEventListener("resize", updateCompactMode);
     const observer = typeof ResizeObserver === "undefined"
       ? null
@@ -234,18 +239,11 @@ function HeaderContent({
     if (measureRef.current) observer?.observe(measureRef.current);
 
     return () => {
+      window.cancelAnimationFrame(initialFrame);
       window.removeEventListener("resize", updateCompactMode);
       observer?.disconnect();
     };
   }, [interfaceLocaleCode, proficiencyOptions.length, selectedLevelText]);
-
-  useEffect(() => {
-    if (!compactNav) setDrawerOpen(false);
-  }, [compactNav]);
-
-  useEffect(() => {
-    setDrawerOpen(false);
-  }, [pathname]);
 
   useEffect(() => {
     if (!drawerOpen) return;
@@ -533,6 +531,7 @@ function LocalizedHeader() {
 
   return (
     <HeaderContent
+      key={pathname}
       pathname={pathname}
       interfaceLocaleCode={interfaceLocale.code}
       interfaceDirection={interfaceLocale.direction}

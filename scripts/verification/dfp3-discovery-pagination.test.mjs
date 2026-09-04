@@ -598,8 +598,8 @@ test("global Level is consumed only where discovery exists and otherwise preserv
   assert.match(resourcesSource, /levelSystemCode:\s*query\.levelSystem/);
   assert.match(resourcesSource, /levelCode:\s*query\.level/);
   assert.doesNotMatch(resourcesSource, /\bhsk\??:|query\.hsk|hskLevels|Filter resources by HSK level/);
-  assert.match(headerSource, /aria-label="Level"/);
-  assert.match(headerSource, /Level: All/);
+  assert.match(headerSource, /aria-label=\{labels\.level\}/);
+  assert.match(headerSource, /<option value="all">\{labels\.levelAll\}<\/option>/);
   assert.match(headerSource, /delete\("cursor"\)/);
   assert.doesNotMatch(headerSource, /\bsystemCode:\s*"HSK"/);
   assert.doesNotMatch(headerSource, /Array\.from\(\{\s*length:\s*9/);
