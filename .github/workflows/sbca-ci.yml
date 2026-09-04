@@ -120,11 +120,11 @@ jobs:
         timeout-minutes: 10
         shell: bash
         run: |
-          set -uo pipefail
+          set -euo pipefail
 
           max_attempts=3
 
-          for attempt in $(seq 1 "${max_attempts}"); do
+          for (( attempt=1; attempt<=max_attempts; attempt++ )); do
             report="${RUNNER_TEMP}/npm-audit-${attempt}.json"
             stderr_file="${RUNNER_TEMP}/npm-audit-${attempt}.stderr"
 
