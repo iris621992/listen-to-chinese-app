@@ -281,7 +281,7 @@ test("Phase F PR-B Home keeps approved product, localization, discovery, and typ
   assert.match(homeCopy, /Không có trình tự cố định/);
   assert.match(homeCopy, /لا يوجد تسلسل ثابت/);
 
-  assert.match(home, /src="\/brand\/yunchinese-logo\.png"/);
+  assert.match(home, /src="\/brand\/yunchinese-home-large\.svg"/);
   assert.match(styles, /\.home-brand-logo\s*\{[^}]*transform:\s*none !important/s);
   assert.match(styles, /\[dir="rtl"\] \.home-brand-logo\s*\{[^}]*transform:\s*none !important/s);
   assert.doesNotMatch(styles, /\.home-brand-logo[^}]*scaleX\(-1\)/s);
