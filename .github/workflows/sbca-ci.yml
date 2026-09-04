@@ -115,8 +115,66 @@ jobs:
         run: test "$(git rev-parse HEAD)" = "${{ github.event.pull_request.head.sha }}"
 
       - name: Audit dependency vulnerabilities
+        id: npm_audit
         if: ${{ always() && steps.install.outcome == 'success' && steps.verify_head_after_dependency_review.outcome == 'success' }}
-        run: npm audit --audit-level=high
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          set -uo pipefail
+
+          max_attempts=3
+
+          for attempt in $(seq 1 "${max_attempts}"); do
+            report="${RUNNER_TEMP}/npm-audit-${attempt}.json"
+            stderr_file="${RUNNER_TEMP}/npm-audit-${attempt}.stderr"
+
+            echo "npm audit attempt ${attempt}/${max_attempts}"
+
+            set +e
+            npm audit \
+              --audit-level=high \
+              --json \
+              --fetch-retries=0 \
+              --fetch-timeout=60000 \
+              >"${report}" 2>"${stderr_file}"
+            status=$?
+            set -e
+
+            valid_report=false
+
+            if jq -e '
+              (.auditReportVersion != null)
+              and (.metadata.vulnerabilities | type == "object")
+              and (.vulnerabilities | type == "object")
+            ' "${report}" >/dev/null 2>&1; then
+              valid_report=true
+            fi
+
+            if [[ "${status}" -eq 0 && "${valid_report}" == "true" ]]; then
+              echo "npm audit completed successfully with a valid report."
+              exit 0
+            fi
+
+            if [[ "${status}" -ne 0 && "${valid_report}" == "true" ]]; then
+              cat "${report}" >&2
+              cat "${stderr_file}" >&2
+              echo "npm audit returned a valid failing security report; fail closed." >&2
+              exit "${status}"
+            fi
+
+            cat "${stderr_file}" >&2
+
+            if [[ "${attempt}" -eq "${max_attempts}" ]]; then
+              echo "npm audit did not produce a trustworthy report after ${max_attempts} attempts." >&2
+              exit 1
+            fi
+
+            if [[ "${attempt}" -eq 1 ]]; then
+              sleep 15
+            else
+              sleep 45
+            fi
+          done
 
       - name: Generate CycloneDX SBOM
         id: sbom
