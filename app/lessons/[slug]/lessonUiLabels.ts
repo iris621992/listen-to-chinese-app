@@ -7,6 +7,20 @@ export type LessonUiLabels = {
   segment: string;
   practice: string;
   exercise: string;
+  resourceLabel: string;
+  resourceSections: string;
+  mainTab: string;
+  mainTitle: string;
+  mainBody: string;
+  mainScriptTitle: string;
+  mainScriptBody: string;
+  mainVocabularyTitle: string;
+  mainVocabularyBody: string;
+  mainGrammarTitle: string;
+  mainGrammarBody: string;
+  mainPracticeTitle: string;
+  mainPracticeBody: string;
+  supportLanguageLabel: string;
   showPronunciation: string;
   showTranslation: string;
   scriptTab: string;
@@ -55,6 +69,20 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     segment: "Segment",
     practice: "Practice",
     exercise: "Exercise",
+    resourceLabel: "Resource",
+    resourceSections: "Resource sections",
+    mainTab: "Main",
+    mainTitle: "Start with this resource.",
+    mainBody: "Choose the part that helps you most right now. You can move between the script, vocabulary, grammar notes, and practice without following a fixed sequence.",
+    mainScriptTitle: "Script",
+    mainScriptBody: "Read the Chinese text with pronunciation and translation support.",
+    mainVocabularyTitle: "Vocabulary",
+    mainVocabularyBody: "Review learner-safe vocabulary connected to this published resource when available.",
+    mainGrammarTitle: "Grammar",
+    mainGrammarBody: "Grammar notes are not available for this resource yet.",
+    mainPracticeTitle: "Practice",
+    mainPracticeBody: "Practice from the immutable published revision of this resource when exercises are available.",
+    supportLanguageLabel: "Support language",
     showPronunciation: "Pronunciation",
     showTranslation: "Translation",
     scriptTab: "Script",
@@ -101,6 +129,20 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     segment: "Dòng",
     practice: "Bài tập",
     exercise: "Câu",
+    resourceLabel: "Tài nguyên",
+    resourceSections: "Các phần của tài nguyên",
+    mainTab: "Chính",
+    mainTitle: "Bắt đầu với tài nguyên này.",
+    mainBody: "Chọn phần hữu ích nhất với bạn lúc này. Bạn có thể chuyển giữa nội dung, từ vựng, ghi chú ngữ pháp và bài tập mà không cần theo một thứ tự cố định.",
+    mainScriptTitle: "Nội dung",
+    mainScriptBody: "Đọc tiếng Trung với hỗ trợ phiên âm và bản dịch.",
+    mainVocabularyTitle: "Từ vựng",
+    mainVocabularyBody: "Ôn từ vựng an toàn cho người học gắn với tài nguyên đã xuất bản này khi có sẵn.",
+    mainGrammarTitle: "Ngữ pháp",
+    mainGrammarBody: "Tài nguyên này hiện chưa có ghi chú ngữ pháp.",
+    mainPracticeTitle: "Bài tập",
+    mainPracticeBody: "Luyện tập từ revision đã xuất bản bất biến của tài nguyên này khi có bài tập.",
+    supportLanguageLabel: "Ngôn ngữ hỗ trợ",
     showPronunciation: "Phiên âm",
     showTranslation: "Bản dịch",
     scriptTab: "Nội dung",
@@ -147,6 +189,20 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     segment: "مقطع",
     practice: "تدريب",
     exercise: "سؤال",
+    resourceLabel: "المورد",
+    resourceSections: "أقسام المورد",
+    mainTab: "الرئيسية",
+    mainTitle: "ابدأ بهذا المورد.",
+    mainBody: "اختر الجزء الأكثر فائدة لك الآن. يمكنك التنقل بين النص والمفردات وملاحظات القواعد والتدريب من دون اتباع ترتيب ثابت.",
+    mainScriptTitle: "النص",
+    mainScriptBody: "اقرأ النص الصيني مع دعم النطق والترجمة.",
+    mainVocabularyTitle: "المفردات",
+    mainVocabularyBody: "راجع المفردات الآمنة للمتعلم والمرتبطة بهذا المورد المنشور عندما تكون متاحة.",
+    mainGrammarTitle: "القواعد",
+    mainGrammarBody: "ملاحظات القواعد غير متاحة لهذا المورد بعد.",
+    mainPracticeTitle: "التدريب",
+    mainPracticeBody: "تدرّب من النسخة المنشورة غير القابلة للتغيير من هذا المورد عندما تتوفر التمارين.",
+    supportLanguageLabel: "لغة الدعم",
     showPronunciation: "النطق",
     showTranslation: "الترجمة",
     scriptTab: "النص",
