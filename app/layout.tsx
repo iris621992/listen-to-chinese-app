@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/Header";
 import "./globals.css";
+import "./home-fidelity.css";
 
 export const metadata: Metadata = {
   title: "Yun Chinese | Chinese Resources & Practice",
