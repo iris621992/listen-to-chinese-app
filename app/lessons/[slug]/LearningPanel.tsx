@@ -1,15 +1,13 @@
 import Link from "next/link";
 import type { InterfaceTextDirection } from "@/lib/interfaceLocaleRegistry";
 import type { SupabaseLessonDetail } from "@/lib/supabaseLesson";
-import { MainTabContent } from "./MainTabContent";
 import { ScriptTabContent } from "./ScriptTabContent";
 import { VocabularyTabContent } from "./VocabularyTabContent";
 import { PracticeTabContent } from "./PracticeTabContent";
 
-export type LearningTab = "main" | "script" | "vocabulary" | "grammar" | "practice";
+export type LearningTab = "script" | "vocabulary" | "grammar" | "practice";
 
 export const LEARNING_TABS: LearningTab[] = [
-  "main",
   "script",
   "vocabulary",
   "grammar",
@@ -17,22 +15,14 @@ export const LEARNING_TABS: LearningTab[] = [
 ];
 
 export function learningTabFor(tab: string | undefined): LearningTab {
-  return LEARNING_TABS.includes(tab as LearningTab) ? tab as LearningTab : "main";
+  if (tab === "main") return "script";
+  return LEARNING_TABS.includes(tab as LearningTab)
+    ? tab as LearningTab
+    : "script";
 }
 
 type LearningPanelLabels = {
   resourceSections: string;
-  mainTab: string;
-  mainTitle: string;
-  mainBody: string;
-  mainScriptTitle: string;
-  mainScriptBody: string;
-  mainVocabularyTitle: string;
-  mainVocabularyBody: string;
-  mainGrammarTitle: string;
-  mainGrammarBody: string;
-  mainPracticeTitle: string;
-  mainPracticeBody: string;
   scriptTab: string;
   vocabularyTab: string;
   grammarTab: string;
@@ -106,7 +96,7 @@ function PlaceholderTabContent({
 }) {
   return (
     <div
-      className={`rounded-3xl bg-cream p-5 text-sm leading-6 text-stone-600 ${interfaceTextAlign}`}
+      className={`resource-placeholder ${interfaceTextAlign}`}
       dir={interfaceDirection}
     >
       {message}
@@ -120,8 +110,6 @@ export function LearningPanel({
   interfaceDirection,
   interfaceTextAlign,
   supportTextAlign,
-  segmentBlockLayout,
-  segmentTextStyle,
   activeTab,
   learnerContextQuery,
 }: {
@@ -130,47 +118,16 @@ export function LearningPanel({
   interfaceDirection: InterfaceTextDirection;
   interfaceTextAlign: string;
   supportTextAlign: string;
-  segmentBlockLayout: string;
-  segmentTextStyle: { textAlign: "right" } | undefined;
   activeTab: LearningTab;
   learnerContextQuery: Record<string, string>;
 }) {
-  const toolbarAlignment = interfaceDirection === "rtl"
-    ? "justify-end"
-    : "justify-start";
+  const articleFamily = lesson.contentType === "reading"
+    || lesson.contentType === "listening"
+    || lesson.contentType === "practice_only"
+    || lesson.contentType === "review_set";
+  const layout = articleFamily ? "article" : "video";
   const hrefFor = (tab: LearningTab) =>
     learningTabHref(lesson.slug, lesson.selectedCode, tab, learnerContextQuery);
-  const tabButtonClassName = (tab: LearningTab) =>
-    `learning-tab-button cursor-pointer rounded-full border px-4 py-2 text-sm font-semibold shadow-sm ${
-      activeTab === tab
-        ? "border-orange-200 bg-cinnabar text-white"
-        : "border-orange-200 bg-white text-stone-700"
-    }`;
-  const readingMain = activeTab === "main" && lesson.contentType === "reading";
-  const showScriptContent = activeTab === "script" || readingMain;
-
-  const mainLinks = [
-    {
-      href: hrefFor("script"),
-      title: labels.mainScriptTitle,
-      body: labels.mainScriptBody,
-    },
-    {
-      href: hrefFor("vocabulary"),
-      title: labels.mainVocabularyTitle,
-      body: labels.mainVocabularyBody,
-    },
-    {
-      href: hrefFor("grammar"),
-      title: labels.mainGrammarTitle,
-      body: labels.mainGrammarBody,
-    },
-    {
-      href: hrefFor("practice"),
-      title: labels.mainPracticeTitle,
-      body: labels.mainPracticeBody,
-    },
-  ];
 
   const practiceLabels = {
     exercise: labels.exercise,
@@ -188,8 +145,8 @@ export function LearningPanel({
 
   return (
     <section
-      className={`resource-learning-panel flex w-full flex-col overscroll-contain rounded-[2rem] bg-paper p-5 pr-3 shadow-soft sm:p-6 sm:pr-4 ${interfaceTextAlign}`}
-      data-content-type={lesson.contentType ?? "unknown"}
+      className={`resource-learning-panel ${interfaceTextAlign}`}
+      data-layout={layout}
       dir={interfaceDirection}
     >
       <input
@@ -205,88 +162,50 @@ export function LearningPanel({
         defaultChecked
       />
 
-      <div className="learning-toolbar border-b border-orange-100 bg-paper">
-        <nav
-          className={`learning-tabs flex flex-wrap gap-3 ${toolbarAlignment}`}
-          aria-label={labels.resourceSections}
-        >
-          <Link
-            href={hrefFor("main")}
-            data-tab="main"
-            aria-current={activeTab === "main" ? "page" : undefined}
-            className={tabButtonClassName("main")}
-          >
-            {labels.mainTab}
-          </Link>
-          <Link
-            href={hrefFor("script")}
-            data-tab="script"
-            aria-current={activeTab === "script" ? "page" : undefined}
-            className={tabButtonClassName("script")}
-          >
-            {labels.scriptTab}
-          </Link>
-          <Link
-            href={hrefFor("vocabulary")}
-            data-tab="vocabulary"
-            aria-current={activeTab === "vocabulary" ? "page" : undefined}
-            className={tabButtonClassName("vocabulary")}
-          >
-            {labels.vocabularyTab}
-          </Link>
-          <Link
-            href={hrefFor("grammar")}
-            data-tab="grammar"
-            aria-current={activeTab === "grammar" ? "page" : undefined}
-            className={tabButtonClassName("grammar")}
-          >
-            {labels.grammarTab}
-          </Link>
-          <Link
-            href={hrefFor("practice")}
-            data-tab="practice"
-            aria-current={activeTab === "practice" ? "page" : undefined}
-            className={tabButtonClassName("practice")}
-          >
-            {labels.practiceTab}
-          </Link>
+      <div className="learning-toolbar">
+        <nav className="learning-tabs" aria-label={labels.resourceSections}>
+          {LEARNING_TABS.map((tab) => {
+            const label = tab === "script"
+              ? labels.scriptTab
+              : tab === "vocabulary"
+                ? labels.vocabularyTab
+                : tab === "grammar"
+                  ? labels.grammarTab
+                  : labels.practiceTab;
+            return (
+              <Link
+                key={tab}
+                href={hrefFor(tab)}
+                data-tab={tab}
+                aria-current={activeTab === tab ? "page" : undefined}
+                className="learning-tab-button"
+              >
+                {label}
+              </Link>
+            );
+          })}
         </nav>
-        <div
-          className={`script-options mt-4 ${activeTab === "script" ? "flex" : "hidden"} flex-wrap gap-2 py-1 ${toolbarAlignment}`}
-        >
-          <label
-            htmlFor="script-toggle-pinyin"
-            className="script-option-button cursor-pointer rounded-full border border-orange-100 bg-white/70 px-3 py-1.5 text-xs font-medium text-stone-600 shadow-sm"
-          >
-            {labels.showPronunciation}
+
+        <div className={`script-options ${activeTab === "script" ? "is-visible" : ""}`}>
+          <label htmlFor="script-toggle-pinyin" className="script-option-button">
+            <span className="script-option-state" aria-hidden="true" />
+            <span>{labels.showPronunciation}</span>
           </label>
-          <label
-            htmlFor="script-toggle-translation"
-            className="script-option-button cursor-pointer rounded-full border border-orange-100 bg-white/70 px-3 py-1.5 text-xs font-medium text-stone-600 shadow-sm"
-          >
-            {labels.showTranslation}
+          <label htmlFor="script-toggle-translation" className="script-option-button">
+            <span className="script-option-state" aria-hidden="true" />
+            <span>{labels.showTranslation}</span>
           </label>
         </div>
       </div>
 
       <div className="learning-panels">
-        {activeTab === "main" && !readingMain ? (
-          <MainTabContent
-            labels={labels}
-            links={mainLinks}
-            interfaceDirection={interfaceDirection}
-            interfaceTextAlign={interfaceTextAlign}
-          />
-        ) : null}
-        {showScriptContent ? (
+        {activeTab === "script" ? (
           <ScriptTabContent
             lesson={lesson}
             labels={labels}
             interfaceDirection={interfaceDirection}
             interfaceTextAlign={interfaceTextAlign}
             supportTextAlign={supportTextAlign}
-            segmentBlockLayout={segmentBlockLayout}
-            segmentTextStyle={segmentTextStyle}
           />
         ) : null}
         {activeTab === "vocabulary" ? (
@@ -317,61 +236,182 @@ export function LearningPanel({
 
       <style>{`
         .resource-learning-panel {
-          height: calc(100vh - 11rem);
-          max-height: calc(100vh - 11rem);
+          --resource-article-width: 49.375rem;
+          width: 100%;
+          min-width: 0;
           overflow: hidden;
-          overscroll-behavior: contain;
-        }
-
-        .resource-learning-panel[data-content-type="reading"],
-        .resource-learning-panel[data-content-type="listening"] {
-          height: auto;
-          max-height: none;
-          overflow: visible;
+          border: 1px solid var(--border-subtle);
+          border-radius: 18px;
+          background: var(--surface-raised);
+          color: var(--text-primary);
         }
 
         .learning-toolbar {
-          flex-shrink: 0;
-          padding-top: 0.5rem;
-          padding-bottom: 1rem;
+          padding: 18px 20px 14px;
+        }
+
+        .resource-learning-panel[data-layout="video"] .learning-toolbar {
+          min-height: 8rem;
+        }
+
+        .learning-tabs {
+          min-width: 0;
+        }
+
+        .resource-learning-panel[data-layout="video"] .learning-tabs {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 4px;
+          width: 100%;
+        }
+
+        .resource-learning-panel[data-layout="article"] .learning-toolbar {
+          width: min(100%, var(--resource-article-width));
+          margin-inline: auto;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+
+        .resource-learning-panel[data-layout="article"] .learning-tabs {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          flex: 0 1 auto;
         }
 
         .learning-tab-button {
+          position: relative;
+          min-width: 0;
           min-height: 44px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
+          border: 0;
+          border-radius: 9px;
+          background: transparent;
+          padding: 0 8px;
+          color: var(--text-primary);
+          font-size: 0.875rem;
+          font-weight: 650;
+          white-space: nowrap;
+        }
+
+        .learning-tab-button:hover {
+          background: var(--surface-subtle);
+        }
+
+        .learning-tab-button[aria-current="page"] {
+          background: #f1f5ee;
+          color: var(--text-primary);
+          font-weight: 800;
+        }
+
+        .learning-tab-button[aria-current="page"]::after {
+          content: "";
+          position: absolute;
+          inset-inline: 12px;
+          bottom: 3px;
+          height: 3px;
+          border-radius: 999px;
+          background: var(--interactive-secondary);
+        }
+
+        .script-options {
+          display: none;
+          min-width: 0;
+          align-items: center;
+          gap: 7px;
+        }
+
+        .script-options.is-visible {
+          display: flex;
+        }
+
+        .resource-learning-panel[data-layout="video"] .script-options {
+          margin-top: 7px;
+          justify-content: flex-start;
+        }
+
+        .resource-learning-panel[data-layout="article"] .script-options {
+          margin-inline-start: auto;
+          justify-content: flex-end;
         }
 
         .script-option-button {
           min-height: 44px;
           display: inline-flex;
           align-items: center;
+          justify-content: center;
+          gap: 6px;
+          border: 1px solid var(--border-subtle);
+          border-radius: 9px;
+          background: var(--surface-raised);
+          padding: 0 11px;
+          color: var(--text-secondary);
+          font-size: 0.8125rem;
+          font-weight: 700;
+          white-space: nowrap;
+          cursor: pointer;
+        }
+
+        .script-option-state::before {
+          content: "○";
+          display: inline-block;
+          min-width: 1em;
+          color: var(--text-muted);
+          font-size: 0.8em;
+          line-height: 1;
+        }
+
+        #script-toggle-pinyin:checked ~ .learning-toolbar label[for="script-toggle-pinyin"],
+        #script-toggle-translation:checked ~ .learning-toolbar label[for="script-toggle-translation"] {
+          border-color: #cdd8c8;
+          background: #f1f5ee;
+          color: var(--interactive-primary);
+        }
+
+        #script-toggle-pinyin:checked ~ .learning-toolbar label[for="script-toggle-pinyin"] .script-option-state::before,
+        #script-toggle-translation:checked ~ .learning-toolbar label[for="script-toggle-translation"] .script-option-state::before {
+          content: "✓";
+          color: var(--interactive-primary);
+          font-weight: 900;
+        }
+
+        #script-toggle-pinyin:focus-visible ~ .learning-toolbar label[for="script-toggle-pinyin"],
+        #script-toggle-translation:focus-visible ~ .learning-toolbar label[for="script-toggle-translation"] {
+          outline: 3px solid var(--focus-ring);
+          outline-offset: 3px;
         }
 
         .learning-panels {
-          flex: 1 1 0;
-          min-height: 0;
+          min-width: 0;
+          border-top: 1px solid var(--border-subtle);
+          padding: 14px 20px 20px;
+        }
+
+        .resource-learning-panel[data-layout="video"] .learning-panels {
+          max-height: calc(100vh - 15rem);
           overflow-y: auto;
           overflow-x: hidden;
           overscroll-behavior: contain;
-          padding-inline-end: 0.5rem;
-          padding-top: 1rem;
           scrollbar-gutter: stable;
         }
 
-        .resource-learning-panel[data-content-type="reading"] .learning-panels,
-        .resource-learning-panel[data-content-type="listening"] .learning-panels {
-          flex: 0 1 auto;
-          min-height: auto;
-          overflow: visible;
-          padding-inline-end: 0;
-          scrollbar-gutter: auto;
+        .resource-learning-panel[data-layout="article"] {
+          padding: 16px 0 24px;
         }
 
-        .resource-learning-panel[data-content-type="reading"] .script-lines {
-          width: min(100%, 56rem);
+        .resource-learning-panel[data-layout="article"] .learning-toolbar {
+          padding: 0 0 14px;
+        }
+
+        .resource-learning-panel[data-layout="article"] .learning-panels {
+          width: min(100%, var(--resource-article-width));
           margin-inline: auto;
+          border-top: 0;
+          padding: 14px 0 0;
+          overflow: visible;
         }
 
         .learning-panels::-webkit-scrollbar {
@@ -379,63 +419,77 @@ export function LearningPanel({
         }
 
         .learning-panels::-webkit-scrollbar-thumb {
-          background: rgba(89, 106, 78, 0.38);
           border-radius: 999px;
+          background: rgba(89, 106, 78, 0.38);
         }
 
-        .resource-main-intro {
-          border-radius: 1.25rem;
-          background: var(--surface-subtle);
-          padding: 1.25rem;
-        }
-
-        .resource-main-intro h2 {
-          margin: 0;
-          color: var(--text-primary);
-          font-size: clamp(1.45rem, 2.2vw, 2rem);
-          line-height: 1.15;
-        }
-
-        .resource-main-intro p {
-          margin: 0.75rem 0 0;
-          color: var(--text-secondary);
-          line-height: 1.7;
-        }
-
-        .resource-main-grid {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 0.875rem;
-          margin-top: 1rem;
-        }
-
-        .resource-main-card {
-          min-height: 132px;
+        .script-lines {
           display: flex;
           flex-direction: column;
-          gap: 0.5rem;
+          gap: 2px;
+          min-width: 0;
+        }
+
+        .script-sentence {
+          min-width: 0;
+          border-radius: 12px;
+          padding: 13px 8px;
+        }
+
+        .resource-learning-panel[data-layout="article"] .script-sentence {
+          padding-top: 16px;
+          padding-bottom: 16px;
+        }
+
+        .resource-chinese-line {
+          margin: 0;
+          color: var(--text-primary);
+          font-family: KaiTi, "Kaiti SC", STKaiti, KaiTi_GB2312, FangSong, "Noto Serif CJK SC", serif;
+          font-size: 1.22rem;
+          font-weight: 500;
+          line-height: 1.72;
+          letter-spacing: 0.012em;
+          overflow-wrap: anywhere;
+        }
+
+        .resource-learning-panel[data-layout="article"] .resource-chinese-line {
+          font-size: 1.38rem;
+          line-height: 1.78;
+        }
+
+        .resource-pinyin-line {
+          margin: 3px 0 0;
+          color: #a4653f;
+          font-size: 0.84rem;
+          font-weight: 500;
+          line-height: 1.55;
+        }
+
+        .resource-translation-line {
+          margin-top: 5px;
+          color: var(--text-muted);
+          font-size: 0.9rem;
+          font-weight: 450;
+          line-height: 1.62;
+        }
+
+        #script-toggle-pinyin:not(:checked) ~ .learning-panels .pinyin-row {
+          display: none;
+        }
+
+        #script-toggle-translation:not(:checked) ~ .learning-panels .translation-row {
+          display: none;
+        }
+
+        .resource-placeholder {
+          min-height: 140px;
           border: 1px solid var(--border-subtle);
-          border-radius: 1.15rem;
-          background: var(--surface-raised);
-          padding: 1rem;
-          transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
-        }
-
-        .resource-main-card:hover {
-          border-color: var(--border-strong);
-          transform: translateY(-1px);
-          box-shadow: 0 10px 28px rgba(55, 52, 43, 0.08);
-        }
-
-        .resource-main-card strong {
-          color: var(--interactive-primary);
-          font-size: 1rem;
-        }
-
-        .resource-main-card span {
+          border-radius: 14px;
+          background: var(--surface-subtle);
+          padding: 20px;
           color: var(--text-secondary);
           font-size: 0.9rem;
-          line-height: 1.55;
+          line-height: 1.65;
         }
 
         .vocabulary-inner-tab-input {
@@ -459,74 +513,113 @@ export function LearningPanel({
           display: block;
         }
 
-        #script-toggle-pinyin:not(:checked) ~ .learning-panels .script-lines .pinyin-row {
-          display: none;
-        }
-
-        #script-toggle-translation:not(:checked) ~ .learning-panels .script-lines .translation-row {
-          display: none;
-        }
-
-        #script-toggle-pinyin:checked ~ .learning-toolbar .script-options label[for="script-toggle-pinyin"],
-        #script-toggle-translation:checked ~ .learning-toolbar .script-options label[for="script-toggle-translation"] {
-          background: var(--surface-subtle);
-          border-color: var(--interactive-primary);
-          color: var(--interactive-primary);
-        }
-
-        #script-toggle-pinyin:focus-visible ~ .learning-toolbar .script-options label[for="script-toggle-pinyin"],
-        #script-toggle-translation:focus-visible ~ .learning-toolbar .script-options label[for="script-toggle-translation"],
         .vocabulary-details-tab-input:focus-visible ~ .vocabulary-inner-tab-controls .vocabulary-details-tab-label,
         .vocabulary-hanzi-tab-input:focus-visible ~ .vocabulary-inner-tab-controls .vocabulary-hanzi-tab-label {
           outline: 3px solid var(--focus-ring);
           outline-offset: 3px;
         }
 
+        @media (min-width: 900px) and (max-width: 1199px) {
+          .resource-learning-panel[data-layout="video"] .learning-tabs {
+            gap: 3px;
+          }
+
+          .resource-learning-panel[data-layout="video"] .learning-tab-button {
+            padding-inline: 4px;
+            font-size: 0.8125rem;
+          }
+
+          .resource-learning-panel[data-layout="article"] .learning-toolbar {
+            gap: 12px;
+          }
+
+          .resource-learning-panel[data-layout="article"] .learning-tabs {
+            gap: 10px;
+          }
+        }
+
         @media (max-width: 899px) {
           .resource-learning-panel {
-            height: auto;
-            max-height: none;
             overflow: visible;
           }
 
+          .resource-learning-panel[data-layout="video"] .learning-toolbar {
+            min-height: 0;
+          }
+
+          .resource-learning-panel[data-layout="article"] {
+            padding: 0;
+          }
+
+          .resource-learning-panel[data-layout="article"] .learning-toolbar,
+          .learning-toolbar {
+            width: 100%;
+            margin: 0;
+            display: block;
+            padding: 16px 16px 12px;
+          }
+
+          .resource-learning-panel[data-layout="article"] .learning-tabs,
+          .resource-learning-panel[data-layout="video"] .learning-tabs {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 5px;
+            width: 100%;
+          }
+
+          .resource-learning-panel[data-layout="article"] .script-options,
+          .resource-learning-panel[data-layout="video"] .script-options {
+            margin: 8px 0 0;
+            justify-content: flex-start;
+          }
+
+          .resource-learning-panel[data-layout="video"] .learning-panels,
+          .resource-learning-panel[data-layout="article"] .learning-panels,
           .learning-panels {
-            flex: 0 1 auto;
-            min-height: auto;
+            width: 100%;
+            max-height: none;
+            margin: 0;
             overflow: visible;
-            padding-inline-end: 0;
+            border-top: 1px solid var(--border-subtle);
+            padding: 12px 16px 16px;
             scrollbar-gutter: auto;
           }
         }
 
-        @media (max-width: 599px) {
-          .learning-tabs {
+        @media (max-width: 639px) {
+          .resource-learning-panel[data-layout="article"] .learning-tabs,
+          .resource-learning-panel[data-layout="video"] .learning-tabs {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+          }
+
+          .script-options.is-visible {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
             width: 100%;
+            gap: 6px;
           }
 
-          .learning-tab-button {
+          .script-option-button {
             width: 100%;
+            min-width: 0;
+            padding-inline: 8px;
           }
 
-          .resource-main-grid {
-            grid-template-columns: 1fr;
+          .resource-chinese-line,
+          .resource-learning-panel[data-layout="article"] .resource-chinese-line {
+            font-size: 1.2rem;
+            line-height: 1.72;
           }
         }
 
         @media (max-width: 899px) and (orientation: landscape) and (max-height: 520px) {
-          .resource-learning-panel {
-            padding-top: 1rem !important;
-            padding-bottom: 1rem !important;
-          }
-
           .learning-toolbar {
-            padding-top: 0;
-            padding-bottom: 0.75rem;
+            padding-top: 12px;
+            padding-bottom: 10px;
           }
 
-          .resource-main-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+          .learning-panels {
+            padding-top: 10px;
           }
         }
       `}</style>

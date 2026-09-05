@@ -24,137 +24,100 @@ export function SupabaseLessonPage({
   const supportTextAlign = lesson.selectedDirection === "rtl"
     ? "text-right"
     : "text-left";
-  const segmentBlockLayout = lesson.selectedDirection === "rtl"
-    ? "flex flex-col items-end"
-    : "";
-  const segmentTextStyle = lesson.selectedDirection === "rtl"
-    ? { textAlign: "right" as const }
-    : undefined;
   const contentType = lesson.contentType ?? "unknown";
-  const isReading = contentType === "reading";
-  const modalityLabel = contentType === "video"
-    ? labels.videoResource
-    : contentType === "listening"
-      ? labels.listeningResource
-      : contentType === "reading"
-        ? labels.readingResource
-        : null;
+  const articleFamily = contentType === "reading"
+    || contentType === "listening"
+    || contentType === "practice_only"
+    || contentType === "review_set";
+
+  const learningPanel = (
+    <LearningPanel
+      lesson={lesson}
+      labels={labels}
+      interfaceDirection={interfaceDirection}
+      interfaceTextAlign={interfaceTextAlign}
+      supportTextAlign={supportTextAlign}
+      activeTab={activeTab}
+      learnerContextQuery={learnerContextQuery}
+    />
+  );
 
   return (
     <main
-      className="lesson-page-shell p4-resource-page mx-auto max-w-[98rem] px-4 py-6 sm:px-6 sm:py-8"
+      className="lesson-page-shell p4-resource-page mx-auto px-4 py-6 sm:px-6 sm:py-8"
       data-content-type={contentType}
       lang={interfaceLocaleCode}
       dir={interfaceDirection}
     >
-      <header className={`resource-identity ${interfaceTextAlign}`}>
-        <p className="resource-identity-eyebrow">{labels.resourceLabel}</p>
-        <h1 className="chinese-text" dir="ltr">{lesson.title}</h1>
-        <div className="resource-identity-meta-row">
-          <div className="resource-identity-meta" aria-label={labels.supportLanguageLabel}>
-            <span>{labels.supportLanguageLabel}</span>
-            <strong dir="ltr">{lesson.selectedCode.toUpperCase()}</strong>
-          </div>
-          {modalityLabel ? (
-            <div className="resource-modality-badge">
-              {modalityLabel}
-            </div>
-          ) : null}
-        </div>
-      </header>
-
-      <section
-        className="lesson-workspace"
-        data-content-type={contentType}
-        data-direction={interfaceDirection}
-      >
-        {!isReading ? (
+      {articleFamily ? (
+        <section className="article-resource-shell">
+          <header className={`resource-identity resource-identity--article ${interfaceTextAlign}`}>
+            <h1 className="resource-title" dir="ltr">{lesson.title}</h1>
+          </header>
+          {learningPanel}
+        </section>
+      ) : (
+        <section
+          className="lesson-workspace"
+          data-content-type={contentType}
+          data-direction={interfaceDirection}
+        >
           <div className="lesson-media-pane">
+            <header className={`resource-identity resource-identity--video ${interfaceTextAlign}`}>
+              <h1 className="resource-title" dir="ltr">{lesson.title}</h1>
+            </header>
             <LessonMediaColumn
               lesson={lesson}
               labels={labels}
               interfaceDirection={interfaceDirection}
             />
           </div>
-        ) : null}
-        <div className="lesson-learning-pane">
-          <LearningPanel
-            lesson={lesson}
-            labels={labels}
-            interfaceDirection={interfaceDirection}
-            interfaceTextAlign={interfaceTextAlign}
-            supportTextAlign={supportTextAlign}
-            segmentBlockLayout={segmentBlockLayout}
-            segmentTextStyle={segmentTextStyle}
-            activeTab={activeTab}
-            learnerContextQuery={learnerContextQuery}
-          />
-        </div>
-      </section>
+          <div className="lesson-learning-pane">
+            {learningPanel}
+          </div>
+        </section>
+      )}
 
       <style>{`
         .p4-resource-page {
-          width: min(100%, 98rem);
+          width: min(100%, 85rem);
         }
 
         .resource-identity {
-          margin-bottom: 1.5rem;
-          border-bottom: 1px solid var(--border-subtle);
-          padding: 0.5rem 0 1.25rem;
+          min-width: 0;
         }
 
-        .resource-identity-eyebrow {
-          margin: 0;
-          color: var(--interactive-primary);
-          font-size: 0.75rem;
-          font-weight: 800;
-          letter-spacing: 0.11em;
-          text-transform: uppercase;
-        }
-
-        .resource-identity h1 {
-          max-width: 62rem;
-          margin: 0.45rem 0 0;
-          color: var(--text-primary);
-          font-size: clamp(2rem, 4vw, 3.4rem);
-          line-height: 1.08;
-          overflow-wrap: anywhere;
-        }
-
-        .resource-identity-meta-row {
+        .resource-identity--video {
+          min-height: 8rem;
           display: flex;
-          flex-wrap: wrap;
-          align-items: center;
-          gap: 0.65rem;
-          margin-top: 0.9rem;
+          align-items: flex-start;
+          padding: 18px 2px 14px;
         }
 
-        .resource-identity-meta,
-        .resource-modality-badge {
-          display: inline-flex;
-          min-height: 44px;
-          align-items: center;
-          gap: 0.5rem;
-          border: 1px solid var(--border-subtle);
-          border-radius: 999px;
-          background: var(--surface-raised);
-          padding: 0.45rem 0.8rem;
-          color: var(--text-secondary);
-          font-size: 0.8rem;
+        .resource-identity--article {
+          width: min(100%, 65rem);
+          margin: 0 auto 18px;
+          padding: 2px 2px 0;
         }
 
-        .resource-identity-meta strong,
-        .resource-modality-badge {
-          color: var(--interactive-primary);
-          font-weight: 750;
-          letter-spacing: 0.04em;
+        .resource-title {
+          max-width: 52rem;
+          margin: 0;
+          color: var(--text-primary);
+          font-family: "Noto Serif CJK SC", "Songti SC", SimSun, Georgia, serif;
+          font-size: clamp(1.75rem, 2.2vw, 2rem);
+          font-weight: 700;
+          line-height: 1.22;
+          letter-spacing: -0.015em;
+          overflow-wrap: anywhere;
         }
 
         .p4-resource-page .lesson-workspace {
           display: grid;
-          grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+          grid-template-columns: minmax(0, 1.95fr) minmax(380px, 1fr);
           align-items: start;
-          gap: 1.5rem;
+          gap: 22px;
+          width: 100%;
         }
 
         .p4-resource-page .lesson-workspace[data-direction="rtl"] {
@@ -167,44 +130,39 @@ export function SupabaseLessonPage({
           width: 100%;
         }
 
+        .p4-resource-page .lesson-media-pane {
+          display: flex;
+          flex-direction: column;
+        }
+
         .p4-resource-page .lesson-media-card {
           position: sticky;
           top: 7rem;
-        }
-
-        .p4-resource-page .lesson-workspace[data-content-type="listening"] {
-          grid-template-columns: minmax(0, 1fr);
-          gap: 1.25rem;
-        }
-
-        .p4-resource-page .lesson-workspace[data-content-type="listening"] .lesson-media-pane {
-          width: min(100%, 72rem);
-          margin-inline: auto;
-        }
-
-        .p4-resource-page .lesson-workspace[data-content-type="listening"] .lesson-learning-pane {
-          width: min(100%, 76rem);
-          margin-inline: auto;
-        }
-
-        .p4-resource-page .lesson-workspace[data-content-type="listening"] .lesson-media-card {
-          position: static;
-        }
-
-        .p4-resource-page .lesson-workspace[data-content-type="reading"] {
-          display: block;
-          width: min(100%, 76rem);
-          margin-inline: auto;
-        }
-
-        .p4-resource-page .lesson-workspace[data-content-type="reading"] .lesson-learning-pane {
           width: 100%;
+        }
+
+        .p4-resource-page .lesson-media-surface {
+          width: 100%;
+          border-radius: 18px;
+          background: #211e1b;
+          padding: 12px;
+          box-shadow: 0 16px 46px rgba(55, 52, 43, 0.08);
+        }
+
+        .p4-resource-page .intent-youtube-frame,
+        .p4-resource-page .intent-youtube-trigger {
+          border-radius: 14px;
+        }
+
+        .article-resource-shell {
+          width: min(100%, 65rem);
+          margin-inline: auto;
         }
 
         @media (min-width: 900px) and (max-width: 1199px) {
           .p4-resource-page .lesson-workspace {
-            grid-template-columns: minmax(0, 1.25fr) minmax(300px, 1fr);
-            gap: 1rem;
+            grid-template-columns: minmax(0, 1.45fr) minmax(360px, 1fr);
+            gap: 18px;
           }
 
           .p4-resource-page .lesson-media-card {
@@ -212,51 +170,30 @@ export function SupabaseLessonPage({
           }
         }
 
-        @media (min-width: 600px) and (max-width: 899px) and (orientation: portrait) {
+        @media (max-width: 899px) {
           .p4-resource-page .lesson-workspace,
           .p4-resource-page .lesson-workspace[data-direction="rtl"] {
             display: flex;
             flex-direction: column;
-            gap: 1.25rem;
+            gap: 16px;
           }
 
-          .p4-resource-page .lesson-workspace[data-content-type="reading"] {
-            display: block;
+          .resource-identity--video {
+            min-height: 0;
+            padding: 0 2px 2px;
+          }
+
+          .resource-identity--article {
+            margin-bottom: 14px;
           }
 
           .p4-resource-page .lesson-media-card {
             position: static;
           }
-        }
 
-        @media (max-width: 899px) and (orientation: landscape) and (max-height: 520px) {
-          .p4-resource-page {
-            padding-top: 1rem !important;
-            padding-bottom: 1rem !important;
-          }
-
-          .resource-identity {
-            margin-bottom: 1rem;
-            padding-bottom: 0.8rem;
-          }
-
-          .resource-identity h1 {
-            font-size: clamp(1.75rem, 5vw, 2.35rem);
-          }
-
-          .p4-resource-page .lesson-workspace,
-          .p4-resource-page .lesson-workspace[data-direction="rtl"] {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-          }
-
-          .p4-resource-page .lesson-workspace[data-content-type="reading"] {
-            display: block;
-          }
-
-          .p4-resource-page .lesson-media-card {
-            position: static;
+          .p4-resource-page .lesson-media-pane,
+          .p4-resource-page .lesson-learning-pane {
+            width: 100%;
           }
         }
 
@@ -266,29 +203,24 @@ export function SupabaseLessonPage({
             padding-right: 1rem !important;
           }
 
-          .resource-identity {
-            margin-bottom: 1rem;
-            padding-top: 0;
-            padding-bottom: 1rem;
+          .resource-title {
+            font-size: clamp(1.65rem, 8vw, 1.9rem);
           }
+        }
 
-          .resource-identity h1 {
-            font-size: clamp(1.8rem, 9vw, 2.45rem);
+        @media (max-width: 899px) and (orientation: landscape) and (max-height: 520px) {
+          .p4-resource-page {
+            padding-top: 1rem !important;
+            padding-bottom: 1rem !important;
           }
 
           .p4-resource-page .lesson-workspace,
           .p4-resource-page .lesson-workspace[data-direction="rtl"] {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
+            gap: 12px;
           }
 
-          .p4-resource-page .lesson-workspace[data-content-type="reading"] {
-            display: block;
-          }
-
-          .p4-resource-page .lesson-media-card {
-            position: static;
+          .resource-title {
+            font-size: 1.7rem;
           }
         }
       `}</style>
