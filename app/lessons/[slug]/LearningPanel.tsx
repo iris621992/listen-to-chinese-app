@@ -170,6 +170,20 @@ export function LearningPanel({
     },
   ];
 
+  const practiceLabels = {
+    exercise: labels.exercise,
+    noOptions: labels.noOptions,
+    noExercises: labels.noExercises,
+    exercisesUnavailable: labels.exercisesUnavailable,
+    openExerciseMedia: labels.openExerciseMedia,
+    checkAnswer: labels.checkAnswer,
+    checkingAnswer: labels.checkingAnswer,
+    answerCorrect: labels.answerCorrect,
+    answerIncorrect: labels.answerIncorrect,
+    lessonUpdatedReload: labels.lessonUpdatedReload,
+    answerCheckUnavailable: labels.answerCheckUnavailable,
+  };
+
   return (
     <section
       className={`resource-learning-panel flex w-full flex-col overscroll-contain rounded-[2rem] bg-paper p-5 pr-3 shadow-soft sm:p-6 sm:pr-4 ${interfaceTextAlign}`}
@@ -291,7 +305,7 @@ export function LearningPanel({
         {activeTab === "practice" ? (
           <PracticeTabContent
             lesson={lesson}
-            labels={labels}
+            labels={practiceLabels}
             interfaceDirection={interfaceDirection}
             interfaceTextAlign={interfaceTextAlign}
           />
