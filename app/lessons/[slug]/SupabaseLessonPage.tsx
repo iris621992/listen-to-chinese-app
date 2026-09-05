@@ -30,33 +30,53 @@ export function SupabaseLessonPage({
   const segmentTextStyle = lesson.selectedDirection === "rtl"
     ? { textAlign: "right" as const }
     : undefined;
+  const contentType = lesson.contentType ?? "unknown";
+  const isReading = contentType === "reading";
+  const modalityLabel = contentType === "video"
+    ? labels.videoResource
+    : contentType === "listening"
+      ? labels.listeningResource
+      : contentType === "reading"
+        ? labels.readingResource
+        : null;
 
   return (
     <main
       className="lesson-page-shell p4-resource-page mx-auto max-w-[98rem] px-4 py-6 sm:px-6 sm:py-8"
+      data-content-type={contentType}
       lang={interfaceLocaleCode}
       dir={interfaceDirection}
     >
       <header className={`resource-identity ${interfaceTextAlign}`}>
         <p className="resource-identity-eyebrow">{labels.resourceLabel}</p>
         <h1 className="chinese-text" dir="ltr">{lesson.title}</h1>
-        <div className="resource-identity-meta" aria-label={labels.supportLanguageLabel}>
-          <span>{labels.supportLanguageLabel}</span>
-          <strong dir="ltr">{lesson.selectedCode.toUpperCase()}</strong>
+        <div className="resource-identity-meta-row">
+          <div className="resource-identity-meta" aria-label={labels.supportLanguageLabel}>
+            <span>{labels.supportLanguageLabel}</span>
+            <strong dir="ltr">{lesson.selectedCode.toUpperCase()}</strong>
+          </div>
+          {modalityLabel ? (
+            <div className="resource-modality-badge">
+              {modalityLabel}
+            </div>
+          ) : null}
         </div>
       </header>
 
       <section
         className="lesson-workspace"
+        data-content-type={contentType}
         data-direction={interfaceDirection}
       >
-        <div className="lesson-media-pane">
-          <LessonMediaColumn
-            lesson={lesson}
-            labels={labels}
-            interfaceDirection={interfaceDirection}
-          />
-        </div>
+        {!isReading ? (
+          <div className="lesson-media-pane">
+            <LessonMediaColumn
+              lesson={lesson}
+              labels={labels}
+              interfaceDirection={interfaceDirection}
+            />
+          </div>
+        ) : null}
         <div className="lesson-learning-pane">
           <LearningPanel
             lesson={lesson}
@@ -101,12 +121,20 @@ export function SupabaseLessonPage({
           overflow-wrap: anywhere;
         }
 
-        .resource-identity-meta {
+        .resource-identity-meta-row {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 0.65rem;
+          margin-top: 0.9rem;
+        }
+
+        .resource-identity-meta,
+        .resource-modality-badge {
           display: inline-flex;
           min-height: 44px;
           align-items: center;
           gap: 0.5rem;
-          margin-top: 0.9rem;
           border: 1px solid var(--border-subtle);
           border-radius: 999px;
           background: var(--surface-raised);
@@ -115,9 +143,11 @@ export function SupabaseLessonPage({
           font-size: 0.8rem;
         }
 
-        .resource-identity-meta strong {
+        .resource-identity-meta strong,
+        .resource-modality-badge {
           color: var(--interactive-primary);
-          letter-spacing: 0.06em;
+          font-weight: 750;
+          letter-spacing: 0.04em;
         }
 
         .p4-resource-page .lesson-workspace {
@@ -142,6 +172,35 @@ export function SupabaseLessonPage({
           top: 7rem;
         }
 
+        .p4-resource-page .lesson-workspace[data-content-type="listening"] {
+          grid-template-columns: minmax(0, 1fr);
+          gap: 1.25rem;
+        }
+
+        .p4-resource-page .lesson-workspace[data-content-type="listening"] .lesson-media-pane {
+          width: min(100%, 72rem);
+          margin-inline: auto;
+        }
+
+        .p4-resource-page .lesson-workspace[data-content-type="listening"] .lesson-learning-pane {
+          width: min(100%, 76rem);
+          margin-inline: auto;
+        }
+
+        .p4-resource-page .lesson-workspace[data-content-type="listening"] .lesson-media-card {
+          position: static;
+        }
+
+        .p4-resource-page .lesson-workspace[data-content-type="reading"] {
+          display: block;
+          width: min(100%, 76rem);
+          margin-inline: auto;
+        }
+
+        .p4-resource-page .lesson-workspace[data-content-type="reading"] .lesson-learning-pane {
+          width: 100%;
+        }
+
         @media (min-width: 900px) and (max-width: 1199px) {
           .p4-resource-page .lesson-workspace {
             grid-template-columns: minmax(0, 1.25fr) minmax(300px, 1fr);
@@ -159,6 +218,10 @@ export function SupabaseLessonPage({
             display: flex;
             flex-direction: column;
             gap: 1.25rem;
+          }
+
+          .p4-resource-page .lesson-workspace[data-content-type="reading"] {
+            display: block;
           }
 
           .p4-resource-page .lesson-media-card {
@@ -188,6 +251,10 @@ export function SupabaseLessonPage({
             gap: 1rem;
           }
 
+          .p4-resource-page .lesson-workspace[data-content-type="reading"] {
+            display: block;
+          }
+
           .p4-resource-page .lesson-media-card {
             position: static;
           }
@@ -214,6 +281,10 @@ export function SupabaseLessonPage({
             display: flex;
             flex-direction: column;
             gap: 1rem;
+          }
+
+          .p4-resource-page .lesson-workspace[data-content-type="reading"] {
+            display: block;
           }
 
           .p4-resource-page .lesson-media-card {

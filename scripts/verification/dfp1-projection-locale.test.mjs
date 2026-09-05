@@ -20,7 +20,7 @@ const registry = JSON.parse(
 const EXPECTED_PROJECTIONS = {
   LANGUAGE_PROJECTION: "code,native_name,direction",
   LESSON_PROJECTION:
-    "id,slug,title_original,title_support_default,youtube_id,status,quality_status,access_level,published_at,updated_at",
+    "id,slug,title_original,title_support_default,content_type,youtube_id,status,quality_status,access_level,published_at,updated_at",
   LESSON_SEGMENT_PROJECTION:
     "id,sort_order,original_text,phonetic_text",
   SEGMENT_TRANSLATION_PROJECTION:

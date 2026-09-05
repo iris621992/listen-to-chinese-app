@@ -146,6 +146,8 @@ export function LearningPanel({
         ? "border-orange-200 bg-cinnabar text-white"
         : "border-orange-200 bg-white text-stone-700"
     }`;
+  const readingMain = activeTab === "main" && lesson.contentType === "reading";
+  const showScriptContent = activeTab === "script" || readingMain;
 
   const mainLinks = [
     {
@@ -187,6 +189,7 @@ export function LearningPanel({
   return (
     <section
       className={`resource-learning-panel flex w-full flex-col overscroll-contain rounded-[2rem] bg-paper p-5 pr-3 shadow-soft sm:p-6 sm:pr-4 ${interfaceTextAlign}`}
+      data-content-type={lesson.contentType ?? "unknown"}
       dir={interfaceDirection}
     >
       <input
@@ -267,7 +270,7 @@ export function LearningPanel({
       </div>
 
       <div className="learning-panels">
-        {activeTab === "main" ? (
+        {activeTab === "main" && !readingMain ? (
           <MainTabContent
             labels={labels}
             links={mainLinks}
@@ -275,7 +278,7 @@ export function LearningPanel({
             interfaceTextAlign={interfaceTextAlign}
           />
         ) : null}
-        {activeTab === "script" ? (
+        {showScriptContent ? (
           <ScriptTabContent
             lesson={lesson}
             labels={labels}
@@ -320,6 +323,13 @@ export function LearningPanel({
           overscroll-behavior: contain;
         }
 
+        .resource-learning-panel[data-content-type="reading"],
+        .resource-learning-panel[data-content-type="listening"] {
+          height: auto;
+          max-height: none;
+          overflow: visible;
+        }
+
         .learning-toolbar {
           flex-shrink: 0;
           padding-top: 0.5rem;
@@ -348,6 +358,20 @@ export function LearningPanel({
           padding-inline-end: 0.5rem;
           padding-top: 1rem;
           scrollbar-gutter: stable;
+        }
+
+        .resource-learning-panel[data-content-type="reading"] .learning-panels,
+        .resource-learning-panel[data-content-type="listening"] .learning-panels {
+          flex: 0 1 auto;
+          min-height: auto;
+          overflow: visible;
+          padding-inline-end: 0;
+          scrollbar-gutter: auto;
+        }
+
+        .resource-learning-panel[data-content-type="reading"] .script-lines {
+          width: min(100%, 56rem);
+          margin-inline: auto;
         }
 
         .learning-panels::-webkit-scrollbar {

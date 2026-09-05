@@ -9,6 +9,13 @@ export type LessonUiLabels = {
   exercise: string;
   resourceLabel: string;
   resourceSections: string;
+  videoResource: string;
+  listeningResource: string;
+  readingResource: string;
+  listeningTitle: string;
+  listeningBody: string;
+  openListeningSource: string;
+  listeningSourceUnavailable: string;
   mainTab: string;
   mainTitle: string;
   mainBody: string;
@@ -71,6 +78,13 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     exercise: "Exercise",
     resourceLabel: "Resource",
     resourceSections: "Resource sections",
+    videoResource: "Video",
+    listeningResource: "Listening",
+    readingResource: "Reading",
+    listeningTitle: "Listen first.",
+    listeningBody: "Use the listening source first, then move into the script and study tools when you need support.",
+    openListeningSource: "Open listening source",
+    listeningSourceUnavailable: "The listening source is not available on this page yet.",
     mainTab: "Main",
     mainTitle: "Start with this resource.",
     mainBody: "Choose the part that helps you most right now. You can move between the script, vocabulary, grammar notes, and practice without following a fixed sequence.",
@@ -131,6 +145,13 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     exercise: "Câu",
     resourceLabel: "Tài nguyên",
     resourceSections: "Các phần của tài nguyên",
+    videoResource: "Video",
+    listeningResource: "Nghe",
+    readingResource: "Đọc",
+    listeningTitle: "Bắt đầu bằng việc nghe.",
+    listeningBody: "Hãy nghe trước, rồi chuyển sang nội dung và các công cụ học khi bạn cần hỗ trợ.",
+    openListeningSource: "Mở nguồn nghe",
+    listeningSourceUnavailable: "Nguồn nghe hiện chưa khả dụng trên trang này.",
     mainTab: "Chính",
     mainTitle: "Bắt đầu với tài nguyên này.",
     mainBody: "Chọn phần hữu ích nhất với bạn lúc này. Bạn có thể chuyển giữa nội dung, từ vựng, ghi chú ngữ pháp và bài tập mà không cần theo một thứ tự cố định.",
@@ -191,6 +212,13 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     exercise: "سؤال",
     resourceLabel: "المورد",
     resourceSections: "أقسام المورد",
+    videoResource: "فيديو",
+    listeningResource: "استماع",
+    readingResource: "قراءة",
+    listeningTitle: "ابدأ بالاستماع.",
+    listeningBody: "استمع أولاً، ثم انتقل إلى النص وأدوات التعلم عندما تحتاج إلى الدعم.",
+    openListeningSource: "افتح مصدر الاستماع",
+    listeningSourceUnavailable: "مصدر الاستماع غير متاح في هذه الصفحة بعد.",
     mainTab: "الرئيسية",
     mainTitle: "ابدأ بهذا المورد.",
     mainBody: "اختر الجزء الأكثر فائدة لك الآن. يمكنك التنقل بين النص والمفردات وملاحظات القواعد والتدريب من دون اتباع ترتيب ثابت.",
