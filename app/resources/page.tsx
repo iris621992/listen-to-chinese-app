@@ -28,7 +28,7 @@ export default async function ResourcesPage({ searchParams }: Props) {
   });
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+    <main className="learner-library-shell py-10 sm:py-14">
       <section className="rounded-[2rem] bg-paper p-6 shadow-soft sm:p-10">
         <p className="text-sm font-bold uppercase tracking-[0.25em] text-cinnabar">Resource Library</p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-5xl">Explore Chinese learning resources</h1>
