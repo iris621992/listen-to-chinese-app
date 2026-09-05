@@ -7,6 +7,27 @@ export type LessonUiLabels = {
   segment: string;
   practice: string;
   exercise: string;
+  resourceLabel: string;
+  resourceSections: string;
+  videoResource: string;
+  listeningResource: string;
+  readingResource: string;
+  listeningTitle: string;
+  listeningBody: string;
+  openListeningSource: string;
+  listeningSourceUnavailable: string;
+  mainTab: string;
+  mainTitle: string;
+  mainBody: string;
+  mainScriptTitle: string;
+  mainScriptBody: string;
+  mainVocabularyTitle: string;
+  mainVocabularyBody: string;
+  mainGrammarTitle: string;
+  mainGrammarBody: string;
+  mainPracticeTitle: string;
+  mainPracticeBody: string;
+  supportLanguageLabel: string;
   showPronunciation: string;
   showTranslation: string;
   scriptTab: string;
@@ -55,6 +76,27 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     segment: "Segment",
     practice: "Practice",
     exercise: "Exercise",
+    resourceLabel: "Resource",
+    resourceSections: "Resource sections",
+    videoResource: "Video",
+    listeningResource: "Listening",
+    readingResource: "Reading",
+    listeningTitle: "Listen first.",
+    listeningBody: "Use the listening source first, then move into the script and study tools when you need support.",
+    openListeningSource: "Open listening source",
+    listeningSourceUnavailable: "The listening source is not available on this page yet.",
+    mainTab: "Main",
+    mainTitle: "Start with this resource.",
+    mainBody: "Choose the part that helps you most right now. You can move between the script, vocabulary, grammar notes, and practice without following a fixed sequence.",
+    mainScriptTitle: "Script",
+    mainScriptBody: "Read the Chinese text with pronunciation and translation support.",
+    mainVocabularyTitle: "Vocabulary",
+    mainVocabularyBody: "Review vocabulary connected to this published resource when it is available.",
+    mainGrammarTitle: "Grammar",
+    mainGrammarBody: "Grammar notes are not available for this resource yet.",
+    mainPracticeTitle: "Practice",
+    mainPracticeBody: "Practice with exercises from the published version of this resource when they are available.",
+    supportLanguageLabel: "Support language",
     showPronunciation: "Pronunciation",
     showTranslation: "Translation",
     scriptTab: "Script",
@@ -101,6 +143,27 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     segment: "Dòng",
     practice: "Bài tập",
     exercise: "Câu",
+    resourceLabel: "Tài nguyên",
+    resourceSections: "Các phần của tài nguyên",
+    videoResource: "Video",
+    listeningResource: "Nghe",
+    readingResource: "Đọc",
+    listeningTitle: "Bắt đầu bằng việc nghe.",
+    listeningBody: "Hãy nghe trước, rồi chuyển sang nội dung và các công cụ học khi bạn cần hỗ trợ.",
+    openListeningSource: "Mở nguồn nghe",
+    listeningSourceUnavailable: "Nguồn nghe hiện chưa khả dụng trên trang này.",
+    mainTab: "Chính",
+    mainTitle: "Bắt đầu với tài nguyên này.",
+    mainBody: "Chọn phần hữu ích nhất với bạn lúc này. Bạn có thể chuyển giữa nội dung, từ vựng, ghi chú ngữ pháp và bài tập mà không cần theo một thứ tự cố định.",
+    mainScriptTitle: "Nội dung",
+    mainScriptBody: "Đọc tiếng Trung với hỗ trợ phiên âm và bản dịch.",
+    mainVocabularyTitle: "Từ vựng",
+    mainVocabularyBody: "Ôn từ vựng gắn với tài nguyên đã xuất bản này khi có sẵn.",
+    mainGrammarTitle: "Ngữ pháp",
+    mainGrammarBody: "Tài nguyên này hiện chưa có ghi chú ngữ pháp.",
+    mainPracticeTitle: "Bài tập",
+    mainPracticeBody: "Luyện tập với các bài tập thuộc phiên bản đã xuất bản của tài nguyên này khi có sẵn.",
+    supportLanguageLabel: "Ngôn ngữ hỗ trợ",
     showPronunciation: "Phiên âm",
     showTranslation: "Bản dịch",
     scriptTab: "Nội dung",
@@ -147,6 +210,27 @@ export const LESSON_UI_LABELS: Record<"en" | "vi" | "ar", LessonUiLabels> = {
     segment: "مقطع",
     practice: "تدريب",
     exercise: "سؤال",
+    resourceLabel: "المورد",
+    resourceSections: "أقسام المورد",
+    videoResource: "فيديو",
+    listeningResource: "استماع",
+    readingResource: "قراءة",
+    listeningTitle: "ابدأ بالاستماع.",
+    listeningBody: "استمع أولاً، ثم انتقل إلى النص وأدوات التعلم عندما تحتاج إلى الدعم.",
+    openListeningSource: "افتح مصدر الاستماع",
+    listeningSourceUnavailable: "مصدر الاستماع غير متاح في هذه الصفحة بعد.",
+    mainTab: "الرئيسية",
+    mainTitle: "ابدأ بهذا المورد.",
+    mainBody: "اختر الجزء الأكثر فائدة لك الآن. يمكنك التنقل بين النص والمفردات وملاحظات القواعد والتدريب من دون اتباع ترتيب ثابت.",
+    mainScriptTitle: "النص",
+    mainScriptBody: "اقرأ النص الصيني مع دعم النطق والترجمة.",
+    mainVocabularyTitle: "المفردات",
+    mainVocabularyBody: "راجع المفردات المرتبطة بهذا المورد المنشور عندما تكون متاحة.",
+    mainGrammarTitle: "القواعد",
+    mainGrammarBody: "ملاحظات القواعد غير متاحة لهذا المورد بعد.",
+    mainPracticeTitle: "التدريب",
+    mainPracticeBody: "تدرّب باستخدام تمارين النسخة المنشورة من هذا المورد عندما تكون متاحة.",
+    supportLanguageLabel: "لغة الدعم",
     showPronunciation: "النطق",
     showTranslation: "الترجمة",
     scriptTab: "النص",
