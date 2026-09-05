@@ -107,7 +107,7 @@ export function SupabaseLessonPage({
 
       <style>{`
         .p4-resource-page {
-          width: min(1360px, calc(100% - 64px));
+          width: min(1568px, calc(100% - 40px));
           max-width: none;
           margin-inline: auto;
           padding: 42px 0 64px;
@@ -197,6 +197,13 @@ export function SupabaseLessonPage({
         .article-resource-shell {
           max-width: 1040px;
           margin-inline: auto;
+        }
+
+        @media (min-width: 1200px) {
+          .p4-resource-page .video-learning {
+            height: clamp(500px, calc(100vh - 230px), 780px);
+            max-height: clamp(500px, calc(100vh - 230px), 780px);
+          }
         }
 
         @media (min-width: 900px) and (max-width: 1199px) {
