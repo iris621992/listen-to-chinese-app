@@ -221,10 +221,12 @@ test("lesson UI labels and shell direction use interface locale, not support loc
   assert.match(supabaseLessonPageSource, /supportTextAlign = lesson\.selectedDirection === "rtl"/);
 
   assert.match(learningPanelSource, /dir=\{interfaceDirection\}/);
-  assert.match(learningPanelSource, /toolbarAlignment = interfaceDirection === "rtl"/);
+  assert.match(learningPanelSource, /interfaceDirection: InterfaceTextDirection/);
+  assert.doesNotMatch(learningPanelSource, /dir=\{lesson\.selectedDirection\}/);
   assert.match(learningPanelSource, /lang:\s*languageCode/);
   assert.match(learningPanelSource, /interfaceDirection=\{interfaceDirection\}/);
   assert.match(learningPanelSource, /supportTextAlign=\{supportTextAlign\}/);
+  assert.match(scriptTabSource, /className="resource-chinese-line chinese-text" dir="ltr"/);
 });
 
 test("script and vocabulary keep support content direction while UI fallback/control direction is independent", () => {
