@@ -25,7 +25,7 @@
   --demo-shadow: 0 16px 46px rgba(55, 52, 43, .08);
 
   /* Shared learner-shell foundation. Keep text measures independent from this outer frame. */
-  --learner-shell-max: 98rem;
+  --learner-shell-max: 85rem;
   --learner-shell-wide-gutter: 32px;
   --demo-shell: var(--learner-shell-max);
 }
@@ -596,6 +596,11 @@
 
 @media (min-width: 1180px) {
   .learner-header-inner { min-width: 0; }
+  .home-explore-panel {
+    width: 100%;
+    max-width: 540px;
+    justify-self: end;
+  }
 }
 
 @media (min-width: 900px) and (max-width: 1179px) {
