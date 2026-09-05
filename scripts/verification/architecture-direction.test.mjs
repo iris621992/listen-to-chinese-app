@@ -270,16 +270,16 @@ test("Phase F PR-B Home keeps approved product, localization, discovery, and typ
   assert.doesNotMatch(homeCopy, /\bHSK\b/);
 
   assert.match(homeCopy, /export type HomeLocaleCode = "en" \| "vi" \| "ar"/);
-  assert.match(homeCopy, /"en":\s*\{/);
-  assert.match(homeCopy, /"vi":\s*\{/);
-  assert.match(homeCopy, /"ar":\s*\{/);
-  assert.doesNotMatch(homeCopy, /"de":\s*\{/);
+  assert.match(homeCopy, /(?:"en"|en):\s*\{/);
+  assert.match(homeCopy, /(?:"vi"|vi):\s*\{/);
+  assert.match(homeCopy, /(?:"ar"|ar):\s*\{/);
+  assert.doesNotMatch(homeCopy, /(?:"de"|de):\s*\{/);
   assert.match(homeCopy, /Library → Resource → Practice/);
   assert.match(homeCopy, /Thư viện → Tài nguyên → Luyện tập/);
   assert.match(homeCopy, /المكتبة ← المورد ← التدريب/);
   assert.match(homeCopy, /There is no fixed sequence/);
-  assert.match(homeCopy, /Không có trình tự cố định/);
-  assert.match(homeCopy, /لا يوجد تسلسل ثابت/);
+  assert.match(homeCopy, /Không có thứ tự bắt buộc/);
+  assert.match(homeCopy, /لا يوجد ترتيب ثابت/);
 
   assert.match(home, /src="\/brand\/yunchinese-home-large\.webp"/);
   assert.match(styles, /\.home-brand-logo\s*\{[^}]*transform:\s*none !important/s);
