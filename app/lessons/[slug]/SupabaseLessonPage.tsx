@@ -200,6 +200,14 @@ export function SupabaseLessonPage({
         }
 
         @media (min-width: 1200px) {
+          .p4-resource-page .learning-tab-button {
+            font-size: 15px;
+          }
+
+          .p4-resource-page .script-option-button {
+            font-size: 14px;
+          }
+
           .p4-resource-page .video-learning {
             height: clamp(500px, calc(100vh - 230px), 780px);
             max-height: clamp(500px, calc(100vh - 230px), 780px);
@@ -209,6 +217,14 @@ export function SupabaseLessonPage({
         @media (min-width: 900px) and (max-width: 1199px) {
           .p4-resource-page {
             width: min(1360px, calc(100% - 48px));
+          }
+
+          .p4-resource-page .learning-tab-button {
+            font-size: 14px;
+          }
+
+          .p4-resource-page .script-option-button {
+            font-size: 13.5px;
           }
 
           .video-head-grid,
