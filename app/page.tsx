@@ -48,17 +48,17 @@ export default async function Home({ searchParams }: Props) {
   const invalidLevel = proficiency.kind === "INVALID";
 
   const libraryCards = [
-    [copy.library.videoTitle, copy.library.videoBody],
-    [copy.library.listeningTitle, copy.library.listeningBody],
-    [copy.library.readingTitle, copy.library.readingBody],
-    [copy.library.practiceOnlyTitle, copy.library.practiceOnlyBody],
-    [copy.library.reviewTitle, copy.library.reviewBody],
+    ["▶", copy.library.videoTitle, copy.library.videoBody],
+    ["◉", copy.library.listeningTitle, copy.library.listeningBody],
+    ["文", copy.library.readingTitle, copy.library.readingBody],
+    ["✓", copy.library.practiceOnlyTitle, copy.library.practiceOnlyBody],
+    ["↺", copy.library.reviewTitle, copy.library.reviewBody],
   ] as const;
   const knowledgeCards = [
-    [copy.knowledge.vocabTitle, copy.knowledge.vocabBody],
-    [copy.knowledge.idiomTitle, copy.knowledge.idiomBody],
-    [copy.knowledge.compareTitle, copy.knowledge.compareBody],
-    [copy.knowledge.grammarTitle, copy.knowledge.grammarBody],
+    ["词", copy.knowledge.vocabTitle, copy.knowledge.vocabBody],
+    ["成", copy.knowledge.idiomTitle, copy.knowledge.idiomBody],
+    ["↔", copy.knowledge.compareTitle, copy.knowledge.compareBody],
+    ["法", copy.knowledge.grammarTitle, copy.knowledge.grammarBody],
   ] as const;
   const discoveryCards = [
     [copy.discovery.levelTitle, copy.discovery.levelBody],
@@ -66,8 +66,8 @@ export default async function Home({ searchParams }: Props) {
     [copy.discovery.libraryTitle, copy.discovery.libraryBody],
   ] as const;
   const guestCards = [
-    [copy.guest.guestTitle, copy.guest.guestBody],
-    [copy.guest.practiceTitle, copy.guest.practiceBody],
+    ["○", copy.guest.guestTitle, copy.guest.guestBody],
+    ["◇", copy.guest.practiceTitle, copy.guest.practiceBody],
   ] as const;
   const howCards = [
     [copy.how.discover, copy.how.discoverBody],
@@ -92,14 +92,14 @@ export default async function Home({ searchParams }: Props) {
             <div className="home-actions">
               <ContextLink href="/resources" query={learnerContextQuery} className="home-button home-button--primary">{copy.hero.ctaLibrary}</ContextLink>
               <ContextLink href="/knowledge" query={learnerContextQuery} className="home-button home-button--secondary">{copy.hero.ctaKnowledge}</ContextLink>
-              <ContextLink href="/practice" query={learnerContextQuery} className="home-button home-button--text">{copy.hero.ctaPractice}</ContextLink>
+              <ContextLink href="/practice" query={learnerContextQuery} className="home-button home-button--accent">{copy.hero.ctaPractice}</ContextLink>
             </div>
             <p className="home-north-star">{copy.hero.northStar}</p>
           </div>
           <aside className="home-explore-panel" aria-label={copy.hero.exploreTitle}>
             <p className="home-eyebrow">{copy.hero.exploreLabel}</p>
             <h2>{copy.hero.exploreTitle}</h2>
-            <p className="home-secondary">{copy.hero.exploreBody}</p>
+            <p className="home-panel-intro">{copy.hero.exploreBody}</p>
             <div className="home-explore-list">
               <ContextLink href="/resources" query={learnerContextQuery} className="home-mini-card">
                 <strong>{copy.hero.miniLibraryTitle}</strong><span>{copy.hero.miniLibraryBody}</span>
@@ -115,25 +115,29 @@ export default async function Home({ searchParams }: Props) {
         </div>
       </section>
 
-      <section className="home-section" data-home-section="library">
+      <section className="home-section home-section--warm" data-home-section="library">
         <div className="home-shell">
+          <p className="home-eyebrow">{copy.library.eyebrow}</p>
           <div className="home-section-heading">
-            <div><p className="home-eyebrow">{copy.library.eyebrow}</p><h2>{copy.library.title}</h2></div>
-            <p className="home-secondary">{copy.library.body}</p>
+            <h2>{copy.library.title}</h2>
+            <p>{copy.library.body}</p>
           </div>
           <div className="home-library-grid">
-            {libraryCards.map(([title, body]) => (
-              <article className="home-card" key={title}><h3>{title}</h3><p>{body}</p></article>
+            {libraryCards.map(([icon, title, body]) => (
+              <article className="home-content-card" key={title}>
+                <span className="home-card-icon" aria-hidden="true">{icon}</span>
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </article>
             ))}
           </div>
-          <div className="home-section-action">
-            <ContextLink href="/resources" query={learnerContextQuery} className="home-button home-button--secondary">{copy.library.cta}</ContextLink>
+          <div className="home-section-action home-section-action--link">
+            <ContextLink href="/resources" query={learnerContextQuery} className="home-text-link">{copy.library.cta}</ContextLink>
           </div>
 
           <div className="home-latest">
-            <div className="home-section-heading home-section-heading--latest">
-              <div><p className="home-eyebrow">{copy.library.latestEyebrow}</p><h2>{copy.library.latestTitle}</h2></div>
-            </div>
+            <p className="home-eyebrow">{copy.library.latestEyebrow}</p>
+            <h2>{copy.library.latestTitle}</h2>
             {invalidLevel ? (
               <p className="home-state">{copy.library.invalidLevel}</p>
             ) : discovery.page.items.length > 0 ? (
@@ -152,75 +156,85 @@ export default async function Home({ searchParams }: Props) {
         </div>
       </section>
 
-      <section className="home-section home-section--warm" data-home-section="knowledge">
+      <section className="home-section" data-home-section="knowledge">
         <div className="home-shell">
+          <p className="home-eyebrow">{copy.knowledge.eyebrow}</p>
           <div className="home-section-heading">
-            <div><p className="home-eyebrow">{copy.knowledge.eyebrow}</p><h2>{copy.knowledge.title}</h2></div>
-            <p className="home-secondary">{copy.knowledge.body}</p>
+            <h2>{copy.knowledge.title}</h2>
+            <p>{copy.knowledge.body}</p>
           </div>
           <div className="home-knowledge-grid">
-            {knowledgeCards.map(([title, body]) => (
-              <article className="home-card home-card--warm" key={title}><h3>{title}</h3><p>{body}</p></article>
+            {knowledgeCards.map(([icon, title, body]) => (
+              <article className="home-content-card home-content-card--feature" key={title}>
+                <span className="home-card-icon" aria-hidden="true">{icon}</span>
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </article>
             ))}
-          </div>
-          <div className="home-section-action">
-            <ContextLink href="/knowledge" query={learnerContextQuery} className="home-button home-button--secondary">{copy.knowledge.cta}</ContextLink>
           </div>
         </div>
       </section>
 
-      <section className="home-section" data-home-section="practice">
-        <div className="home-shell home-practice-grid">
-          <div>
-            <p className="home-eyebrow">{copy.practice.eyebrow}</p>
+      <section className="home-section home-section--sage-wash" data-home-section="practice">
+        <div className="home-shell">
+          <p className="home-eyebrow">{copy.practice.eyebrow}</p>
+          <div className="home-section-heading">
             <h2>{copy.practice.title}</h2>
-            <p className="home-secondary home-measure">{copy.practice.body}</p>
-            <div className="home-tags" aria-label={copy.practice.title}>
-              {copy.practice.tags.map((tag) => <span key={tag}>{tag}</span>)}
-            </div>
-            <ContextLink href="/practice" query={learnerContextQuery} className="home-button home-button--primary">{copy.practice.cta}</ContextLink>
+            <p>{copy.practice.body}</p>
+          </div>
+          <div className="home-tags" aria-label={copy.practice.title}>
+            {copy.practice.tags.map((tag) => <span key={tag}>{tag}</span>)}
           </div>
           <article className="home-practice-feature">
-            <p className="home-eyebrow home-eyebrow--sage">{copy.practice.featureEyebrow}</p>
-            <h3>{copy.practice.featureTitle}</h3>
-            <p>{copy.practice.featureBody}</p>
+            <div>
+              <p className="home-eyebrow home-eyebrow--light">{copy.practice.featureEyebrow}</p>
+              <h3>{copy.practice.featureTitle}</h3>
+              <p>{copy.practice.featureBody}</p>
+            </div>
+            <ContextLink href="/practice" query={learnerContextQuery} className="home-button home-button--light">{copy.practice.cta}</ContextLink>
           </article>
         </div>
       </section>
 
-      <section className="home-section home-section--sage-wash" data-home-section="discovery">
+      <section className="home-section" data-home-section="discovery">
         <div className="home-shell">
+          <p className="home-eyebrow">{copy.discovery.eyebrow}</p>
           <div className="home-section-heading">
-            <div><p className="home-eyebrow">{copy.discovery.eyebrow}</p><h2>{copy.discovery.title}</h2></div>
-            <p className="home-secondary">{copy.discovery.body}</p>
+            <h2>{copy.discovery.title}</h2>
+            <p>{copy.discovery.body}</p>
           </div>
           <div className="home-three-grid">
             {discoveryCards.map(([title, body]) => (
-              <article className="home-card home-card--quiet" key={title}><h3>{title}</h3><p>{body}</p></article>
+              <article className="home-info-card" key={title}><h3>{title}</h3><p>{body}</p></article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="home-section" data-home-section="guest">
-        <div className="home-shell">
-          <div className="home-section-heading">
-            <div><p className="home-eyebrow">{copy.guest.eyebrow}</p><h2>{copy.guest.title}</h2></div>
+      <section className="home-section home-section--sand" data-home-section="guest">
+        <div className="home-shell home-account-grid">
+          <div>
+            <p className="home-eyebrow">{copy.guest.eyebrow}</p>
+            <h2>{copy.guest.title}</h2>
             <p className="home-secondary">{copy.guest.body}</p>
           </div>
-          <div className="home-two-grid">
-            {guestCards.map(([title, body]) => (
-              <article className="home-card home-card--sand" key={title}><h3>{title}</h3><p>{body}</p></article>
+          <div className="home-account-cards">
+            {guestCards.map(([icon, title, body]) => (
+              <article className="home-account-card" key={title}>
+                <span aria-hidden="true">{icon}</span>
+                <div><h3>{title}</h3><p>{body}</p></div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="home-section home-section--warm" data-home-section="how">
+      <section className="home-section" data-home-section="how">
         <div className="home-shell">
+          <p className="home-eyebrow">{copy.how.eyebrow}</p>
           <div className="home-section-heading">
-            <div><p className="home-eyebrow">{copy.how.eyebrow}</p><h2>{copy.how.title}</h2></div>
-            <p className="home-secondary">{copy.how.body}</p>
+            <h2>{copy.how.title}</h2>
+            <p>{copy.how.body}</p>
           </div>
           <div className="home-how-grid">
             {howCards.map(([title, body], index) => (
@@ -236,22 +250,22 @@ export default async function Home({ searchParams }: Props) {
       <section className="home-section home-section--sage" data-home-section="positioning">
         <div className="home-shell home-positioning-grid">
           <div>
-            <p className="home-eyebrow home-eyebrow--sage">{copy.positioning.eyebrow}</p>
+            <p className="home-eyebrow home-eyebrow--light">{copy.positioning.eyebrow}</p>
             <h2>{copy.positioning.title}</h2>
             <p className="home-sage-secondary">{copy.positioning.body}</p>
           </div>
           <div className="home-positioning-list">
             {positioningCards.map(([title, body]) => (
-              <article key={title}><h3>{title}</h3><p>{body}</p></article>
+              <article key={title}><strong>{title}</strong><span>{body}</span></article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="home-section" data-home-section="growing">
+      <section className="home-section home-section--warm" data-home-section="growing">
         <div className="home-shell home-growing-grid">
           <div className="home-growing-art" aria-hidden="true">
-            <Image src="/brand/yunchinese-home-large.webp" alt="" width={240} height={240} className="home-brand-logo" />
+            <Image src="/brand/yunchinese-home-large.webp" alt="" width={332} height={332} className="home-brand-logo" />
           </div>
           <div>
             <p className="home-eyebrow">{copy.growing.eyebrow}</p>
@@ -264,11 +278,12 @@ export default async function Home({ searchParams }: Props) {
 
       <section className="home-section home-final" data-home-section="final">
         <div className="home-shell home-final-inner">
-          <div><h2>{copy.final.title}</h2><p>{copy.final.body}</p></div>
+          <h2>{copy.final.title}</h2>
+          <p>{copy.final.body}</p>
           <div className="home-actions">
             <ContextLink href="/resources" query={learnerContextQuery} className="home-button home-button--light">{copy.final.ctaLibrary}</ContextLink>
-            <ContextLink href="/knowledge" query={learnerContextQuery} className="home-button home-button--ghost-light">{copy.final.ctaKnowledge}</ContextLink>
-            <ContextLink href="/practice" query={learnerContextQuery} className="home-button home-button--ghost-light">{copy.final.ctaPractice}</ContextLink>
+            <ContextLink href="/knowledge" query={learnerContextQuery} className="home-button home-button--outline-light">{copy.final.ctaKnowledge}</ContextLink>
+            <ContextLink href="/practice" query={learnerContextQuery} className="home-button home-button--accent">{copy.final.ctaPractice}</ContextLink>
           </div>
         </div>
       </section>
