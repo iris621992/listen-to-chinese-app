@@ -146,6 +146,7 @@ function createStore(allRows) {
     let rows = allRows
       .filter((row) => row.published_at <= query.snapshotAt)
       .filter((row) => row.updated_at <= query.snapshotAt)
+      .filter((row) => query.contentType === null || row.content_type === query.contentType)
       .filter((row) => {
         if (query.levelCode === null && query.levelSystemCode === null) return true;
         return row.level?.code === query.levelCode
@@ -335,6 +336,7 @@ test("actual discovery flow uses one bounded store operation", async () => {
   assert.equal(store.calls[0].visibility, "published_free");
   assert.equal(store.calls[0].levelSystemCode, null);
   assert.equal(store.calls[0].levelCode, null);
+  assert.equal(store.calls[0].contentType, null);
   assert.ok(result.page.nextCursor);
 });
 
@@ -413,6 +415,72 @@ test("exact proficiency filters both system and level at the store boundary", as
   assert.equal(result.page.items[0].levelCode, "HSK1");
 });
 
+test("content type is an optional exact store boundary and Videos remains video-only across pages", async () => {
+  const rows = Array.from({ length: 36 }, (_, index) => rowFor(index, {
+    content_type: index % 3 === 0 ? "video" : index % 3 === 1 ? "reading" : "listening",
+  })).sort(compareRows);
+  const expectedVideoIds = rows
+    .filter((row) => row.content_type === "video")
+    .map((row) => row.id);
+  const seen = [];
+  let cursor = null;
+  do {
+    const store = createStore(rows);
+    const result = await actual.runDfp3DiscoveryFlow(
+      {
+        cursor,
+        pageSize: 5,
+        contentType: "video",
+        now: () => new Date(snapshotAt),
+      },
+      store.loadPage,
+    );
+    assert.equal(result.status, "FOUND");
+    assert.equal(store.calls[0].contentType, "video");
+    assert.ok(result.page.items.every((item) => item.contentType === "video"));
+    seen.push(...result.page.items.map((item) => item.id));
+    cursor = result.page.nextCursor;
+  } while (cursor);
+  assert.deepEqual(seen, expectedVideoIds);
+});
+
+test("invalid content type and content-type cursor mismatch fail closed before store access", async () => {
+  let invalidCalls = 0;
+  const invalid = await actual.runDfp3DiscoveryFlow(
+    { contentType: "not-a-resource-type" },
+    async () => {
+      invalidCalls += 1;
+      return { data: [], error: null };
+    },
+  );
+  assert.equal(invalid.status, "INVALID_CONTENT_TYPE");
+  assert.equal(invalidCalls, 0);
+
+  const first = await actual.runDfp3DiscoveryFlow(
+    { pageSize: 1, contentType: "video", now: () => new Date(snapshotAt) },
+    createStore([
+      rowFor(0, { content_type: "video" }),
+      rowFor(2, { content_type: "video" }),
+    ]).loadPage,
+  );
+  const cursor = decodeCursor(first.page.nextCursor);
+  assert.equal(cursor.contentType, "video");
+
+  for (const options of [
+    { cursor: first.page.nextCursor, contentType: "reading" },
+    { cursor: encodeCursor({ ...cursor, contentType: "listening" }), contentType: "video" },
+    { cursor: encodeCursor({ ...cursor, contentType: "unknown" }), contentType: "video" },
+  ]) {
+    let calls = 0;
+    const result = await actual.runDfp3DiscoveryFlow(options, async () => {
+      calls += 1;
+      return { data: [], error: null };
+    });
+    assert.equal(result.status, "INVALID_CURSOR");
+    assert.equal(calls, 0);
+  }
+});
+
 test("invalid, partial, empty, or whitespace proficiency fails closed before store access", async () => {
   for (const options of [
     { levelSystemCode: "HSK" },
@@ -447,6 +515,7 @@ test("malformed and context-mismatched cursors fail closed before store access",
   const cursor = decodeCursor(first.page.nextCursor);
   assert.equal(cursor.levelSystemCode, "HSK");
   assert.equal(cursor.levelCode, "HSK1");
+  assert.equal(cursor.contentType, null);
 
   for (const options of [
     { cursor: "not-json", levelSystemCode: "HSK", levelCode: "HSK1" },
@@ -468,7 +537,7 @@ test("malformed and context-mismatched cursors fail closed before store access",
   }
 });
 
-test("invalid rows, cross-system leaks, store errors, and oversized payloads fail closed", async () => {
+test("invalid rows, cross-system leaks, store errors, content-type leaks, and oversized payloads fail closed", async () => {
   const databaseError = await actual.runDfp3DiscoveryFlow({}, async () => ({ data: null, error: { message: "redacted" } }));
   assert.equal(databaseError.status, "DATABASE_ERROR");
 
@@ -480,6 +549,12 @@ test("invalid rows, cross-system leaks, store errors, and oversized payloads fai
     async () => ({ data: [rowFor(1)], error: null }),
   );
   assert.equal(wrongFilter.status, "DATABASE_ERROR");
+
+  const contentTypeLeak = await actual.runDfp3DiscoveryFlow(
+    { contentType: "video" },
+    async () => ({ data: [rowFor(0, { content_type: "reading" })], error: null }),
+  );
+  assert.equal(contentTypeLeak.status, "DATABASE_ERROR");
 
   const crossSystem = await actual.runDfp3DiscoveryFlow(
     { levelSystemCode: "HSK", levelCode: "HSK1" },
@@ -561,7 +636,7 @@ test("all-level discovery retains published lessons with no proficiency metadata
   assert.equal(result.page.items[0].levelCode, null);
 });
 
-test("production query is summary-only, publication-aware, and exact-pair source filtered", () => {
+test("production query is summary-only, publication-aware, exact-pair and optional-content-type filtered", () => {
   assert.match(discoverySource, /lesson-discovery-summary\.v2/);
   assert.match(discoverySource, /lesson-discovery-cursor\.v2/);
   assert.match(
@@ -578,13 +653,28 @@ test("production query is summary-only, publication-aware, and exact-pair source
   assert.match(discoverySource, /\.eq\("quality_status", "published"\)/);
   assert.match(discoverySource, /\.eq\("access_level", "free"\)/);
   assert.match(discoverySource, /\.not\("published_at", "is", null\)/);
+  assert.match(discoverySource, /\.eq\("content_type", storeQuery\.contentType\)/);
   assert.match(discoverySource, /\.eq\("level\.code", storeQuery\.levelCode\)/);
   assert.match(discoverySource, /\.eq\("level\.system\.code", storeQuery\.levelSystemCode\)/);
-  assert.match(discoverySource, /levelSystemCode,[\s\S]*?levelCode,[\s\S]*?localeCode,[\s\S]*?pageSize/);
+  assert.match(discoverySource, /levelSystemCode,[\s\S]*?levelCode,[\s\S]*?contentType,[\s\S]*?localeCode,[\s\S]*?pageSize/);
   assert.equal(discoverySource.match(/\.from\("lessons"\)/g)?.length, 2);
   assert.match(discoverySource, /verifyCachedVisibility/);
+  assert.match(discoverySource, /\.eq\("content_type", contentType\)/);
   assert.match(discoverySource, /\.eq\("level\.code", proficiency\.levelCode\)/);
   assert.match(discoverySource, /\.eq\("level\.system\.code", proficiency\.systemCode\)/);
+});
+
+test("Videos surface is video-only while generic resource routing and learner context remain intact", () => {
+  assert.match(resourcesSource, /contentType:\s*"video"/);
+  assert.match(resourcesSource, /pathname:\s*"\/resources"/);
+  assert.match(resourcesSource, /VIDEOS/);
+  assert.match(resourcesSource, /Khám phá video tiếng Trung/);
+  assert.doesNotMatch(resourcesSource, /Resource Library|reading, listening|practice-linked resources/i);
+  assert.match(headerSource, /library:\s*"Videos"/);
+  assert.match(headerSource, /library:\s*"Video"/);
+  assert.match(headerSource, /path:\s*"\/resources"/);
+  assert.match(cardSource, /pathname:\s*`\/lessons\/\$\{lesson\.slug\}`/);
+  assert.doesNotMatch(cardSource, /lesson\.contentType\.replace/);
 });
 
 test("global Level is consumed only where discovery exists and otherwise preserved", () => {
