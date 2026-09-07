@@ -26,7 +26,15 @@ const LESSON_DISCOVERY_EXACT_PROJECTION =
   `${LESSON_DISCOVERY_BASE_PROJECTION},level:levels!inner(code,system:level_systems!inner(code))`;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const CONTENT_TYPES = new Set([
+
+export type LessonDiscoveryContentType =
+  | "video"
+  | "reading"
+  | "listening"
+  | "practice_only"
+  | "review_set";
+
+const CONTENT_TYPES = new Set<LessonDiscoveryContentType>([
   "video",
   "reading",
   "listening",
@@ -45,6 +53,8 @@ type ExactProficiency = {
   levelCode: string;
 };
 
+type NormalizedContentType = LessonDiscoveryContentType | null | "INVALID";
+
 export type LessonDiscoverySummary = {
   id: string;
   slug: string;
@@ -52,12 +62,7 @@ export type LessonDiscoverySummary = {
   titleSupport: string | null;
   levelSystemCode: string | null;
   levelCode: string | null;
-  contentType:
-    | "video"
-    | "reading"
-    | "listening"
-    | "practice_only"
-    | "review_set";
+  contentType: LessonDiscoveryContentType;
   durationSeconds: number | null;
   accessLevel: "free";
   publishedAt: string;
@@ -76,6 +81,7 @@ export type LessonDiscoveryResult =
       status:
         | "UNCONFIGURED"
         | "INVALID_PROFICIENCY"
+        | "INVALID_CONTENT_TYPE"
         | "INVALID_CURSOR"
         | "DATABASE_ERROR"
         | "PAYLOAD_LIMIT_EXCEEDED";
@@ -89,6 +95,7 @@ type CursorEnvelope = {
   localeCode: string;
   levelSystemCode: string | null;
   levelCode: string | null;
+  contentType: LessonDiscoveryContentType | null;
   snapshotAt: string;
   publishedAt: string;
   id: string;
@@ -97,6 +104,7 @@ type CursorEnvelope = {
 export type LessonDiscoveryStoreQuery = {
   levelSystemCode: string | null;
   levelCode: string | null;
+  contentType: LessonDiscoveryContentType | null;
   localeCode: string;
   visibility: typeof LESSON_DISCOVERY_VISIBILITY;
   snapshotAt: string;
@@ -112,6 +120,7 @@ export type DiscoveryFlowOptions = {
   cursor?: string | null;
   levelSystemCode?: string | null;
   levelCode?: string | null;
+  contentType?: LessonDiscoveryContentType | string | null;
   pageSize?: number;
   requestedLocale?: string | null;
   now?: () => Date;
@@ -126,6 +135,17 @@ const emptyPage = (localeCode: string): LessonDiscoveryPage => ({
 
 const normalizedLocale = (value: string | null | undefined) =>
   getLearnerLocale(value)?.code ?? defaultLearnerLocaleCode;
+
+const normalizedContentType = (
+  value: string | null | undefined,
+): NormalizedContentType => {
+  if (value === null || value === undefined) return null;
+  const normalized = value.trim().toLowerCase();
+  if (normalized.length === 0) return "INVALID";
+  return CONTENT_TYPES.has(normalized as LessonDiscoveryContentType)
+    ? normalized as LessonDiscoveryContentType
+    : "INVALID";
+};
 
 const exactProficiencyFor = (
   levelSystemCode: string | null | undefined,
@@ -180,8 +200,12 @@ const decodeCursor = (value: string): CursorEnvelope | null => {
       return null;
     }
     const cursor = decoded as Row;
+    const cursorContentType = normalizedContentType(
+      typeof cursor.contentType === "string" ? cursor.contentType : null,
+    );
     if (
       !exactKeys(cursor, [
+        "contentType",
         "id",
         "levelCode",
         "levelSystemCode",
@@ -211,6 +235,10 @@ const decodeCursor = (value: string): CursorEnvelope | null => {
         )
       )
       || ((cursor.levelSystemCode === null) !== (cursor.levelCode === null))
+      || (
+        cursor.contentType !== null
+        && cursorContentType === "INVALID"
+      )
       || normalizedTimestamp(cursor.snapshotAt) !== cursor.snapshotAt
       || normalizedTimestamp(cursor.publishedAt) !== cursor.publishedAt
       || typeof cursor.id !== "string"
@@ -218,7 +246,20 @@ const decodeCursor = (value: string): CursorEnvelope | null => {
     ) {
       return null;
     }
-    return cursor as CursorEnvelope;
+    return {
+      version: cursor.version,
+      order: cursor.order,
+      visibility: cursor.visibility,
+      localeCode: cursor.localeCode,
+      levelSystemCode: cursor.levelSystemCode as string | null,
+      levelCode: cursor.levelCode as string | null,
+      contentType: cursor.contentType === null
+        ? null
+        : cursorContentType as LessonDiscoveryContentType,
+      snapshotAt: cursor.snapshotAt as string,
+      publishedAt: cursor.publishedAt as string,
+      id: cursor.id,
+    };
   } catch {
     return null;
   }
@@ -269,7 +310,7 @@ const summaryFromRow = (value: unknown): ParsedDiscoveryRow | null => {
       && typeof row.title_support_default !== "string"
     )
     || typeof row.content_type !== "string"
-    || !CONTENT_TYPES.has(row.content_type)
+    || !CONTENT_TYPES.has(row.content_type as LessonDiscoveryContentType)
     || (
       row.duration_seconds !== null
       && row.duration_seconds !== undefined
@@ -298,7 +339,7 @@ const summaryFromRow = (value: unknown): ParsedDiscoveryRow | null => {
           : null,
       levelSystemCode: proficiency?.systemCode ?? null,
       levelCode: proficiency?.levelCode ?? null,
-      contentType: row.content_type as LessonDiscoverySummary["contentType"],
+      contentType: row.content_type as LessonDiscoveryContentType,
       durationSeconds:
         typeof row.duration_seconds === "number" ? row.duration_seconds : null,
       accessLevel: "free",
@@ -331,19 +372,23 @@ export async function runDfp3DiscoveryFlow(
   if (proficiency === "INVALID") {
     return { status: "INVALID_PROFICIENCY", page: emptyPage(localeCode) };
   }
+  const contentType = normalizedContentType(options.contentType);
+  if (contentType === "INVALID") {
+    return { status: "INVALID_CONTENT_TYPE", page: emptyPage(localeCode) };
+  }
+
   const pageSize = normalizedPageSize(options.pageSize);
   const requestedCursor = options.cursor?.trim() || null;
   const cursor = requestedCursor ? decodeCursor(requestedCursor) : null;
   const requestDate = options.now?.() ?? new Date();
   const requestTime = requestDate.getTime();
-
   if (!Number.isFinite(requestTime)) {
     return { status: "DATABASE_ERROR", page: emptyPage(localeCode) };
   }
+
   const requestNow = new Date(requestTime).toISOString();
   const levelSystemCode = proficiency?.systemCode ?? null;
   const levelCode = proficiency?.levelCode ?? null;
-
   if (
     requestedCursor
     && (
@@ -351,6 +396,7 @@ export async function runDfp3DiscoveryFlow(
       || cursor.localeCode !== localeCode
       || cursor.levelSystemCode !== levelSystemCode
       || cursor.levelCode !== levelCode
+      || cursor.contentType !== contentType
       || cursor.snapshotAt > requestNow
       || cursor.publishedAt > cursor.snapshotAt
     )
@@ -362,6 +408,7 @@ export async function runDfp3DiscoveryFlow(
   const storeResult = await loadPage({
     levelSystemCode,
     levelCode,
+    contentType,
     localeCode,
     visibility: LESSON_DISCOVERY_VISIBILITY,
     snapshotAt,
@@ -388,6 +435,10 @@ export async function runDfp3DiscoveryFlow(
     new Set(summaries.map((item) => item.id)).size !== summaries.length
     || summaries.some((item) => item.publishedAt > snapshotAt)
     || parsedRows.some((item) => item.updatedAt > snapshotAt)
+    || (
+      contentType !== null
+      && summaries.some((item) => item.contentType !== contentType)
+    )
     || (
       proficiency !== null
       && summaries.some(
@@ -426,6 +477,7 @@ export async function runDfp3DiscoveryFlow(
           localeCode,
           levelSystemCode,
           levelCode,
+          contentType,
           snapshotAt,
           publishedAt: lastItem.publishedAt,
           id: lastItem.id,
@@ -467,6 +519,11 @@ export async function getLessonDiscoveryPage(
   if (proficiency === "INVALID") {
     return { status: "INVALID_PROFICIENCY", page: emptyPage(localeCode) };
   }
+  const contentType = normalizedContentType(options.contentType);
+  if (contentType === "INVALID") {
+    return { status: "INVALID_CONTENT_TYPE", page: emptyPage(localeCode) };
+  }
+
   const requestedCursor = options.cursor?.trim() || null;
   const cursor = requestedCursor ? decodeCursor(requestedCursor) : null;
   const levelSystemCode = proficiency?.systemCode ?? null;
@@ -484,6 +541,7 @@ export async function getLessonDiscoveryPage(
       || cursor.localeCode !== localeCode
       || cursor.levelSystemCode !== levelSystemCode
       || cursor.levelCode !== levelCode
+      || cursor.contentType !== contentType
       || cursor.snapshotAt > requestNow
       || cursor.publishedAt > cursor.snapshotAt
     )
@@ -516,10 +574,12 @@ export async function getLessonDiscoveryPage(
       cursor: requestedCursor,
       levelSystemCode,
       levelCode,
+      contentType,
       localeCode,
       pageSize,
     }),
   );
+
   const loadFresh = () =>
     runDfp3DiscoveryFlow(effectiveOptions, async (storeQuery) => {
       let query = supabase
@@ -539,6 +599,9 @@ export async function getLessonDiscoveryPage(
         .order("id", { ascending: false })
         .limit(storeQuery.limit);
 
+      if (storeQuery.contentType) {
+        query = query.eq("content_type", storeQuery.contentType);
+      }
       if (storeQuery.levelCode && storeQuery.levelSystemCode) {
         query = query
           .eq("level.code", storeQuery.levelCode)
@@ -551,6 +614,7 @@ export async function getLessonDiscoveryPage(
       }
       return query;
     });
+
   const cacheRead = await readPublicDiscovery<LessonDiscoveryResult>({
     adapter: nextPublicCacheAdapter,
     contentIdentity,
@@ -572,8 +636,8 @@ export async function getLessonDiscoveryPage(
         .from("lessons")
         .select(
           proficiency
-            ? "id,level:levels!inner(code,system:level_systems!inner(code))"
-            : "id",
+            ? "id,content_type,level:levels!inner(code,system:level_systems!inner(code))"
+            : "id,content_type",
         )
         .in("id", ids)
         .eq("status", "published")
@@ -582,6 +646,9 @@ export async function getLessonDiscoveryPage(
         .not("published_at", "is", null)
         .lte("published_at", requestNow)
         .limit(LESSON_DISCOVERY_MAX_PAGE_SIZE);
+      if (contentType) {
+        authority = authority.eq("content_type", contentType);
+      }
       if (proficiency) {
         authority = authority
           .eq("level.code", proficiency.levelCode)
@@ -604,6 +671,7 @@ export async function getLessonDiscoveryPage(
         : "NOT_PUBLIC";
     },
   });
+
   return cacheRead.status === "FOUND"
     ? cacheRead.value
     : { status: "DATABASE_ERROR", page: emptyPage(localeCode) };
