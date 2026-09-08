@@ -444,6 +444,15 @@ const durationBounds = (filter: LessonDiscoveryDurationFilter | null) => {
   }
 };
 
+const durationPostgrestFilter = (filter: LessonDiscoveryDurationFilter) => {
+  switch (filter) {
+    case "under5": return "duration_seconds.lt.300";
+    case "5to10": return "and(duration_seconds.gte.300,duration_seconds.lt.600)";
+    case "10to20": return "and(duration_seconds.gte.600,duration_seconds.lt.1200)";
+    case "20plus": return "duration_seconds.gte.1200";
+  }
+};
+
 const matchesDuration = (
   seconds: number | null,
   filter: LessonDiscoveryDurationFilter | null,
@@ -775,12 +784,7 @@ export async function getLessonDiscoveryPage(
         );
       }
       if (storeQuery.durationFilter) {
-        const bounds = durationBounds(storeQuery.durationFilter);
-        query = query.not("duration_seconds", "is", null);
-        if (bounds.min !== null) query = query.gte("duration_seconds", bounds.min);
-        if (bounds.maxExclusive !== null) {
-          query = query.lt("duration_seconds", bounds.maxExclusive);
-        }
+        query = query.or(durationPostgrestFilter(storeQuery.durationFilter));
       }
       if (storeQuery.levelCode && storeQuery.levelSystemCode) {
         query = query
@@ -837,12 +841,7 @@ export async function getLessonDiscoveryPage(
         );
       }
       if (durationFilter) {
-        const bounds = durationBounds(durationFilter);
-        authority = authority.not("duration_seconds", "is", null);
-        if (bounds.min !== null) authority = authority.gte("duration_seconds", bounds.min);
-        if (bounds.maxExclusive !== null) {
-          authority = authority.lt("duration_seconds", bounds.maxExclusive);
-        }
+        authority = authority.or(durationPostgrestFilter(durationFilter));
       }
       if (proficiency) {
         authority = authority
