@@ -44,7 +44,7 @@ type HeaderLabels = {
 const HEADER_LABELS: Record<string, HeaderLabels> = {
   en: {
     home: "Home",
-    library: "Library",
+    library: "Videos",
     knowledge: "Knowledge",
     practice: "Practice",
     level: "Level",
@@ -57,7 +57,7 @@ const HEADER_LABELS: Record<string, HeaderLabels> = {
   },
   vi: {
     home: "Trang chủ",
-    library: "Thư viện",
+    library: "Video",
     knowledge: "Kiến thức",
     practice: "Luyện tập",
     level: "Cấp độ",
@@ -70,7 +70,7 @@ const HEADER_LABELS: Record<string, HeaderLabels> = {
   },
   ar: {
     home: "الرئيسية",
-    library: "المكتبة",
+    library: "الفيديوهات",
     knowledge: "المعرفة",
     practice: "التدريب",
     level: "المستوى",

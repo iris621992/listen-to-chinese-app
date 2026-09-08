@@ -20,19 +20,44 @@ export const LESSON_DISCOVERY_MAX_PAYLOAD_BYTES = 96 * 1024;
 const LESSON_DISCOVERY_VISIBILITY = "published_free" as const;
 const LESSON_DISCOVERY_BASE_PROJECTION =
   "id,slug,title_original,title_support_default,content_type,duration_seconds,access_level,published_at,updated_at";
+const LESSON_DISCOVERY_CARD_MEDIA_PROJECTION = "thumbnail_url";
 const LESSON_DISCOVERY_ALL_PROJECTION =
-  `${LESSON_DISCOVERY_BASE_PROJECTION},level:levels(code,system:level_systems(code))`;
+  `${LESSON_DISCOVERY_BASE_PROJECTION},${LESSON_DISCOVERY_CARD_MEDIA_PROJECTION},level:levels(code,system:level_systems(code))`;
 const LESSON_DISCOVERY_EXACT_PROJECTION =
-  `${LESSON_DISCOVERY_BASE_PROJECTION},level:levels!inner(code,system:level_systems!inner(code))`;
+  `${LESSON_DISCOVERY_BASE_PROJECTION},${LESSON_DISCOVERY_CARD_MEDIA_PROJECTION},level:levels!inner(code,system:level_systems!inner(code))`;
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const CONTENT_TYPES = new Set([
+const SEARCH_DENIED_PATTERN = /[\u0000-\u001f\u007f",()\\%_*]/;
+
+export type LessonDiscoveryContentType =
+  | "video"
+  | "reading"
+  | "listening"
+  | "practice_only"
+  | "review_set";
+
+export type LessonDiscoveryDurationFilter =
+  | "under5"
+  | "5to10"
+  | "10to20"
+  | "20plus";
+
+export type LessonDiscoverySort = "newest" | "oldest";
+
+const CONTENT_TYPES = new Set<LessonDiscoveryContentType>([
   "video",
   "reading",
   "listening",
   "practice_only",
   "review_set",
 ]);
+const DURATION_FILTERS = new Set<LessonDiscoveryDurationFilter>([
+  "under5",
+  "5to10",
+  "10to20",
+  "20plus",
+]);
+const SORTS = new Set<LessonDiscoverySort>(["newest", "oldest"]);
 
 type Row = Record<string, unknown>;
 type DiscoveryStoreError = { message: string };
@@ -45,19 +70,20 @@ type ExactProficiency = {
   levelCode: string;
 };
 
+type NormalizedContentType = LessonDiscoveryContentType | null | "INVALID";
+type NormalizedDurationFilter = LessonDiscoveryDurationFilter | null | "INVALID";
+type NormalizedSearchQuery = string | null | "INVALID";
+type NormalizedSort = LessonDiscoverySort | "INVALID";
+
 export type LessonDiscoverySummary = {
   id: string;
   slug: string;
   titleOriginal: string;
   titleSupport: string | null;
+  thumbnailUrl: string | null;
   levelSystemCode: string | null;
   levelCode: string | null;
-  contentType:
-    | "video"
-    | "reading"
-    | "listening"
-    | "practice_only"
-    | "review_set";
+  contentType: LessonDiscoveryContentType;
   durationSeconds: number | null;
   accessLevel: "free";
   publishedAt: string;
@@ -76,6 +102,10 @@ export type LessonDiscoveryResult =
       status:
         | "UNCONFIGURED"
         | "INVALID_PROFICIENCY"
+        | "INVALID_CONTENT_TYPE"
+        | "INVALID_SEARCH"
+        | "INVALID_DURATION"
+        | "INVALID_SORT"
         | "INVALID_CURSOR"
         | "DATABASE_ERROR"
         | "PAYLOAD_LIMIT_EXCEEDED";
@@ -84,11 +114,12 @@ export type LessonDiscoveryResult =
 
 type CursorEnvelope = {
   version: typeof LESSON_DISCOVERY_CURSOR_VERSION;
-  order: typeof LESSON_DISCOVERY_ORDER_VERSION;
+  order: string;
   visibility: typeof LESSON_DISCOVERY_VISIBILITY;
   localeCode: string;
   levelSystemCode: string | null;
   levelCode: string | null;
+  contentType: LessonDiscoveryContentType | null;
   snapshotAt: string;
   publishedAt: string;
   id: string;
@@ -97,6 +128,10 @@ type CursorEnvelope = {
 export type LessonDiscoveryStoreQuery = {
   levelSystemCode: string | null;
   levelCode: string | null;
+  contentType: LessonDiscoveryContentType | null;
+  searchQuery: string | null;
+  durationFilter: LessonDiscoveryDurationFilter | null;
+  sort: LessonDiscoverySort;
   localeCode: string;
   visibility: typeof LESSON_DISCOVERY_VISIBILITY;
   snapshotAt: string;
@@ -112,6 +147,10 @@ export type DiscoveryFlowOptions = {
   cursor?: string | null;
   levelSystemCode?: string | null;
   levelCode?: string | null;
+  contentType?: LessonDiscoveryContentType | string | null;
+  searchQuery?: string | null;
+  durationFilter?: LessonDiscoveryDurationFilter | string | null;
+  sort?: LessonDiscoverySort | string | null;
   pageSize?: number;
   requestedLocale?: string | null;
   now?: () => Date;
@@ -126,6 +165,52 @@ const emptyPage = (localeCode: string): LessonDiscoveryPage => ({
 
 const normalizedLocale = (value: string | null | undefined) =>
   getLearnerLocale(value)?.code ?? defaultLearnerLocaleCode;
+
+const normalizedContentType = (
+  value: string | null | undefined,
+): NormalizedContentType => {
+  if (value === null || value === undefined) return null;
+  const normalized = value.trim().toLowerCase();
+  if (normalized.length === 0) return "INVALID";
+  return CONTENT_TYPES.has(normalized as LessonDiscoveryContentType)
+    ? normalized as LessonDiscoveryContentType
+    : "INVALID";
+};
+
+const normalizedSearchQuery = (
+  value: string | null | undefined,
+): NormalizedSearchQuery => {
+  if (value === null || value === undefined) return null;
+  const normalized = value.trim().replace(/\s+/g, " ");
+  if (normalized.length === 0) return null;
+  if (normalized.length > 120 || SEARCH_DENIED_PATTERN.test(normalized)) {
+    return "INVALID";
+  }
+  return normalized;
+};
+
+const normalizedDurationFilter = (
+  value: string | null | undefined,
+): NormalizedDurationFilter => {
+  if (value === null || value === undefined) return null;
+  const normalized = value.trim().toLowerCase();
+  if (normalized.length === 0 || normalized === "any") return null;
+  return DURATION_FILTERS.has(normalized as LessonDiscoveryDurationFilter)
+    ? normalized as LessonDiscoveryDurationFilter
+    : "INVALID";
+};
+
+const normalizedSort = (
+  value: string | null | undefined,
+): NormalizedSort => {
+  if (value === null || value === undefined || value.trim().length === 0) {
+    return "newest";
+  }
+  const normalized = value.trim().toLowerCase();
+  return SORTS.has(normalized as LessonDiscoverySort)
+    ? normalized as LessonDiscoverySort
+    : "INVALID";
+};
 
 const exactProficiencyFor = (
   levelSystemCode: string | null | undefined,
@@ -151,6 +236,21 @@ const normalizedTimestamp = (value: unknown) => {
   if (typeof value !== "string" || value.length > 64) return null;
   const timestamp = Date.parse(value);
   return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
+};
+
+const normalizedThumbnailUrl = (value: unknown) => {
+  if (value === null || value === undefined) return null;
+  if (typeof value !== "string" || value.length === 0 || value.length > 2048) {
+    return "INVALID" as const;
+  }
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:"
+      ? url.toString()
+      : "INVALID" as const;
+  } catch {
+    return "INVALID" as const;
+  }
 };
 
 const exactKeys = (value: Row, expected: string[]) => {
@@ -180,8 +280,12 @@ const decodeCursor = (value: string): CursorEnvelope | null => {
       return null;
     }
     const cursor = decoded as Row;
+    const cursorContentType = normalizedContentType(
+      typeof cursor.contentType === "string" ? cursor.contentType : null,
+    );
     if (
       !exactKeys(cursor, [
+        "contentType",
         "id",
         "levelCode",
         "levelSystemCode",
@@ -193,7 +297,9 @@ const decodeCursor = (value: string): CursorEnvelope | null => {
         "visibility",
       ])
       || cursor.version !== LESSON_DISCOVERY_CURSOR_VERSION
-      || cursor.order !== LESSON_DISCOVERY_ORDER_VERSION
+      || typeof cursor.order !== "string"
+      || cursor.order.length === 0
+      || cursor.order.length > 1024
       || cursor.visibility !== LESSON_DISCOVERY_VISIBILITY
       || typeof cursor.localeCode !== "string"
       || (
@@ -211,6 +317,10 @@ const decodeCursor = (value: string): CursorEnvelope | null => {
         )
       )
       || ((cursor.levelSystemCode === null) !== (cursor.levelCode === null))
+      || (
+        cursor.contentType !== null
+        && cursorContentType === "INVALID"
+      )
       || normalizedTimestamp(cursor.snapshotAt) !== cursor.snapshotAt
       || normalizedTimestamp(cursor.publishedAt) !== cursor.publishedAt
       || typeof cursor.id !== "string"
@@ -218,7 +328,20 @@ const decodeCursor = (value: string): CursorEnvelope | null => {
     ) {
       return null;
     }
-    return cursor as CursorEnvelope;
+    return {
+      version: cursor.version,
+      order: cursor.order,
+      visibility: cursor.visibility,
+      localeCode: cursor.localeCode,
+      levelSystemCode: cursor.levelSystemCode as string | null,
+      levelCode: cursor.levelCode as string | null,
+      contentType: cursor.contentType === null
+        ? null
+        : cursorContentType as LessonDiscoveryContentType,
+      snapshotAt: cursor.snapshotAt as string,
+      publishedAt: cursor.publishedAt as string,
+      id: cursor.id,
+    };
   } catch {
     return null;
   }
@@ -255,6 +378,7 @@ const summaryFromRow = (value: unknown): ParsedDiscoveryRow | null => {
   const publishedAt = normalizedTimestamp(row.published_at);
   const updatedAt = normalizedTimestamp(row.updated_at);
   const proficiency = proficiencyFrom(row.level);
+  const thumbnailUrl = normalizedThumbnailUrl(row.thumbnail_url);
   if (
     typeof row.id !== "string"
     || !UUID_PATTERN.test(row.id)
@@ -268,8 +392,9 @@ const summaryFromRow = (value: unknown): ParsedDiscoveryRow | null => {
       && row.title_support_default !== undefined
       && typeof row.title_support_default !== "string"
     )
+    || thumbnailUrl === "INVALID"
     || typeof row.content_type !== "string"
-    || !CONTENT_TYPES.has(row.content_type)
+    || !CONTENT_TYPES.has(row.content_type as LessonDiscoveryContentType)
     || (
       row.duration_seconds !== null
       && row.duration_seconds !== undefined
@@ -296,9 +421,10 @@ const summaryFromRow = (value: unknown): ParsedDiscoveryRow | null => {
         typeof row.title_support_default === "string"
           ? row.title_support_default
           : null,
+      thumbnailUrl,
       levelSystemCode: proficiency?.systemCode ?? null,
       levelCode: proficiency?.levelCode ?? null,
-      contentType: row.content_type as LessonDiscoverySummary["contentType"],
+      contentType: row.content_type as LessonDiscoveryContentType,
       durationSeconds:
         typeof row.duration_seconds === "number" ? row.duration_seconds : null,
       accessLevel: "free",
@@ -308,16 +434,92 @@ const summaryFromRow = (value: unknown): ParsedDiscoveryRow | null => {
   };
 };
 
+const durationBounds = (filter: LessonDiscoveryDurationFilter | null) => {
+  switch (filter) {
+    case "under5": return { min: null, maxExclusive: 300 };
+    case "5to10": return { min: 300, maxExclusive: 600 };
+    case "10to20": return { min: 600, maxExclusive: 1200 };
+    case "20plus": return { min: 1200, maxExclusive: null };
+    default: return { min: null, maxExclusive: null };
+  }
+};
+
+const durationPostgrestFilter = (filter: LessonDiscoveryDurationFilter) => {
+  switch (filter) {
+    case "under5": return "duration_seconds.lt.300";
+    case "5to10": return "and(duration_seconds.gte.300,duration_seconds.lt.600)";
+    case "10to20": return "and(duration_seconds.gte.600,duration_seconds.lt.1200)";
+    case "20plus": return "duration_seconds.gte.1200";
+  }
+};
+
+const matchesDuration = (
+  seconds: number | null,
+  filter: LessonDiscoveryDurationFilter | null,
+) => {
+  if (!filter) return true;
+  if (seconds === null) return false;
+  const bounds = durationBounds(filter);
+  return (bounds.min === null || seconds >= bounds.min)
+    && (bounds.maxExclusive === null || seconds < bounds.maxExclusive);
+};
+
+const matchesSearch = (summary: LessonDiscoverySummary, searchQuery: string | null) => {
+  if (!searchQuery) return true;
+  const needle = searchQuery.toLocaleLowerCase();
+  return summary.titleOriginal.toLocaleLowerCase().includes(needle)
+    || summary.titleSupport?.toLocaleLowerCase().includes(needle) === true;
+};
+
 const compareSummary = (
   left: LessonDiscoverySummary,
   right: LessonDiscoverySummary,
+  sort: LessonDiscoverySort,
 ) => {
-  const dateOrder = right.publishedAt.localeCompare(left.publishedAt);
-  return dateOrder !== 0 ? dateOrder : right.id.localeCompare(left.id);
+  const dateOrder = left.publishedAt.localeCompare(right.publishedAt);
+  const idOrder = left.id.localeCompare(right.id);
+  return sort === "oldest"
+    ? (dateOrder !== 0 ? dateOrder : idOrder)
+    : (dateOrder !== 0 ? -dateOrder : -idOrder);
+};
+
+const isAfterCursor = (
+  summary: LessonDiscoverySummary,
+  cursor: CursorEnvelope,
+  sort: LessonDiscoverySort,
+) => sort === "oldest"
+  ? summary.publishedAt > cursor.publishedAt
+    || (summary.publishedAt === cursor.publishedAt && summary.id > cursor.id)
+  : summary.publishedAt < cursor.publishedAt
+    || (summary.publishedAt === cursor.publishedAt && summary.id < cursor.id);
+
+const discoveryOrderIdentity = (
+  searchQuery: string | null,
+  durationFilter: LessonDiscoveryDurationFilter | null,
+  sort: LessonDiscoverySort,
+) => {
+  if (!searchQuery && !durationFilter && sort === "newest") {
+    return LESSON_DISCOVERY_ORDER_VERSION;
+  }
+  const context = Buffer.from(
+    JSON.stringify({ searchQuery, durationFilter, sort }),
+    "utf8",
+  ).toString("base64url");
+  return `published_at_id_context.v2.${context}`;
 };
 
 const payloadBytes = (page: LessonDiscoveryPage) =>
   Buffer.byteLength(JSON.stringify(page), "utf8");
+
+const normalizedDiscoveryContext = (options: DiscoveryFlowOptions) => {
+  const searchQuery = normalizedSearchQuery(options.searchQuery);
+  if (searchQuery === "INVALID") return { status: "INVALID_SEARCH" as const };
+  const durationFilter = normalizedDurationFilter(options.durationFilter);
+  if (durationFilter === "INVALID") return { status: "INVALID_DURATION" as const };
+  const sort = normalizedSort(options.sort);
+  if (sort === "INVALID") return { status: "INVALID_SORT" as const };
+  return { status: "OK" as const, searchQuery, durationFilter, sort };
+};
 
 export async function runDfp3DiscoveryFlow(
   options: DiscoveryFlowOptions,
@@ -331,19 +533,29 @@ export async function runDfp3DiscoveryFlow(
   if (proficiency === "INVALID") {
     return { status: "INVALID_PROFICIENCY", page: emptyPage(localeCode) };
   }
+  const contentType = normalizedContentType(options.contentType);
+  if (contentType === "INVALID") {
+    return { status: "INVALID_CONTENT_TYPE", page: emptyPage(localeCode) };
+  }
+  const discoveryContext = normalizedDiscoveryContext(options);
+  if (discoveryContext.status !== "OK") {
+    return { status: discoveryContext.status, page: emptyPage(localeCode) };
+  }
+  const { searchQuery, durationFilter, sort } = discoveryContext;
+  const orderIdentity = discoveryOrderIdentity(searchQuery, durationFilter, sort);
+
   const pageSize = normalizedPageSize(options.pageSize);
   const requestedCursor = options.cursor?.trim() || null;
   const cursor = requestedCursor ? decodeCursor(requestedCursor) : null;
   const requestDate = options.now?.() ?? new Date();
   const requestTime = requestDate.getTime();
-
   if (!Number.isFinite(requestTime)) {
     return { status: "DATABASE_ERROR", page: emptyPage(localeCode) };
   }
+
   const requestNow = new Date(requestTime).toISOString();
   const levelSystemCode = proficiency?.systemCode ?? null;
   const levelCode = proficiency?.levelCode ?? null;
-
   if (
     requestedCursor
     && (
@@ -351,6 +563,8 @@ export async function runDfp3DiscoveryFlow(
       || cursor.localeCode !== localeCode
       || cursor.levelSystemCode !== levelSystemCode
       || cursor.levelCode !== levelCode
+      || cursor.contentType !== contentType
+      || cursor.order !== orderIdentity
       || cursor.snapshotAt > requestNow
       || cursor.publishedAt > cursor.snapshotAt
     )
@@ -362,6 +576,10 @@ export async function runDfp3DiscoveryFlow(
   const storeResult = await loadPage({
     levelSystemCode,
     levelCode,
+    contentType,
+    searchQuery,
+    durationFilter,
+    sort,
     localeCode,
     visibility: LESSON_DISCOVERY_VISIBILITY,
     snapshotAt,
@@ -388,6 +606,12 @@ export async function runDfp3DiscoveryFlow(
     new Set(summaries.map((item) => item.id)).size !== summaries.length
     || summaries.some((item) => item.publishedAt > snapshotAt)
     || parsedRows.some((item) => item.updatedAt > snapshotAt)
+    || summaries.some((item) => !matchesSearch(item, searchQuery))
+    || summaries.some((item) => !matchesDuration(item.durationSeconds, durationFilter))
+    || (
+      contentType !== null
+      && summaries.some((item) => item.contentType !== contentType)
+    )
     || (
       proficiency !== null
       && summaries.some(
@@ -396,20 +620,10 @@ export async function runDfp3DiscoveryFlow(
           || item.levelCode !== proficiency.levelCode,
       )
     )
-    || (
-      cursor
-      && summaries.some(
-        (item) =>
-          item.publishedAt > cursor.publishedAt
-          || (
-            item.publishedAt === cursor.publishedAt
-            && item.id >= cursor.id
-          ),
-      )
-    )
+    || (cursor && summaries.some((item) => !isAfterCursor(item, cursor, sort)))
     || summaries.some(
       (item, index) =>
-        index > 0 && compareSummary(summaries[index - 1], item) > 0,
+        index > 0 && compareSummary(summaries[index - 1], item, sort) > 0,
     )
   ) {
     return { status: "DATABASE_ERROR", page: emptyPage(localeCode) };
@@ -421,11 +635,12 @@ export async function runDfp3DiscoveryFlow(
     summaries.length > pageSize && lastItem
       ? encodeCursor({
           version: LESSON_DISCOVERY_CURSOR_VERSION,
-          order: LESSON_DISCOVERY_ORDER_VERSION,
+          order: orderIdentity,
           visibility: LESSON_DISCOVERY_VISIBILITY,
           localeCode,
           levelSystemCode,
           levelCode,
+          contentType,
           snapshotAt,
           publishedAt: lastItem.publishedAt,
           id: lastItem.id,
@@ -452,6 +667,8 @@ export const isLessonDiscoveryConfigured = Boolean(
     && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
 );
 
+const postgrestSearchPattern = (searchQuery: string) => `"*${searchQuery}*"`;
+
 export async function getLessonDiscoveryPage(
   options: DiscoveryFlowOptions = {},
 ): Promise<LessonDiscoveryResult> {
@@ -467,6 +684,17 @@ export async function getLessonDiscoveryPage(
   if (proficiency === "INVALID") {
     return { status: "INVALID_PROFICIENCY", page: emptyPage(localeCode) };
   }
+  const contentType = normalizedContentType(options.contentType);
+  if (contentType === "INVALID") {
+    return { status: "INVALID_CONTENT_TYPE", page: emptyPage(localeCode) };
+  }
+  const discoveryContext = normalizedDiscoveryContext(options);
+  if (discoveryContext.status !== "OK") {
+    return { status: discoveryContext.status, page: emptyPage(localeCode) };
+  }
+  const { searchQuery, durationFilter, sort } = discoveryContext;
+  const orderIdentity = discoveryOrderIdentity(searchQuery, durationFilter, sort);
+
   const requestedCursor = options.cursor?.trim() || null;
   const cursor = requestedCursor ? decodeCursor(requestedCursor) : null;
   const levelSystemCode = proficiency?.systemCode ?? null;
@@ -484,6 +712,8 @@ export async function getLessonDiscoveryPage(
       || cursor.localeCode !== localeCode
       || cursor.levelSystemCode !== levelSystemCode
       || cursor.levelCode !== levelCode
+      || cursor.contentType !== contentType
+      || cursor.order !== orderIdentity
       || cursor.snapshotAt > requestNow
       || cursor.publishedAt > cursor.snapshotAt
     )
@@ -516,10 +746,15 @@ export async function getLessonDiscoveryPage(
       cursor: requestedCursor,
       levelSystemCode,
       levelCode,
+      contentType,
+      searchQuery,
+      durationFilter,
+      sort,
       localeCode,
       pageSize,
     }),
   );
+
   const loadFresh = () =>
     runDfp3DiscoveryFlow(effectiveOptions, async (storeQuery) => {
       let query = supabase
@@ -535,22 +770,36 @@ export async function getLessonDiscoveryPage(
         .not("published_at", "is", null)
         .lte("published_at", storeQuery.snapshotAt)
         .lte("updated_at", storeQuery.snapshotAt)
-        .order("published_at", { ascending: false })
-        .order("id", { ascending: false })
+        .order("published_at", { ascending: storeQuery.sort === "oldest" })
+        .order("id", { ascending: storeQuery.sort === "oldest" })
         .limit(storeQuery.limit);
 
+      if (storeQuery.contentType) {
+        query = query.eq("content_type", storeQuery.contentType);
+      }
+      if (storeQuery.searchQuery) {
+        const pattern = postgrestSearchPattern(storeQuery.searchQuery);
+        query = query.or(
+          `title_original.ilike.${pattern},title_support_default.ilike.${pattern}`,
+        );
+      }
+      if (storeQuery.durationFilter) {
+        query = query.or(durationPostgrestFilter(storeQuery.durationFilter));
+      }
       if (storeQuery.levelCode && storeQuery.levelSystemCode) {
         query = query
           .eq("level.code", storeQuery.levelCode)
           .eq("level.system.code", storeQuery.levelSystemCode);
       }
       if (storeQuery.after) {
+        const comparator = storeQuery.sort === "oldest" ? "gt" : "lt";
         query = query.or(
-          `published_at.lt.${storeQuery.after.publishedAt},and(published_at.eq.${storeQuery.after.publishedAt},id.lt.${storeQuery.after.id})`,
+          `published_at.${comparator}.${storeQuery.after.publishedAt},and(published_at.eq.${storeQuery.after.publishedAt},id.${comparator}.${storeQuery.after.id})`,
         );
       }
       return query;
     });
+
   const cacheRead = await readPublicDiscovery<LessonDiscoveryResult>({
     adapter: nextPublicCacheAdapter,
     contentIdentity,
@@ -572,8 +821,8 @@ export async function getLessonDiscoveryPage(
         .from("lessons")
         .select(
           proficiency
-            ? "id,level:levels!inner(code,system:level_systems!inner(code))"
-            : "id",
+            ? "id,content_type,level:levels!inner(code,system:level_systems!inner(code))"
+            : "id,content_type",
         )
         .in("id", ids)
         .eq("status", "published")
@@ -582,6 +831,18 @@ export async function getLessonDiscoveryPage(
         .not("published_at", "is", null)
         .lte("published_at", requestNow)
         .limit(LESSON_DISCOVERY_MAX_PAGE_SIZE);
+      if (contentType) {
+        authority = authority.eq("content_type", contentType);
+      }
+      if (searchQuery) {
+        const pattern = postgrestSearchPattern(searchQuery);
+        authority = authority.or(
+          `title_original.ilike.${pattern},title_support_default.ilike.${pattern}`,
+        );
+      }
+      if (durationFilter) {
+        authority = authority.or(durationPostgrestFilter(durationFilter));
+      }
       if (proficiency) {
         authority = authority
           .eq("level.code", proficiency.levelCode)
@@ -604,6 +865,7 @@ export async function getLessonDiscoveryPage(
         : "NOT_PUBLIC";
     },
   });
+
   return cacheRead.status === "FOUND"
     ? cacheRead.value
     : { status: "DATABASE_ERROR", page: emptyPage(localeCode) };
