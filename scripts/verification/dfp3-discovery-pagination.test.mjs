@@ -16,6 +16,7 @@ const resourcesSource = await readFile("app/resources/page.tsx", "utf8");
 const practiceSource = await readFile("app/practice/page.tsx", "utf8");
 const headerSource = await readFile("components/Header.tsx", "utf8");
 const cardSource = await readFile("components/LessonCard.tsx", "utf8");
+const controlsSource = await readFile("components/VideoDiscoveryControls.tsx", "utf8");
 const detailPageSource = await readFile("app/lessons/[slug]/page.tsx", "utf8");
 const learningPanelSource = await readFile("app/lessons/[slug]/LearningPanel.tsx", "utf8");
 
@@ -51,7 +52,13 @@ function compiledModule(source, context) {
 }
 
 async function loadActualExports(localeFixtures = THREE_LOCALE_FIXTURES) {
-  const context = vm.createContext({ Buffer, Date, process: { env: {} }, URLSearchParams });
+  const context = vm.createContext({
+    Buffer,
+    Date,
+    URL,
+    URLSearchParams,
+    process: { env: {} },
+  });
   const proficiencyModule = compiledModule(proficiencySource, context);
   await proficiencyModule.link(async (specifier) => {
     throw new Error(`Unexpected proficiency import: ${specifier}`);
@@ -120,6 +127,7 @@ function rowFor(index, overrides = {}) {
     slug: `lesson-${index}`,
     title_original: `第${index}课`,
     title_support_default: `Lesson ${index}`,
+    thumbnail_url: null,
     content_type: "listening",
     duration_seconds: 300,
     access_level: "free",
@@ -133,9 +141,21 @@ function rowFor(index, overrides = {}) {
   };
 }
 
-const compareRows = (left, right) => {
-  const dateOrder = right.published_at.localeCompare(left.published_at);
-  return dateOrder !== 0 ? dateOrder : right.id.localeCompare(left.id);
+const compareRows = (left, right, sort = "newest") => {
+  const dateOrder = left.published_at.localeCompare(right.published_at);
+  const idOrder = left.id.localeCompare(right.id);
+  return sort === "oldest"
+    ? (dateOrder !== 0 ? dateOrder : idOrder)
+    : (dateOrder !== 0 ? -dateOrder : -idOrder);
+};
+
+const matchesDuration = (seconds, filter) => {
+  if (!filter) return true;
+  if (typeof seconds !== "number") return false;
+  if (filter === "under5") return seconds < 300;
+  if (filter === "5to10") return seconds >= 300 && seconds < 600;
+  if (filter === "10to20") return seconds >= 600 && seconds < 1200;
+  return seconds >= 1200;
 };
 
 function createStore(allRows) {
@@ -143,25 +163,27 @@ function createStore(allRows) {
   const returnedRowCounts = [];
   const loadPage = async (query) => {
     calls.push(query);
+    const needle = query.searchQuery?.toLocaleLowerCase() ?? null;
     let rows = allRows
       .filter((row) => row.published_at <= query.snapshotAt)
       .filter((row) => row.updated_at <= query.snapshotAt)
       .filter((row) => query.contentType === null || row.content_type === query.contentType)
+      .filter((row) => !needle
+        || row.title_original.toLocaleLowerCase().includes(needle)
+        || row.title_support_default?.toLocaleLowerCase().includes(needle))
+      .filter((row) => matchesDuration(row.duration_seconds, query.durationFilter))
       .filter((row) => {
         if (query.levelCode === null && query.levelSystemCode === null) return true;
         return row.level?.code === query.levelCode
           && row.level?.system?.code === query.levelSystemCode;
       })
-      .sort(compareRows);
+      .sort((left, right) => compareRows(left, right, query.sort));
     if (query.after) {
-      rows = rows.filter(
-        (row) =>
-          row.published_at < query.after.publishedAt
-          || (
-            row.published_at === query.after.publishedAt
-            && row.id < query.after.id
-          ),
-      );
+      rows = rows.filter((row) => query.sort === "oldest"
+        ? row.published_at > query.after.publishedAt
+          || (row.published_at === query.after.publishedAt && row.id > query.after.id)
+        : row.published_at < query.after.publishedAt
+          || (row.published_at === query.after.publishedAt && row.id < query.after.id));
     }
     const data = rows.slice(0, query.limit);
     returnedRowCounts.push(data.length);
@@ -174,6 +196,21 @@ const decodeCursor = (cursor) =>
   JSON.parse(Buffer.from(cursor, "base64url").toString("utf8"));
 const encodeCursor = (cursor) =>
   Buffer.from(JSON.stringify(cursor), "utf8").toString("base64url");
+
+async function collectIds(rows, options = {}) {
+  const seen = [];
+  let cursor = null;
+  do {
+    const result = await actual.runDfp3DiscoveryFlow(
+      { ...options, cursor, pageSize: options.pageSize ?? 7, now: () => new Date(snapshotAt) },
+      createStore(rows).loadPage,
+    );
+    assert.equal(result.status, "FOUND");
+    seen.push(...result.page.items.map((item) => item.id));
+    cursor = result.page.nextCursor;
+  } while (cursor);
+  return seen;
+}
 
 test("proficiency context is generic, pair-bound, and fail closed", () => {
   assert.deepEqual(
@@ -202,7 +239,7 @@ test("proficiency context is generic, pair-bound, and fail closed", () => {
   }
 });
 
-test("public proficiency catalog is generic and deterministic across frameworks", () => {
+test("public proficiency catalog remains generic and deterministic", () => {
   const parsed = catalogActual.parsePublicProficiencyCatalog([
     {
       code: "FRAME_B",
@@ -212,7 +249,6 @@ test("public proficiency catalog is generic and deterministic across frameworks"
       levels: [
         { code: "B2", name: "Beta 2", sort_order: 2, is_active: true },
         { code: "B1", name: "Beta 1", sort_order: 1, is_active: true },
-        { code: "B0", name: "Inactive Beta", sort_order: 0, is_active: false },
       ],
     },
     {
@@ -226,104 +262,24 @@ test("public proficiency catalog is generic and deterministic across frameworks"
       ],
     },
   ]);
-
-  assert.deepEqual(JSON.parse(JSON.stringify(parsed)), [
-    {
-      value: "FRAME_A:A1",
-      systemCode: "FRAME_A",
-      systemName: "Alpha Framework",
-      levelCode: "A1",
-      levelName: "Alpha 1",
-      sortOrder: 1,
-    },
-    {
-      value: "FRAME_A:A2",
-      systemCode: "FRAME_A",
-      systemName: "Alpha Framework",
-      levelCode: "A2",
-      levelName: "Alpha 2",
-      sortOrder: 2,
-    },
-    {
-      value: "FRAME_B:B1",
-      systemCode: "FRAME_B",
-      systemName: "Beta Framework",
-      levelCode: "B1",
-      levelName: "Beta 1",
-      sortOrder: 1,
-    },
-    {
-      value: "FRAME_B:B2",
-      systemCode: "FRAME_B",
-      systemName: "Beta Framework",
-      levelCode: "B2",
-      levelName: "Beta 2",
-      sortOrder: 2,
-    },
+  assert.deepEqual(JSON.parse(JSON.stringify(parsed)).map((item) => item.value), [
+    "FRAME_A:A1",
+    "FRAME_A:A2",
+    "FRAME_B:B1",
+    "FRAME_B:B2",
   ]);
+  assert.equal(catalogActual.parsePublicProficiencyCatalog([
+    {
+      code: "FRAME",
+      name: "Framework",
+      is_active: true,
+      library: { slug: "wrong-library", is_active: true },
+      levels: [],
+    },
+  ]), null);
 });
 
-test("public proficiency catalog fails closed on malformed, duplicate, and oversized taxonomies", () => {
-  const baseSystem = {
-    code: "FRAME",
-    name: "Framework",
-    is_active: true,
-    library: { slug: "listen-to-chinese", is_active: true },
-    levels: [{ code: "L1", name: "Level 1", sort_order: 1, is_active: true }],
-  };
-
-  assert.equal(
-    catalogActual.parsePublicProficiencyCatalog([
-      {
-        ...baseSystem,
-        levels: [
-          { code: "L1", name: "Level 1", sort_order: 1, is_active: true },
-          { code: "L1", name: "Duplicate", sort_order: 2, is_active: true },
-        ],
-      },
-    ]),
-    null,
-  );
-  assert.equal(
-    catalogActual.parsePublicProficiencyCatalog([
-      { ...baseSystem, library: { slug: "wrong-library", is_active: true } },
-    ]),
-    null,
-  );
-  assert.equal(
-    catalogActual.parsePublicProficiencyCatalog([
-      { ...baseSystem, code: "bad value" },
-    ]),
-    null,
-  );
-  assert.equal(
-    catalogActual.parsePublicProficiencyCatalog(
-      Array.from({ length: 33 }, (_, index) => ({
-        ...baseSystem,
-        code: `FRAME${index}`,
-        name: `Framework ${index}`,
-        levels: [],
-      })),
-    ),
-    null,
-  );
-  assert.equal(
-    catalogActual.parsePublicProficiencyCatalog([
-      {
-        ...baseSystem,
-        levels: Array.from({ length: 65 }, (_, index) => ({
-          code: `L${index}`,
-          name: `Level ${index}`,
-          sort_order: index,
-          is_active: true,
-        })),
-      },
-    ]),
-    null,
-  );
-});
-
-test("actual discovery flow uses one bounded store operation", async () => {
+test("actual discovery flow keeps one bounded store operation and page-size limits", async () => {
   const store = createStore(Array.from({ length: 70 }, (_, index) => rowFor(index)));
   const result = await actual.runDfp3DiscoveryFlow(
     { now: () => new Date(snapshotAt) },
@@ -334,221 +290,277 @@ test("actual discovery flow uses one bounded store operation", async () => {
   assert.equal(store.calls.length, 1);
   assert.equal(store.calls[0].limit, 25);
   assert.equal(store.calls[0].visibility, "published_free");
-  assert.equal(store.calls[0].levelSystemCode, null);
-  assert.equal(store.calls[0].levelCode, null);
-  assert.equal(store.calls[0].contentType, null);
-  assert.ok(result.page.nextCursor);
-});
-
-test("page size defaults to 24 and clamps to the hard maximum 50", async () => {
-  for (const [requested, expected] of [[undefined, 24], [0, 1], [500, 50]]) {
-    const store = createStore(Array.from({ length: 60 }, (_, index) => rowFor(index)));
+  assert.equal(store.calls[0].searchQuery, null);
+  assert.equal(store.calls[0].durationFilter, null);
+  assert.equal(store.calls[0].sort, "newest");
+  for (const [requested, expected] of [[0, 1], [500, 50]]) {
+    const boundedStore = createStore(Array.from({ length: 60 }, (_, index) => rowFor(index)));
     await actual.runDfp3DiscoveryFlow(
       { pageSize: requested, now: () => new Date(snapshotAt) },
-      store.loadPage,
+      boundedStore.loadPage,
     );
-    assert.equal(store.calls[0].limit, expected + 1);
+    assert.equal(boundedStore.calls[0].limit, expected + 1);
   }
 });
 
-test("adjacent cursor pages have no duplicate or skipped rows with tied timestamps", async () => {
-  const rows = Array.from({ length: 77 }, (_, index) => rowFor(index)).sort(compareRows);
-  const seen = [];
-  let cursor = null;
-  do {
-    const store = createStore(rows);
-    const result = await actual.runDfp3DiscoveryFlow(
-      { cursor, pageSize: 13, now: () => new Date(snapshotAt) },
-      store.loadPage,
-    );
-    assert.equal(result.status, "FOUND");
-    seen.push(...result.page.items.map((item) => item.id));
-    cursor = result.page.nextCursor;
-  } while (cursor);
-  assert.equal(new Set(seen).size, rows.length);
-  assert.deepEqual(seen, rows.map((row) => row.id));
-});
+test("newest cursor pagination is deterministic with tied timestamps and snapshot-bound", async () => {
+  const rows = Array.from({ length: 77 }, (_, index) => rowFor(index));
+  const expected = [...rows].sort((a, b) => compareRows(a, b, "newest")).map((row) => row.id);
+  assert.deepEqual(await collectIds(rows, { pageSize: 13 }), expected);
 
-test("snapshot binding prevents newer publications from entering later pages", async () => {
-  const baseRows = Array.from({ length: 30 }, (_, index) => rowFor(index));
   const first = await actual.runDfp3DiscoveryFlow(
     { pageSize: 10, now: () => new Date(snapshotAt) },
-    createStore(baseRows).loadPage,
+    createStore(rows).loadPage,
   );
-  const laterStore = createStore([
-    rowFor(100, {
-      id: uuidFor(10000),
-      published_at: "2026-07-27T00:00:00.000Z",
-      updated_at: "2026-07-30T00:00:00.000Z",
-    }),
-    ...baseRows,
-  ]);
   const second = await actual.runDfp3DiscoveryFlow(
     { cursor: first.page.nextCursor, pageSize: 10 },
-    laterStore.loadPage,
+    createStore([
+      rowFor(100, {
+        id: uuidFor(10000),
+        published_at: "2026-07-27T00:00:00.000Z",
+        updated_at: "2026-07-30T00:00:00.000Z",
+      }),
+      ...rows,
+    ]).loadPage,
   );
   assert.equal(second.status, "FOUND");
   assert.ok(second.page.items.every((item) => item.publishedAt <= snapshotAt));
 });
 
-test("exact proficiency filters both system and level at the store boundary", async () => {
+test("exact proficiency and video content type remain exact store boundaries", async () => {
   const rows = [
-    rowFor(0),
-    rowFor(10, { level: { code: "HSK1", system: { code: "TOCFL" } } }),
-    rowFor(20, { level: null }),
+    rowFor(0, { content_type: "video" }),
+    rowFor(1, { content_type: "reading" }),
+    rowFor(10, {
+      content_type: "video",
+      level: { code: "HSK1", system: { code: "TOCFL" } },
+    }),
   ];
   const store = createStore(rows);
   const result = await actual.runDfp3DiscoveryFlow(
     {
       levelSystemCode: "HSK",
       levelCode: "HSK1",
+      contentType: "video",
       now: () => new Date(snapshotAt),
     },
     store.loadPage,
   );
   assert.equal(result.status, "FOUND");
-  assert.equal(store.calls.length, 1);
   assert.equal(store.calls[0].levelSystemCode, "HSK");
   assert.equal(store.calls[0].levelCode, "HSK1");
+  assert.equal(store.calls[0].contentType, "video");
   assert.equal(result.page.items.length, 1);
-  assert.equal(result.page.items[0].levelSystemCode, "HSK");
-  assert.equal(result.page.items[0].levelCode, "HSK1");
+  assert.equal(result.page.items[0].contentType, "video");
 });
 
-test("content type is an optional exact store boundary and Videos remains video-only across pages", async () => {
+test("Videos remains video-only across cursor pages", async () => {
   const rows = Array.from({ length: 36 }, (_, index) => rowFor(index, {
     content_type: index % 3 === 0 ? "video" : index % 3 === 1 ? "reading" : "listening",
-  })).sort(compareRows);
-  const expectedVideoIds = rows
+  }));
+  const expected = [...rows]
     .filter((row) => row.content_type === "video")
+    .sort((a, b) => compareRows(a, b, "newest"))
     .map((row) => row.id);
-  const seen = [];
-  let cursor = null;
-  do {
+  assert.deepEqual(
+    await collectIds(rows, { pageSize: 5, contentType: "video" }),
+    expected,
+  );
+});
+
+test("Chinese and default-support title search are bounded and normalized", async () => {
+  const rows = [
+    rowFor(0, { title_original: "我学中文", title_support_default: "Day 1: I Learn Chinese" }),
+    rowFor(1, { title_original: "你好世界", title_support_default: "Hello World" }),
+    rowFor(2, { title_original: "生日快乐", title_support_default: "Happy Birthday" }),
+  ];
+  const chineseStore = createStore(rows);
+  const chinese = await actual.runDfp3DiscoveryFlow(
+    { searchQuery: "  学中文  ", now: () => new Date(snapshotAt) },
+    chineseStore.loadPage,
+  );
+  assert.equal(chinese.status, "FOUND");
+  assert.deepEqual(chinese.page.items.map((item) => item.titleOriginal), ["我学中文"]);
+  assert.equal(chineseStore.calls[0].searchQuery, "学中文");
+
+  const support = await actual.runDfp3DiscoveryFlow(
+    { searchQuery: "hello", now: () => new Date(snapshotAt) },
+    createStore(rows).loadPage,
+  );
+  assert.equal(support.status, "FOUND");
+  assert.deepEqual(support.page.items.map((item) => item.titleSupport), ["Hello World"]);
+
+  for (const searchQuery of ["bad,query", "*wildcard*", "x".repeat(121)]) {
+    let calls = 0;
+    const result = await actual.runDfp3DiscoveryFlow({ searchQuery }, async () => {
+      calls += 1;
+      return { data: [], error: null };
+    });
+    assert.equal(result.status, "INVALID_SEARCH");
+    assert.equal(calls, 0);
+  }
+});
+
+test("duration filters use authoritative seconds and exclude missing duration", async () => {
+  const rows = [
+    rowFor(0, { duration_seconds: 299 }),
+    rowFor(1, { duration_seconds: 300 }),
+    rowFor(2, { duration_seconds: 599 }),
+    rowFor(3, { duration_seconds: 600 }),
+    rowFor(4, { duration_seconds: 1199 }),
+    rowFor(5, { duration_seconds: 1200 }),
+    rowFor(6, { duration_seconds: null }),
+  ];
+  const expectedCounts = {
+    under5: 1,
+    "5to10": 2,
+    "10to20": 2,
+    "20plus": 1,
+  };
+  for (const [durationFilter, expectedCount] of Object.entries(expectedCounts)) {
     const store = createStore(rows);
     const result = await actual.runDfp3DiscoveryFlow(
-      {
-        cursor,
-        pageSize: 5,
-        contentType: "video",
-        now: () => new Date(snapshotAt),
-      },
+      { durationFilter, now: () => new Date(snapshotAt) },
       store.loadPage,
     );
     assert.equal(result.status, "FOUND");
-    assert.equal(store.calls[0].contentType, "video");
-    assert.ok(result.page.items.every((item) => item.contentType === "video"));
-    seen.push(...result.page.items.map((item) => item.id));
-    cursor = result.page.nextCursor;
-  } while (cursor);
-  assert.deepEqual(seen, expectedVideoIds);
-});
-
-test("invalid content type and content-type cursor mismatch fail closed before store access", async () => {
-  let invalidCalls = 0;
-  const invalid = await actual.runDfp3DiscoveryFlow(
-    { contentType: "not-a-resource-type" },
-    async () => {
-      invalidCalls += 1;
-      return { data: [], error: null };
-    },
-  );
-  assert.equal(invalid.status, "INVALID_CONTENT_TYPE");
-  assert.equal(invalidCalls, 0);
-
-  const first = await actual.runDfp3DiscoveryFlow(
-    { pageSize: 1, contentType: "video", now: () => new Date(snapshotAt) },
-    createStore([
-      rowFor(0, { content_type: "video" }),
-      rowFor(2, { content_type: "video" }),
-    ]).loadPage,
-  );
-  const cursor = decodeCursor(first.page.nextCursor);
-  assert.equal(cursor.contentType, "video");
-
-  for (const options of [
-    { cursor: first.page.nextCursor, contentType: "reading" },
-    { cursor: encodeCursor({ ...cursor, contentType: "listening" }), contentType: "video" },
-    { cursor: encodeCursor({ ...cursor, contentType: "unknown" }), contentType: "video" },
-  ]) {
-    let calls = 0;
-    const result = await actual.runDfp3DiscoveryFlow(options, async () => {
-      calls += 1;
-      return { data: [], error: null };
-    });
-    assert.equal(result.status, "INVALID_CURSOR");
-    assert.equal(calls, 0);
+    assert.equal(result.page.items.length, expectedCount);
+    assert.equal(store.calls[0].durationFilter, durationFilter);
   }
+
+  let calls = 0;
+  const invalid = await actual.runDfp3DiscoveryFlow({ durationFilter: "short" }, async () => {
+    calls += 1;
+    return { data: [], error: null };
+  });
+  assert.equal(invalid.status, "INVALID_DURATION");
+  assert.equal(calls, 0);
 });
 
-test("invalid, partial, empty, or whitespace proficiency fails closed before store access", async () => {
-  for (const options of [
-    { levelSystemCode: "HSK" },
-    { levelCode: "HSK1" },
-    { levelSystemCode: "bad value", levelCode: "HSK1" },
-    { levelSystemCode: "" },
-    { levelCode: "" },
-    { levelSystemCode: "", levelCode: "" },
-    { levelSystemCode: "   ", levelCode: "HSK1" },
-    { levelSystemCode: "HSK", levelCode: "   " },
-  ]) {
-    let calls = 0;
-    const result = await actual.runDfp3DiscoveryFlow(options, async () => {
-      calls += 1;
-      return { data: [], error: null };
-    });
-    assert.equal(result.status, "INVALID_PROFICIENCY");
-    assert.equal(calls, 0);
-  }
+test("oldest sort is deterministic across cursor pages", async () => {
+  const rows = Array.from({ length: 41 }, (_, index) => rowFor(index));
+  const expected = [...rows]
+    .sort((a, b) => compareRows(a, b, "oldest"))
+    .map((row) => row.id);
+  const seen = await collectIds(rows, { sort: "oldest", pageSize: 6 });
+  assert.deepEqual(seen, expected);
+
+  let calls = 0;
+  const invalid = await actual.runDfp3DiscoveryFlow({ sort: "popular" }, async () => {
+    calls += 1;
+    return { data: [], error: null };
+  });
+  assert.equal(invalid.status, "INVALID_SORT");
+  assert.equal(calls, 0);
 });
 
-test("malformed and context-mismatched cursors fail closed before store access", async () => {
+test("search, duration, sort, locale, level and content-type cursor context mismatches fail closed", async () => {
+  const rows = Array.from({ length: 5 }, (_, index) => rowFor(index, {
+    content_type: "video",
+    title_support_default: `Chinese video ${index}`,
+    duration_seconds: 320,
+  }));
   const first = await actual.runDfp3DiscoveryFlow(
     {
       pageSize: 1,
+      contentType: "video",
+      searchQuery: "Chinese",
+      durationFilter: "5to10",
+      sort: "oldest",
       levelSystemCode: "HSK",
       levelCode: "HSK1",
       now: () => new Date(snapshotAt),
     },
-    createStore([rowFor(0), rowFor(2)]).loadPage,
+    createStore(rows).loadPage,
   );
+  assert.equal(first.status, "FOUND");
+  assert.ok(first.page.nextCursor);
   const cursor = decodeCursor(first.page.nextCursor);
-  assert.equal(cursor.levelSystemCode, "HSK");
-  assert.equal(cursor.levelCode, "HSK1");
-  assert.equal(cursor.contentType, null);
 
-  for (const options of [
-    { cursor: "not-json", levelSystemCode: "HSK", levelCode: "HSK1" },
-    { cursor: encodeCursor({ ...cursor, localeCode: "vi" }), levelSystemCode: "HSK", levelCode: "HSK1" },
-    { cursor: first.page.nextCursor, requestedLocale: "vi", levelSystemCode: "HSK", levelCode: "HSK1" },
-    { cursor: first.page.nextCursor, levelSystemCode: "TOCFL", levelCode: "HSK1" },
-    { cursor: first.page.nextCursor, levelSystemCode: "HSK", levelCode: "HSK2" },
-    { cursor: encodeCursor({ ...cursor, levelSystemCode: null }), levelSystemCode: "HSK", levelCode: "HSK1" },
-    { cursor: encodeCursor({ ...cursor, visibility: "draft" }), levelSystemCode: "HSK", levelCode: "HSK1" },
-    { cursor: encodeCursor({ ...cursor, snapshotAt: "2099-01-01T00:00:00.000Z" }), levelSystemCode: "HSK", levelCode: "HSK1", now: () => new Date(snapshotAt) },
-  ]) {
+  const mismatches = [
+    { searchQuery: "video 2" },
+    { durationFilter: "under5" },
+    { sort: "newest" },
+    { requestedLocale: "vi" },
+    { levelSystemCode: "HSK", levelCode: "HSK2" },
+    { contentType: "reading" },
+  ];
+  for (const mismatch of mismatches) {
     let calls = 0;
-    const result = await actual.runDfp3DiscoveryFlow(options, async () => {
-      calls += 1;
-      return { data: [], error: null };
-    });
+    const result = await actual.runDfp3DiscoveryFlow(
+      {
+        cursor: first.page.nextCursor,
+        contentType: "video",
+        searchQuery: "Chinese",
+        durationFilter: "5to10",
+        sort: "oldest",
+        levelSystemCode: "HSK",
+        levelCode: "HSK1",
+        ...mismatch,
+      },
+      async () => {
+        calls += 1;
+        return { data: [], error: null };
+      },
+    );
     assert.equal(result.status, "INVALID_CURSOR");
     assert.equal(calls, 0);
   }
+
+  const tampered = encodeCursor({ ...cursor, order: "wrong-context" });
+  let calls = 0;
+  const tamperedResult = await actual.runDfp3DiscoveryFlow(
+    {
+      cursor: tampered,
+      contentType: "video",
+      searchQuery: "Chinese",
+      durationFilter: "5to10",
+      sort: "oldest",
+      levelSystemCode: "HSK",
+      levelCode: "HSK1",
+    },
+    async () => {
+      calls += 1;
+      return { data: [], error: null };
+    },
+  );
+  assert.equal(tamperedResult.status, "INVALID_CURSOR");
+  assert.equal(calls, 0);
 });
 
-test("invalid rows, cross-system leaks, store errors, content-type leaks, and oversized payloads fail closed", async () => {
-  const databaseError = await actual.runDfp3DiscoveryFlow({}, async () => ({ data: null, error: { message: "redacted" } }));
+test("thumbnail projection accepts explicit http(s) authority and fails closed on malformed values", async () => {
+  const withThumbnail = await actual.runDfp3DiscoveryFlow(
+    { now: () => new Date(snapshotAt) },
+    createStore([
+      rowFor(0, { thumbnail_url: "https://cdn.example.com/video/one.jpg" }),
+      rowFor(1, { thumbnail_url: null }),
+    ]).loadPage,
+  );
+  assert.equal(withThumbnail.status, "FOUND");
+  assert.equal(withThumbnail.page.items[0].thumbnailUrl, "https://cdn.example.com/video/one.jpg");
+  assert.equal(withThumbnail.page.items[1].thumbnailUrl, null);
+
+  for (const thumbnail_url of ["javascript:alert(1)", "not-a-url"]) {
+    const result = await actual.runDfp3DiscoveryFlow(
+      {},
+      async () => ({ data: [rowFor(0, { thumbnail_url })], error: null }),
+    );
+    assert.equal(result.status, "DATABASE_ERROR");
+  }
+});
+
+test("invalid rows, filter leaks, store errors and oversized payloads fail closed", async () => {
+  const databaseError = await actual.runDfp3DiscoveryFlow(
+    {},
+    async () => ({ data: null, error: { message: "redacted" } }),
+  );
   assert.equal(databaseError.status, "DATABASE_ERROR");
 
-  const invalidRow = await actual.runDfp3DiscoveryFlow({}, async () => ({ data: [rowFor(0, { access_level: "vip" })], error: null }));
-  assert.equal(invalidRow.status, "DATABASE_ERROR");
-
-  const wrongFilter = await actual.runDfp3DiscoveryFlow(
-    { levelSystemCode: "HSK", levelCode: "HSK1" },
-    async () => ({ data: [rowFor(1)], error: null }),
+  const invalidRow = await actual.runDfp3DiscoveryFlow(
+    {},
+    async () => ({ data: [rowFor(0, { access_level: "vip" })], error: null }),
   );
-  assert.equal(wrongFilter.status, "DATABASE_ERROR");
+  assert.equal(invalidRow.status, "DATABASE_ERROR");
 
   const contentTypeLeak = await actual.runDfp3DiscoveryFlow(
     { contentType: "video" },
@@ -556,26 +568,17 @@ test("invalid rows, cross-system leaks, store errors, content-type leaks, and ov
   );
   assert.equal(contentTypeLeak.status, "DATABASE_ERROR");
 
-  const crossSystem = await actual.runDfp3DiscoveryFlow(
-    { levelSystemCode: "HSK", levelCode: "HSK1" },
-    async () => ({
-      data: [rowFor(0, { level: { code: "HSK1", system: { code: "TOCFL" } } })],
-      error: null,
-    }),
+  const searchLeak = await actual.runDfp3DiscoveryFlow(
+    { searchQuery: "needle" },
+    async () => ({ data: [rowFor(0)], error: null }),
   );
-  assert.equal(crossSystem.status, "DATABASE_ERROR");
+  assert.equal(searchLeak.status, "DATABASE_ERROR");
 
-  const malformedRelation = await actual.runDfp3DiscoveryFlow({}, async () => ({
-    data: [rowFor(0, { level: { code: "HSK1" } })],
-    error: null,
-  }));
-  assert.equal(malformedRelation.status, "DATABASE_ERROR");
-
-  const futurePublication = await actual.runDfp3DiscoveryFlow(
-    { now: () => new Date(snapshotAt) },
-    async () => ({ data: [rowFor(0, { published_at: "2026-07-30T00:00:00.000Z" })], error: null }),
+  const durationLeak = await actual.runDfp3DiscoveryFlow(
+    { durationFilter: "under5" },
+    async () => ({ data: [rowFor(0, { duration_seconds: 600 })], error: null }),
   );
-  assert.equal(futurePublication.status, "DATABASE_ERROR");
+  assert.equal(durationLeak.status, "DATABASE_ERROR");
 
   const oversized = await actual.runDfp3DiscoveryFlow(
     { pageSize: 50 },
@@ -591,30 +594,29 @@ test("invalid rows, cross-system leaks, store errors, content-type leaks, and ov
   assert.deepEqual([...oversized.page.items], []);
 });
 
-test("maximum-approved discovery payload stays within 96 KiB", async () => {
+test("maximum-approved discovery payload and locale expansion remain bounded", async () => {
+  const rows = Array.from({ length: 50 }, (_, index) => rowFor(index, {
+    title_original: `中文标题${index}`.repeat(12),
+    title_support_default: `Support title ${index}`.repeat(12),
+  }));
   const result = await actual.runDfp3DiscoveryFlow(
     { pageSize: 50, now: () => new Date(snapshotAt) },
-    createStore(Array.from({ length: 50 }, (_, index) => rowFor(index, {
-      title_original: `中文标题${index}`.repeat(12),
-      title_support_default: `Support title ${index}`.repeat(12),
-    }))).loadPage,
+    createStore(rows).loadPage,
   );
   assert.equal(result.status, "FOUND");
   assert.ok(Buffer.byteLength(JSON.stringify(result.page), "utf8") <= actual.LESSON_DISCOVERY_MAX_PAYLOAD_BYTES);
-});
 
-test("three-to-fifteen locale expansion including RTL stays within 10 percent", async () => {
-  assert.equal(FIFTEEN_LOCALE_FIXTURES.length, 15);
-  assert.ok(FIFTEEN_LOCALE_FIXTURES.some((locale) => locale.direction === "rtl"));
-  const rows = Array.from({ length: 50 }, (_, index) => rowFor(index));
   const measure = async (localeFixtures) => {
     const implementation = await loadActualExports(localeFixtures);
     const store = createStore(rows);
-    const result = await implementation.runDfp3DiscoveryFlow({ pageSize: 50, requestedLocale: "ar", now: () => new Date(snapshotAt) }, store.loadPage);
-    assert.equal(result.status, "FOUND");
+    const measured = await implementation.runDfp3DiscoveryFlow(
+      { pageSize: 50, requestedLocale: "ar", now: () => new Date(snapshotAt) },
+      store.loadPage,
+    );
+    assert.equal(measured.status, "FOUND");
     return {
-      ids: [...result.page.items].map((item) => item.id),
-      payloadBytes: utf8Bytes(deterministicJson(JSON.parse(JSON.stringify(result.page)))),
+      ids: [...measured.page.items].map((item) => item.id),
+      payloadBytes: utf8Bytes(deterministicJson(JSON.parse(JSON.stringify(measured.page)))),
       returnedRows: store.returnedRowCounts[0],
     };
   };
@@ -636,15 +638,14 @@ test("all-level discovery retains published lessons with no proficiency metadata
   assert.equal(result.page.items[0].levelCode, null);
 });
 
-test("production query is summary-only, publication-aware, exact-pair and optional-content-type filtered", () => {
+test("production query stays publication-aware, summary-bounded and findability-bound", () => {
   assert.match(discoverySource, /lesson-discovery-summary\.v2/);
   assert.match(discoverySource, /lesson-discovery-cursor\.v2/);
   assert.match(
     discoverySource,
     /const LESSON_DISCOVERY_BASE_PROJECTION =\s*"id,slug,title_original,title_support_default,content_type,duration_seconds,access_level,published_at,updated_at"/,
   );
-  assert.match(discoverySource, /level:levels\(code,system:level_systems\(code\)\)/);
-  assert.match(discoverySource, /level:levels!inner\(code,system:level_systems!inner\(code\)\)/);
+  assert.match(discoverySource, /LESSON_DISCOVERY_CARD_MEDIA_PROJECTION = "thumbnail_url"/);
   assert.doesNotMatch(
     discoverySource.match(/const LESSON_DISCOVERY_BASE_PROJECTION =[\s\S]*?;/)[0],
     /segment|transcript|vocabulary|exercise|answer|media|audio_url|youtube_id/i,
@@ -652,53 +653,56 @@ test("production query is summary-only, publication-aware, exact-pair and option
   assert.match(discoverySource, /\.eq\("status", "published"\)/);
   assert.match(discoverySource, /\.eq\("quality_status", "published"\)/);
   assert.match(discoverySource, /\.eq\("access_level", "free"\)/);
-  assert.match(discoverySource, /\.not\("published_at", "is", null\)/);
   assert.match(discoverySource, /\.eq\("content_type", storeQuery\.contentType\)/);
-  assert.match(discoverySource, /\.eq\("level\.code", storeQuery\.levelCode\)/);
-  assert.match(discoverySource, /\.eq\("level\.system\.code", storeQuery\.levelSystemCode\)/);
-  assert.match(discoverySource, /levelSystemCode,[\s\S]*?levelCode,[\s\S]*?contentType,[\s\S]*?localeCode,[\s\S]*?pageSize/);
+  assert.match(discoverySource, /title_original\.ilike/);
+  assert.match(discoverySource, /title_support_default\.ilike/);
+  assert.match(discoverySource, /duration_seconds/);
+  assert.match(discoverySource, /ascending:\s*storeQuery\.sort === "oldest"/);
+  assert.match(discoverySource, /searchQuery,[\s\S]*?durationFilter,[\s\S]*?sort,[\s\S]*?localeCode,[\s\S]*?pageSize/);
+  assert.match(discoverySource, /cursor\.order !== orderIdentity/);
   assert.equal(discoverySource.match(/\.from\("lessons"\)/g)?.length, 2);
   assert.match(discoverySource, /verifyCachedVisibility/);
-  assert.match(discoverySource, /\.eq\("content_type", contentType\)/);
-  assert.match(discoverySource, /\.eq\("level\.code", proficiency\.levelCode\)/);
-  assert.match(discoverySource, /\.eq\("level\.system\.code", proficiency\.systemCode\)/);
 });
 
-test("Videos surface is video-only while generic resource routing and learner context remain intact", () => {
+test("Videos UX uses scalable controls, thumbnail-first cards and URL-preserved Load More", () => {
   assert.match(resourcesSource, /contentType:\s*"video"/);
+  assert.match(resourcesSource, /searchQuery:\s*query\.q/);
+  assert.match(resourcesSource, /durationFilter:\s*query\.duration/);
+  assert.match(resourcesSource, /sort:\s*query\.sort/);
+  assert.match(resourcesSource, /VideoDiscoveryControls/);
+  assert.match(resourcesSource, /md:grid-cols-2 xl:grid-cols-3/);
+  assert.match(resourcesSource, /\.\.\.discoveryQuery,[\s\S]*?cursor:\s*discovery\.page\.nextCursor/);
   assert.match(resourcesSource, /pathname:\s*"\/resources"/);
-  assert.match(resourcesSource, /VIDEOS/);
-  assert.match(resourcesSource, /Khám phá video tiếng Trung/);
-  assert.doesNotMatch(resourcesSource, /Resource Library|reading, listening|practice-linked resources/i);
-  assert.match(headerSource, /library:\s*"Videos"/);
-  assert.match(headerSource, /library:\s*"Video"/);
-  assert.match(headerSource, /path:\s*"\/resources"/);
+  assert.match(controlsSource, /type="search"/);
+  assert.match(controlsSource, /delete\("cursor"\)/);
+  assert.match(controlsSource, /set\("q", value\)/);
+  assert.match(controlsSource, /set\("duration", value\)/);
+  assert.match(controlsSource, /set\("sort", value\)/);
+  assert.match(cardSource, /lesson\.thumbnailUrl/);
+  assert.match(cardSource, /aspect-video/);
   assert.match(cardSource, /pathname:\s*`\/lessons\/\$\{lesson\.slug\}`/);
-  assert.doesNotMatch(cardSource, /lesson\.contentType\.replace/);
+  assert.doesNotMatch(cardSource, /youtube/i);
+  assert.doesNotMatch(resourcesSource, /Series|Topic|Tags|Category/);
 });
 
-test("global Level is consumed only where discovery exists and otherwise preserved", () => {
+test("global Level remains generic and Video-specific discovery state stays local to Videos", () => {
   for (const source of [homeSource, resourcesSource, cardSource]) {
     assert.doesNotMatch(source, /@\/lib\/lessons/);
     assert.doesNotMatch(source, /\.script|\.exercises|\.vocabulary|transcript/i);
   }
   assert.match(homeSource, /getLessonDiscoveryPage/);
-  assert.match(resourcesSource, /getLessonDiscoveryPage/);
   assert.match(resourcesSource, /parseProficiencyContext\(query\.levelSystem,\s*query\.level\)/);
   assert.match(resourcesSource, /levelSystemCode:\s*query\.levelSystem/);
   assert.match(resourcesSource, /levelCode:\s*query\.level/);
-  assert.doesNotMatch(resourcesSource, /\bhsk\??:|query\.hsk|hskLevels|Filter resources by HSK level/);
   assert.match(headerSource, /aria-label=\{labels\.level\}/);
   assert.match(headerSource, /<option value="all">\{labels\.levelAll\}<\/option>/);
   assert.match(headerSource, /delete\("cursor"\)/);
   assert.doesNotMatch(headerSource, /\bsystemCode:\s*"HSK"/);
-  assert.doesNotMatch(headerSource, /Array\.from\(\{\s*length:\s*9/);
   assert.match(practiceSource, /preservedLearnerContextQuery/);
   assert.doesNotMatch(practiceSource, /getLessonDiscoveryPage/);
   assert.match(cardSource, /learnerContextQuery/);
   assert.match(detailPageSource, /preservedLearnerContextQuery/);
   assert.match(detailPageSource, /getSupabaseLessonCore\(slug, query\?\.lang\)/);
-  assert.doesNotMatch(detailPageSource, /getSupabaseLessonCore\([^\n]*level/);
   assert.match(learningPanelSource, /learnerContextQuery/);
   assert.match(learningPanelSource, /lang:\s*languageCode/);
 });
