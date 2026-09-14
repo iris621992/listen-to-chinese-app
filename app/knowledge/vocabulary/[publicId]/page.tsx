@@ -7,6 +7,7 @@ import {
   type VocabularyReadingItem,
   type VocabularyTranslationEquivalent,
 } from "@/lib/vocabularyDetail";
+import VocabularyRichSupport from "./VocabularyRichSupport";
 import VocabularyStickyNav from "./VocabularyStickyNav";
 import styles from "./VocabularyDetail.module.css";
 
@@ -34,6 +35,10 @@ type Labels = {
   usage: string;
   usageNote: string;
   memoryTip: string;
+  collocations: string;
+  classifiers: string;
+  example: string;
+  quickDistinction: string;
   characters: string;
   unavailable: string;
 };
@@ -59,6 +64,10 @@ const LABELS: Record<string, Labels> = {
     usage: "Usage",
     usageNote: "Usage note",
     memoryTip: "Memory tip",
+    collocations: "Common combinations",
+    classifiers: "Measure words",
+    example: "Example",
+    quickDistinction: "Quick distinction",
     characters: "Characters",
     unavailable: "This vocabulary entry is temporarily unavailable.",
   },
@@ -76,6 +85,10 @@ const LABELS: Record<string, Labels> = {
     usage: "Cách dùng",
     usageNote: "Lưu ý cách dùng",
     memoryTip: "Gợi ý ghi nhớ",
+    collocations: "Kết hợp thường gặp",
+    classifiers: "Lượng từ",
+    example: "Ví dụ",
+    quickDistinction: "Phân biệt nhanh",
     characters: "Hán tự",
     unavailable: "Mục từ này hiện chưa thể hiển thị.",
   },
@@ -93,6 +106,10 @@ const LABELS: Record<string, Labels> = {
     usage: "الاستعمال",
     usageNote: "ملاحظة الاستعمال",
     memoryTip: "تلميح للتذكر",
+    collocations: "تراكيب شائعة",
+    classifiers: "كلمات القياس",
+    example: "مثال",
+    quickDistinction: "تمييز سريع",
     characters: "الحروف الصينية",
     unavailable: "هذا المدخل غير متاح مؤقتًا.",
   },
@@ -438,6 +455,16 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
                                           ) : null}
                                         </div>
                                       ) : null}
+
+                                      <VocabularyRichSupport
+                                        item={item}
+                                        labels={{
+                                          collocations: labels.collocations,
+                                          classifiers: labels.classifiers,
+                                          example: labels.example,
+                                          quickDistinction: labels.quickDistinction,
+                                        }}
+                                      />
                                     </article>
                                   );
                                 })}
