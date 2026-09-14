@@ -38,6 +38,12 @@ type Labels = {
   unavailable: string;
 };
 
+type VocabularyNavItem = {
+  label: string;
+  href: string;
+  mobileOnly?: boolean;
+};
+
 const LABELS: Record<string, Labels> = {
   en: {
     knowledge: "Knowledge",
@@ -219,7 +225,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
   const hasPosNavigation = distinctPosCodes.length > 1;
   const characters = extractHanCharacters(primaryForm.text);
 
-  const navItems = hasReadingNavigation
+  const navItems: VocabularyNavItem[] = hasReadingNavigation
     ? detail.pronunciations.map((pronunciation) => ({
         label: pronunciation.pronunciation,
         href: `#reading-${pronunciation.publicId}`,
