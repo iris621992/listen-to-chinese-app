@@ -1,0 +1,97 @@
+.supportStack {
+  display: grid;
+  gap: 0.78rem;
+  margin: 0.92rem 0 0 2.5rem;
+}
+
+.supportBlock {
+  border: 1px solid #d8d1c4;
+  border-radius: 0.9rem;
+  background: #fffefb;
+  padding: 0.84rem 0.95rem;
+}
+
+.supportBlock h4 {
+  margin: 0 0 0.48rem;
+  color: #5f655c;
+  font-size: 0.72rem;
+  font-weight: 760;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  border: 1px solid #d7d0c2;
+  border-radius: 999px;
+  background: #f8f5ee;
+  padding: 0.28rem 0.58rem;
+  color: var(--text-primary);
+  font-size: 0.86rem;
+}
+
+.classifierList,
+.exampleList,
+.distinctionList {
+  display: grid;
+  gap: 0.68rem;
+}
+
+.classifierItem,
+.distinctionItem {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.classifierItem strong,
+.distinctionItem strong {
+  color: var(--text-primary);
+  font-size: 0.96rem;
+}
+
+.classifierItem p,
+.distinctionItem p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.exampleItem {
+  display: grid;
+  gap: 0.24rem;
+  border-inline-start: 2px solid #dfe7da;
+  padding-inline-start: 0.72rem;
+}
+
+.exampleChinese {
+  color: var(--text-primary);
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: 1.03rem;
+  line-height: 1.55;
+}
+
+.examplePinyin {
+  color: var(--brand-brown);
+  font-size: 0.84rem;
+}
+
+.exampleTranslation {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 700px) {
+  .supportStack {
+    margin-inline-start: 0;
+  }
+}
