@@ -23,6 +23,20 @@ function learnerHeaderOffset() {
 
 export default function VocabularyStickyNav({ headword, pronunciation, navItems }: Props) {
   const [active, setActive] = useState(false);
+  const [activePronunciation, setActivePronunciation] = useState(pronunciation);
+
+  useEffect(() => {
+    const syncPronunciation = () => {
+      const selected = navItems.find(
+        (item) => item.href.startsWith("#reading-") && item.href === window.location.hash,
+      );
+      setActivePronunciation(selected?.label ?? pronunciation);
+    };
+
+    syncPronunciation();
+    window.addEventListener("hashchange", syncPronunciation);
+    return () => window.removeEventListener("hashchange", syncPronunciation);
+  }, [navItems, pronunciation]);
 
   useEffect(() => {
     let frame = 0;
@@ -62,7 +76,7 @@ export default function VocabularyStickyNav({ headword, pronunciation, navItems 
         <div className={styles.compactStickyInner}>
           <div className={styles.compactIdentity}>
             <strong>{headword}</strong>
-            {pronunciation ? <span>{pronunciation}</span> : null}
+            {activePronunciation ? <span>{activePronunciation}</span> : null}
           </div>
           {navItems.length > 0 ? (
             <nav className={styles.compactNav} aria-label="Vocabulary sections">
@@ -83,7 +97,7 @@ export default function VocabularyStickyNav({ headword, pronunciation, navItems 
       <aside className={styles.landscapeRail} data-active={active ? "true" : "false"} aria-hidden={!active}>
         <div className={styles.landscapeIdentity}>
           <strong>{headword}</strong>
-          {pronunciation ? <span>{pronunciation}</span> : null}
+          {activePronunciation ? <span>{activePronunciation}</span> : null}
         </div>
         {navItems.length > 0 ? (
           <nav aria-label="Vocabulary sections">
