@@ -61,12 +61,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
 
   useEffect(() => {
     if (!opened || strokes.length === 0) return;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduceMotion) {
-      setVisibleStrokeCount(strokes.length);
-      return;
-    }
-    setVisibleStrokeCount(0);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     let count = 0;
     const timer = window.setInterval(() => {
       count += 1;
@@ -77,6 +72,11 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
   }, [opened, playNonce, strokes]);
 
   if (!sourceUrl) return null;
+
+  const replay = () => {
+    setVisibleStrokeCount(0);
+    setPlayNonce((value) => value + 1);
+  };
 
   return (
     <div className={styles.wrap}>
@@ -105,7 +105,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
                   ))}
                 </g>
               </svg>
-              <button type="button" className={styles.replay} onClick={() => setPlayNonce((value) => value + 1)}>
+              <button type="button" className={styles.replay} onClick={replay}>
                 {labels.replay}
               </button>
             </>
