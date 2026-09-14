@@ -9,7 +9,9 @@ export type VocabularyForm = {
   publicId: string;
   text: string;
   formType: string;
+  formStatus: string | null;
   isPrimary: boolean;
+  scriptProfileCode: string | null;
   scriptVariantCode: string | null;
 };
 
@@ -18,23 +20,37 @@ export type VocabularyTranslationEquivalent = {
   localeCode: string;
   expression: string;
   equivalenceProfile: string;
+  contextRestriction: string | null;
+  mismatchNote: string | null;
+  preferenceStatus: string | null;
+  directionality: string | null;
 };
 
 export type VocabularyReadingItem = {
   publicId: string;
+  parentPublicId: string | null;
   itemType: string;
+  usageType: string | null;
+  isSubsense: boolean;
   partOfSpeechCode: string | null;
+  registerCode: string | null;
+  domainCode: string | null;
   regionProfileCode: string | null;
   contentLocale: string;
   shortLabel: string | null;
   fullExplanation: string | null;
+  usageNote: string | null;
+  memoryTip: string | null;
   translationEquivalents: VocabularyTranslationEquivalent[];
 };
 
 export type VocabularyPronunciation = {
   publicId: string;
   pronunciation: string;
+  pronunciationSystemCode: string | null;
+  readingStatus: string | null;
   isDefault: boolean;
+  applicableFormPublicIds: string[];
   readingItems: VocabularyReadingItem[];
 };
 
@@ -66,6 +82,11 @@ const stringValue = (value: unknown): string | null =>
 
 const booleanValue = (value: unknown): boolean => value === true;
 
+const stringArray = (value: unknown): string[] =>
+  asArray(value)
+    .map(stringValue)
+    .filter((item): item is string => item !== null);
+
 function parseTranslationEquivalent(value: unknown): VocabularyTranslationEquivalent | null {
   const row = asObject(value);
   if (!row) return null;
@@ -74,7 +95,16 @@ function parseTranslationEquivalent(value: unknown): VocabularyTranslationEquiva
   const expression = stringValue(row.expression);
   const equivalenceProfile = stringValue(row.equivalence_profile);
   if (!publicId || !localeCode || !expression || !equivalenceProfile) return null;
-  return { publicId, localeCode, expression, equivalenceProfile };
+  return {
+    publicId,
+    localeCode,
+    expression,
+    equivalenceProfile,
+    contextRestriction: stringValue(row.context_restriction),
+    mismatchNote: stringValue(row.mismatch_note),
+    preferenceStatus: stringValue(row.preference_status),
+    directionality: stringValue(row.directionality),
+  };
 }
 
 function parseReadingItem(value: unknown): VocabularyReadingItem | null {
@@ -88,12 +118,19 @@ function parseReadingItem(value: unknown): VocabularyReadingItem | null {
 
   return {
     publicId,
+    parentPublicId: stringValue(row.parent_public_id),
     itemType,
+    usageType: stringValue(row.usage_type),
+    isSubsense: booleanValue(row.is_subsense),
     partOfSpeechCode: stringValue(row.part_of_speech_code),
+    registerCode: stringValue(row.register_code),
+    domainCode: stringValue(row.domain_code),
     regionProfileCode: stringValue(row.region_profile_code),
     contentLocale,
     shortLabel: stringValue(explanation.short_label),
     fullExplanation: stringValue(explanation.full_explanation),
+    usageNote: stringValue(explanation.usage_note),
+    memoryTip: stringValue(explanation.memory_tip),
     translationEquivalents: asArray(row.translation_equivalents)
       .map(parseTranslationEquivalent)
       .filter((item): item is VocabularyTranslationEquivalent => item !== null),
@@ -109,7 +146,10 @@ function parsePronunciation(value: unknown): VocabularyPronunciation | null {
   return {
     publicId,
     pronunciation,
+    pronunciationSystemCode: stringValue(row.pronunciation_system_code),
+    readingStatus: stringValue(row.reading_status),
     isDefault: booleanValue(row.is_default),
+    applicableFormPublicIds: stringArray(row.applicable_form_public_ids),
     readingItems: asArray(row.reading_items)
       .map(parseReadingItem)
       .filter((item): item is VocabularyReadingItem => item !== null),
@@ -127,7 +167,9 @@ function parseForm(value: unknown): VocabularyForm | null {
     publicId,
     text,
     formType,
+    formStatus: stringValue(row.form_status),
     isPrimary: booleanValue(row.is_primary),
+    scriptProfileCode: stringValue(row.script_profile_code),
     scriptVariantCode: stringValue(row.script_variant_code),
   };
 }
