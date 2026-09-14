@@ -2,11 +2,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { resolveInterfaceLocale } from "@/lib/interfaceLocaleRegistry";
 import { preservedLearnerContextQuery } from "@/lib/proficiencyContext";
+import { loadVocabularyCharacterDelivery } from "@/lib/vocabularyCharacterDelivery";
 import {
   loadVocabularyDetail,
   type VocabularyReadingItem,
   type VocabularyTranslationEquivalent,
 } from "@/lib/vocabularyDetail";
+import VocabularyCharacterRail from "./VocabularyCharacterRail";
 import VocabularyRichSupport from "./VocabularyRichSupport";
 import VocabularyStickyNav from "./VocabularyStickyNav";
 import styles from "./VocabularyDetail.module.css";
@@ -40,6 +42,13 @@ type Labels = {
   example: string;
   quickDistinction: string;
   characters: string;
+  radical: string;
+  strokes: string;
+  hanViet: string;
+  writingOpen: string;
+  writingReplay: string;
+  writingUnavailable: string;
+  writingSource: string;
   unavailable: string;
 };
 
@@ -69,6 +78,13 @@ const LABELS: Record<string, Labels> = {
     example: "Example",
     quickDistinction: "Quick distinction",
     characters: "Characters",
+    radical: "Radical",
+    strokes: "Strokes",
+    hanViet: "Sino-Vietnamese",
+    writingOpen: "View writing",
+    writingReplay: "Replay",
+    writingUnavailable: "Writing data is temporarily unavailable.",
+    writingSource: "Stroke data",
     unavailable: "This vocabulary entry is temporarily unavailable.",
   },
   vi: {
@@ -90,6 +106,13 @@ const LABELS: Record<string, Labels> = {
     example: "Ví dụ",
     quickDistinction: "Phân biệt nhanh",
     characters: "Hán tự",
+    radical: "Bộ thủ",
+    strokes: "Số nét",
+    hanViet: "Hán Việt",
+    writingOpen: "Xem cách viết",
+    writingReplay: "Viết lại",
+    writingUnavailable: "Dữ liệu cách viết tạm thời không tải được.",
+    writingSource: "Dữ liệu nét",
     unavailable: "Mục từ này hiện chưa thể hiển thị.",
   },
   ar: {
@@ -111,6 +134,13 @@ const LABELS: Record<string, Labels> = {
     example: "مثال",
     quickDistinction: "تمييز سريع",
     characters: "الحروف الصينية",
+    radical: "الجذر",
+    strokes: "عدد الخطوط",
+    hanViet: "القراءة الصينية الفيتنامية",
+    writingOpen: "عرض طريقة الكتابة",
+    writingReplay: "إعادة",
+    writingUnavailable: "بيانات الكتابة غير متاحة مؤقتًا.",
+    writingSource: "بيانات الخطوط",
     unavailable: "هذا المدخل غير متاح مؤقتًا.",
   },
 };
@@ -192,9 +222,6 @@ const groupByPartOfSpeech = (items: VocabularyReadingItem[]) => {
   return [...groups.entries()];
 };
 
-const extractHanCharacters = (text: string) =>
-  [...new Set(Array.from(text).filter((character) => /\p{Script=Han}/u.test(character)))];
-
 export default async function VocabularyDetailPage({ params, searchParams }: Props) {
   const { publicId } = await params;
   const query = await searchParams;
@@ -206,7 +233,10 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
     levelSystem: query?.levelSystem,
     level: query?.level,
   });
-  const result = await loadVocabularyDetail(publicId, query?.lang ?? query?.uiLang);
+  const [result, characterResult] = await Promise.all([
+    loadVocabularyDetail(publicId, query?.lang ?? query?.uiLang),
+    loadVocabularyCharacterDelivery(publicId, query?.lang ?? query?.uiLang),
+  ]);
 
   if (result.status === "NOT_FOUND" || result.status === "INVALID_INPUT") notFound();
 
@@ -240,7 +270,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
   )];
   const hasReadingNavigation = detail.pronunciations.length > 1;
   const hasPosNavigation = distinctPosCodes.length > 1;
-  const characters = extractHanCharacters(primaryForm.text);
+  const characters = characterResult.status === "FOUND" ? characterResult.characters : [];
 
   const navItems: VocabularyNavItem[] = hasReadingNavigation
     ? detail.pronunciations.map((pronunciation) => ({
@@ -481,18 +511,19 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
           </div>
         </article>
 
-        {characters.length > 0 ? (
-          <aside id="characters" className={styles.characterRail} aria-labelledby="characters-title">
-            <div className={styles.characterRailInner}>
-              <h2 id="characters-title">{labels.characters}</h2>
-              <div className={styles.characterList}>
-                {characters.map((character) => (
-                  <span key={character} className={styles.characterTile}>{character}</span>
-                ))}
-              </div>
-            </div>
-          </aside>
-        ) : null}
+        <VocabularyCharacterRail
+          occurrences={characters}
+          labels={{
+            characters: labels.characters,
+            radical: labels.radical,
+            strokes: labels.strokes,
+            hanViet: labels.hanViet,
+            writingOpen: labels.writingOpen,
+            writingReplay: labels.writingReplay,
+            writingUnavailable: labels.writingUnavailable,
+            writingSource: labels.writingSource,
+          }}
+        />
       </div>
     </main>
   );
