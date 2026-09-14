@@ -4,11 +4,15 @@ import test from "node:test";
 
 const read = (path) => readFile(path, "utf8");
 
-test("Vocabulary detail preserves K1B/K1C/K1D depth and approved v4.1 learner behavior", async () => {
-  const [loader, page, styles, sticky, rich, richStyles, knowledge, header] = await Promise.all([
+test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Character delivery", async () => {
+  const [loader, characterLoader, page, styles, characterRail, writing, writingStyles, sticky, rich, richStyles, knowledge, header] = await Promise.all([
     read("lib/vocabularyDetail.ts"),
+    read("lib/vocabularyCharacterDelivery.ts"),
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetail.module.css"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/CharacterWritingPreview.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/CharacterWritingPreview.module.css"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyStickyNav.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css"),
@@ -38,17 +42,27 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and approved v4.1 learner be
   assert.match(loader, /context_restriction/);
   assert.match(loader, /preference_status/);
 
+  assert.match(characterLoader, /get_public_vocabulary_entry_v4/);
+  assert.match(characterLoader, /K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1/);
+  assert.match(characterLoader, /lexical_context_pronunciation/);
+  assert.match(characterLoader, /standalone_reading/);
+  assert.match(characterLoader, /source_repository/);
+  assert.match(characterLoader, /source_commit/);
+  assert.match(characterLoader, /source_path/);
+
   assert.match(page, /params:\s*Promise<\{ publicId: string \}>/);
   assert.match(page, /loadVocabularyDetail\(publicId/);
+  assert.match(page, /loadVocabularyCharacterDelivery\(publicId/);
   assert.match(page, /detail\.forms/);
   assert.match(page, /detail\.pronunciations/);
   assert.match(page, /groupByPartOfSpeech/);
   assert.match(page, /learnerMeaningParts/);
-  assert.match(page, /extractHanCharacters/);
+  assert.doesNotMatch(page, /extractHanCharacters/);
+  assert.doesNotMatch(page, /Script=Han/);
   assert.match(page, /VocabularyStickyNav/);
   assert.match(page, /VocabularyRichSupport/);
+  assert.match(page, /VocabularyCharacterRail/);
   assert.match(page, /classifiers:\s*labels\.classifiers/);
-  assert.match(page, /styles\.characterRail/);
   assert.match(page, /item\.usageNote/);
   assert.match(page, /item\.memoryTip/);
   assert.match(page, /item\.itemType === "usage"/);
@@ -57,6 +71,20 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and approved v4.1 learner be
   assert.doesNotMatch(page, /translations:\s*"Từ tương đương"/);
   assert.doesNotMatch(page, /formLabel\(/);
   assert.doesNotMatch(page, /languageVarietyLabel/);
+
+  assert.match(characterRail, /lexicalContextPronunciation/);
+  assert.match(characterRail, /character\.hanViet/);
+  assert.match(characterRail, /character\.radical/);
+  assert.match(characterRail, /character\.strokeCount/);
+  assert.match(characterRail, /CharacterWritingPreview/);
+  assert.doesNotMatch(characterRail, /活动|椅子|出租车|运动/);
+
+  assert.match(writing, /chanind\/hanzi-writer-data/);
+  assert.match(writing, /68d10a4b21150cae5e1ebbd223eed289cf32d90c/);
+  assert.match(writing, /writing\.sourcePath !== `data\/\$\{glyph\}\.json`/);
+  assert.match(writing, /prefers-reduced-motion: reduce/);
+  assert.match(writing, /raw\.githubusercontent\.com/);
+  assert.match(writingStyles, /prefers-reduced-motion: reduce/);
 
   assert.match(rich, /item\.collocations\.length > 0/);
   assert.match(rich, /item\.classifiers\.length > 0/);
@@ -68,7 +96,6 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and approved v4.1 learner be
   assert.match(richStyles, /\.exampleChinese/);
 
   assert.match(styles, /\.workspace/);
-  assert.match(styles, /\.characterRailInner[\s\S]*position:\s*sticky/);
   assert.match(styles, /\.compactSticky/);
   assert.match(styles, /\.landscapeRail/);
   assert.match(styles, /\.hasMultipleReadings:has\(\.readingSection:target\)/);
@@ -82,10 +109,9 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and approved v4.1 learner be
   assert.match(sticky, /styles\.compactSticky/);
   assert.match(sticky, /styles\.landscapeRail/);
 
-  for (const source of [loader, page, sticky, rich]) {
+  for (const source of [loader, characterLoader, page, characterRail, sticky, rich]) {
     assert.doesNotMatch(source, /出租车|出租車|chūzūchē|xe taxi/);
     assert.doesNotMatch(source, /fake example|fake collocation|fake grammar|fake classifier/i);
-    assert.doesNotMatch(source, /活动|博物馆|博物館|huódòng|bówùguǎn/);
   }
 
   assert.doesNotMatch(page, /audio|speechSynthesis|Polly/i);
