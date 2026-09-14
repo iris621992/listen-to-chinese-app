@@ -81,6 +81,7 @@
 @media (prefers-reduced-motion: reduce) {
   .visibleStroke,
   .hiddenStroke {
+    opacity: 1;
     transition: none;
   }
 }
