@@ -2,7 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { resolveInterfaceLocale } from "@/lib/interfaceLocaleRegistry";
 import { preservedLearnerContextQuery } from "@/lib/proficiencyContext";
-import { loadVocabularyDetail } from "@/lib/vocabularyDetail";
+import {
+  loadVocabularyDetail,
+  type VocabularyReadingItem,
+  type VocabularyTranslationEquivalent,
+} from "@/lib/vocabularyDetail";
 import styles from "./VocabularyDetail.module.css";
 
 type Props = {
@@ -16,156 +20,157 @@ type Props = {
 };
 
 type Labels = {
-  eyebrow: string;
+  knowledge: string;
+  vocabulary: string;
   back: string;
-  forms: string;
+  writtenForms: string;
   simplified: string;
   traditional: string;
   pronunciation: string;
+  readings: string;
   partOfSpeech: string;
+  sensesUsage: string;
+  sense: string;
+  senses: string;
   meaning: string;
   translations: string;
-  entryInfo: string;
-  writingSystem: string;
   languageVariety: string;
   region: string;
-  readings: string;
-  senses: string;
   unavailable: string;
 };
 
 const LABELS: Record<string, Labels> = {
   en: {
-    eyebrow: "Vocabulary",
+    knowledge: "Knowledge",
+    vocabulary: "Vocabulary",
     back: "Back to Knowledge",
-    forms: "Written forms",
+    writtenForms: "Written forms",
     simplified: "Simplified",
     traditional: "Traditional",
     pronunciation: "Pronunciation",
+    readings: "Readings",
     partOfSpeech: "Part of speech",
+    sensesUsage: "Meaning & usage",
+    sense: "sense",
+    senses: "senses",
     meaning: "Meaning",
     translations: "Translation equivalents",
-    entryInfo: "Entry information",
-    writingSystem: "Writing system",
     languageVariety: "Language variety",
     region: "Region",
-    readings: "Readings",
-    senses: "Senses",
     unavailable: "This vocabulary entry is temporarily unavailable.",
   },
   vi: {
-    eyebrow: "Từ vựng",
+    knowledge: "Kiến thức",
+    vocabulary: "Từ vựng",
     back: "Quay lại Kiến thức",
-    forms: "Dạng chữ",
+    writtenForms: "Dạng chữ",
     simplified: "Giản thể",
     traditional: "Phồn thể",
-    pronunciation: "Phiên âm",
+    pronunciation: "Cách đọc",
+    readings: "Cách đọc",
     partOfSpeech: "Từ loại",
+    sensesUsage: "Nghĩa & cách dùng",
+    sense: "nghĩa",
+    senses: "nghĩa",
     meaning: "Nghĩa",
     translations: "Từ tương đương",
-    entryInfo: "Thông tin từ",
-    writingSystem: "Dạng chữ",
     languageVariety: "Biến thể ngôn ngữ",
     region: "Khu vực",
-    readings: "Cách đọc",
-    senses: "Nghĩa",
     unavailable: "Mục từ này hiện chưa thể hiển thị.",
   },
   ar: {
-    eyebrow: "المفردات",
+    knowledge: "المعرفة",
+    vocabulary: "المفردات",
     back: "العودة إلى المعرفة",
-    forms: "الأشكال الكتابية",
+    writtenForms: "الأشكال الكتابية",
     simplified: "المبسطة",
     traditional: "التقليدية",
-    pronunciation: "النطق",
+    pronunciation: "القراءة",
+    readings: "القراءات",
     partOfSpeech: "نوع الكلمة",
+    sensesUsage: "المعنى والاستعمال",
+    sense: "معنى",
+    senses: "معانٍ",
     meaning: "المعنى",
     translations: "المكافئات الترجمية",
-    entryInfo: "معلومات المدخل",
-    writingSystem: "نظام الكتابة",
     languageVariety: "التنوع اللغوي",
     region: "المنطقة",
-    readings: "القراءات",
-    senses: "المعاني",
     unavailable: "هذا المدخل غير متاح مؤقتًا.",
   },
 };
 
 const labelFor = (localeCode: string) => LABELS[localeCode] ?? LABELS.en;
 
-const formLabel = (scriptVariantCode: string | null, labels: Labels) => {
-  if (scriptVariantCode === "simplified") return labels.simplified;
-  if (scriptVariantCode === "traditional") return labels.traditional;
-  return scriptVariantCode ?? labels.forms;
-};
-
 const POS_LABELS: Record<string, Record<string, string>> = {
-  en: {
-    noun: "Noun",
-    verb: "Verb",
-    adjective: "Adjective",
-    adverb: "Adverb",
-    pronoun: "Pronoun",
-    numeral: "Numeral",
-    classifier: "Classifier",
-    preposition: "Preposition",
-    conjunction: "Conjunction",
-    particle: "Particle",
-    interjection: "Interjection",
-  },
-  vi: {
-    noun: "Danh từ",
-    verb: "Động từ",
-    adjective: "Tính từ",
-    adverb: "Trạng từ",
-    pronoun: "Đại từ",
-    numeral: "Số từ",
-    classifier: "Lượng từ",
-    preposition: "Giới từ",
-    conjunction: "Liên từ",
-    particle: "Trợ từ",
-    interjection: "Thán từ",
-  },
-  ar: {
-    noun: "اسم",
-    verb: "فعل",
-    adjective: "صفة",
-    adverb: "ظرف",
-    pronoun: "ضمير",
-    numeral: "عدد",
-    classifier: "كلمة قياس",
-    preposition: "حرف جر",
-    conjunction: "حرف عطف",
-    particle: "أداة",
-    interjection: "تعجب",
-  },
-};
-
-const REGION_LABELS: Record<string, Record<string, string>> = {
-  en: {
-    mainland_mandarin: "Mainland Mandarin",
-  },
-  vi: {
-    mainland_mandarin: "Quan thoại · Trung Quốc đại lục",
-  },
-  ar: {
-    mainland_mandarin: "الماندرين في بر الصين الرئيسي",
-  },
+  noun: { en: "Noun", vi: "Danh từ", ar: "اسم" },
+  verb: { en: "Verb", vi: "Động từ", ar: "فعل" },
+  adjective: { en: "Adjective", vi: "Tính từ", ar: "صفة" },
+  adverb: { en: "Adverb", vi: "Phó từ", ar: "حال" },
+  pronoun: { en: "Pronoun", vi: "Đại từ", ar: "ضمير" },
+  preposition: { en: "Preposition", vi: "Giới từ", ar: "حرف جر" },
+  conjunction: { en: "Conjunction", vi: "Liên từ", ar: "أداة ربط" },
+  particle: { en: "Particle", vi: "Trợ từ", ar: "أداة" },
+  measure_word: { en: "Measure word", vi: "Lượng từ", ar: "كلمة قياس" },
 };
 
 const LANGUAGE_VARIETY_LABELS: Record<string, Record<string, string>> = {
-  en: { mandarin: "Mandarin", cmn: "Mandarin" },
-  vi: { mandarin: "Quan thoại", cmn: "Quan thoại" },
-  ar: { mandarin: "الماندرين", cmn: "الماندرين" },
+  mandarin: { en: "Mandarin", vi: "Quan thoại", ar: "الماندرين" },
 };
 
-const learnerFacingCode = (
+const REGION_LABELS: Record<string, Record<string, string>> = {
+  mainland_mandarin: {
+    en: "Mainland China",
+    vi: "Trung Quốc đại lục",
+    ar: "الصين القارية",
+  },
+};
+
+const localizedCodeLabel = (
   code: string | null,
   localeCode: string,
   dictionary: Record<string, Record<string, string>>,
 ) => {
   if (!code) return null;
-  return dictionary[localeCode]?.[code] ?? dictionary.en?.[code] ?? null;
+  return dictionary[code]?.[localeCode] ?? dictionary[code]?.en ?? null;
+};
+
+const posLabel = (code: string | null, localeCode: string) =>
+  code ? POS_LABELS[code]?.[localeCode] ?? POS_LABELS[code]?.en ?? null : null;
+
+const formLabel = (scriptVariantCode: string | null, labels: Labels) => {
+  if (scriptVariantCode === "simplified") return labels.simplified;
+  if (scriptVariantCode === "traditional") return labels.traditional;
+  return null;
+};
+
+const preferredTranslations = (
+  translations: VocabularyTranslationEquivalent[],
+  requestedLocale: string,
+  fallbackLocale: string,
+) => {
+  const language = requestedLocale.split("-")[0];
+  const exactOrRegional = translations.filter((translation) => {
+    const translationLanguage = translation.localeCode.split("-")[0];
+    return translation.localeCode === requestedLocale || translationLanguage === language;
+  });
+  if (exactOrRegional.length > 0) return exactOrRegional;
+
+  const fallbackLanguage = fallbackLocale.split("-")[0];
+  return translations.filter((translation) => {
+    const translationLanguage = translation.localeCode.split("-")[0];
+    return translation.localeCode === fallbackLocale || translationLanguage === fallbackLanguage;
+  });
+};
+
+const groupByPartOfSpeech = (items: VocabularyReadingItem[]) => {
+  const groups = new Map<string, VocabularyReadingItem[]>();
+  for (const item of items) {
+    const key = item.partOfSpeechCode ?? "unspecified";
+    const current = groups.get(key) ?? [];
+    current.push(item);
+    groups.set(key, current);
+  }
+  return [...groups.entries()];
 };
 
 export default async function VocabularyDetailPage({ params, searchParams }: Props) {
@@ -200,269 +205,244 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
   const detail = result.detail;
   const primaryPronunciation =
     detail.pronunciations.find((item) => item.isDefault) ?? detail.pronunciations[0];
-  const secondaryForms = detail.forms.filter((form) => form.text !== detail.displayForm);
-  const readingCount = detail.pronunciations.length;
-  const totalSenseCount = detail.pronunciations.reduce(
-    (sum, pronunciation) => sum + pronunciation.readingItems.length,
-    0,
+  const primaryForm = detail.forms.find((form) => form.isPrimary) ?? detail.forms[0];
+  const secondaryForms = detail.forms.filter(
+    (form) => form.publicId !== primaryForm.publicId && form.text !== primaryForm.text,
   );
-  const languageVarietyLabel = learnerFacingCode(
+  const allReadingItems = detail.pronunciations.flatMap((item) => item.readingItems);
+  const singleSummary = allReadingItems.length === 1 ? allReadingItems[0]?.shortLabel : null;
+  const languageVarietyLabel = localizedCodeLabel(
     detail.languageVarietyCode,
     interfaceLocale.code,
     LANGUAGE_VARIETY_LABELS,
   );
-  const entryRegionLabel = learnerFacingCode(
+  const regionLabel = localizedCodeLabel(
     detail.regionProfileCode,
     interfaceLocale.code,
     REGION_LABELS,
   );
+  const distinctPosCodes = [...new Set(allReadingItems.map((item) => item.partOfSpeechCode).filter(Boolean))];
+  const hasReadingNavigation = detail.pronunciations.length > 1;
+  const hasPosNavigation = distinctPosCodes.length > 1;
 
   return (
     <main className={styles.page} dir={interfaceLocale.direction}>
-      <Link
-        href={{ pathname: "/knowledge", query: learnerContextQuery }}
-        className={styles.backLink}
-      >
-        ← {labels.back}
-      </Link>
+      <nav className={styles.breadcrumb} aria-label="Breadcrumb">
+        <Link href={{ pathname: "/knowledge", query: learnerContextQuery }}>
+          {labels.knowledge}
+        </Link>
+        <span aria-hidden="true">/</span>
+        <span>{labels.vocabulary}</span>
+        <span aria-hidden="true">/</span>
+        <span className={styles.breadcrumbCurrent}>{detail.displayForm}</span>
+      </nav>
 
-      <section className={styles.entryHeader} aria-labelledby="vocabulary-headword">
-        <div className={styles.headerTopline}>
-          <p className={styles.eyebrow}>{labels.eyebrow}</p>
-          <div className={styles.headerStatus}>
-            {languageVarietyLabel ? (
-              <span className={styles.softBadge}>{languageVarietyLabel}</span>
-            ) : null}
-            {entryRegionLabel ? (
-              <span className={styles.softBadge}>{entryRegionLabel}</span>
-            ) : null}
-          </div>
-        </div>
-
-        <div className={styles.lexicalCore}>
-          <div className={styles.wordLine}>
-            <h1 id="vocabulary-headword" className={styles.headword}>
-              {detail.displayForm}
-            </h1>
-            {secondaryForms.length > 0 ? (
-              <div className={styles.altForms} aria-label={labels.forms}>
+      <article className={styles.entryCard}>
+        <header className={styles.entryHeader}>
+          <div className={styles.headTop}>
+            <div className={styles.headwordWrap}>
+              <div className={styles.writtenLine}>
+                <h1 className={styles.headword}>{detail.displayForm}</h1>
                 {secondaryForms.map((form) => (
-                  <span key={form.publicId} className={styles.formBadge}>
-                    <span className={styles.formText}>{form.text}</span>
-                    <span className={styles.formRole}>
-                      {formLabel(form.scriptVariantCode, labels)}
-                    </span>
+                  <span key={form.publicId} className={styles.traditionalGroup}>
+                    <span className={styles.traditional}>{form.text}</span>
+                    {formLabel(form.scriptVariantCode, labels) ? (
+                      <span className={styles.formRole}>
+                        {formLabel(form.scriptVariantCode, labels)}
+                      </span>
+                    ) : null}
                   </span>
                 ))}
               </div>
-            ) : null}
-          </div>
 
-          {primaryPronunciation ? (
-            <div className={styles.pronunciationLine}>
-              <span className={styles.pronunciation}>{primaryPronunciation.pronunciation}</span>
-              {readingCount > 1 ? (
-                <>
-                  <span className={styles.dot}>·</span>
-                  <span className={styles.secondaryMeta}>
-                    {readingCount} {labels.readings.toLowerCase()}
-                  </span>
-                </>
+              {primaryPronunciation ? (
+                <div className={styles.pronLine}>
+                  <span className={styles.pinyin}>{primaryPronunciation.pronunciation}</span>
+                </div>
+              ) : null}
+
+              {(languageVarietyLabel || regionLabel) ? (
+                <div className={styles.metaChips}>
+                  {languageVarietyLabel ? (
+                    <span className={styles.metaChip}>{languageVarietyLabel}</span>
+                  ) : null}
+                  {regionLabel ? <span className={styles.metaChip}>{regionLabel}</span> : null}
+                </div>
+              ) : null}
+
+              {singleSummary ? (
+                <div className={styles.entrySummary}>
+                  <strong>{singleSummary}</strong>
+                </div>
+              ) : null}
+
+              {hasReadingNavigation ? (
+                <div className={styles.readingSelector} aria-label={labels.readings}>
+                  {detail.pronunciations.map((pronunciation) => (
+                    <a
+                      key={pronunciation.publicId}
+                      className={styles.readingButton}
+                      href={`#reading-${pronunciation.publicId}`}
+                    >
+                      <strong>{pronunciation.pronunciation}</strong>
+                      <span>{pronunciation.readingItems.length} {pronunciation.readingItems.length === 1 ? labels.sense : labels.senses}</span>
+                    </a>
+                  ))}
+                </div>
               ) : null}
             </div>
-          ) : null}
-        </div>
+          </div>
+        </header>
 
-        {readingCount > 1 ? (
-          <div className={styles.readingBlock}>
-            <p className={styles.readingLabel}>{labels.readings}</p>
-            <div className={styles.readingTabs}>
-              {detail.pronunciations.map((pronunciation) => (
-                <span
-                  key={pronunciation.publicId}
-                  className={styles.readingTab}
-                  data-active={pronunciation.publicId === primaryPronunciation?.publicId}
-                >
-                  {pronunciation.pronunciation}
-                </span>
-              ))}
-            </div>
+        {allReadingItems.length > 0 ? (
+          <div className={styles.posSummary} aria-label={labels.partOfSpeech}>
+            {[...new Set(allReadingItems.map((item) => item.partOfSpeechCode ?? "unspecified"))].map(
+              (code) => {
+                const count = allReadingItems.filter(
+                  (item) => (item.partOfSpeechCode ?? "unspecified") === code,
+                ).length;
+                const learnerLabel = posLabel(code === "unspecified" ? null : code, interfaceLocale.code);
+                return learnerLabel ? (
+                  <span key={code} className={styles.posSummaryChip}>
+                    <strong>{learnerLabel}</strong>
+                    <span aria-hidden="true"> · </span>
+                    {count} {count === 1 ? labels.sense : labels.senses}
+                  </span>
+                ) : null;
+              },
+            )}
           </div>
         ) : null}
-      </section>
 
-      <div className={styles.workspace}>
-        <div className={styles.mainColumn}>
-          {detail.pronunciations.map((pronunciation, pronunciationIndex) => {
-            const groupedByPos = new Map<string, typeof pronunciation.readingItems>();
-            for (const item of pronunciation.readingItems) {
-              const key = item.partOfSpeechCode ?? "other";
-              const current = groupedByPos.get(key) ?? [];
-              groupedByPos.set(key, [...current, item]);
-            }
-            const posGroups = [...groupedByPos.entries()];
+        {(hasReadingNavigation || hasPosNavigation) ? (
+          <nav className={styles.sectionNav} aria-label={labels.sensesUsage}>
+            {hasReadingNavigation
+              ? detail.pronunciations.map((pronunciation) => (
+                  <a key={pronunciation.publicId} href={`#reading-${pronunciation.publicId}`}>
+                    {pronunciation.pronunciation}
+                  </a>
+                ))
+              : distinctPosCodes.map((code) => (
+                  <a key={code} href={`#pos-${code}`}>
+                    {posLabel(code, interfaceLocale.code)}
+                  </a>
+                ))}
+          </nav>
+        ) : null}
 
-            return (
-              <section key={pronunciation.publicId} aria-labelledby={`reading-${pronunciation.publicId}`}>
-                {readingCount > 1 ? (
-                  <div className={styles.sectionHeading}>
-                    <div>
-                      <p className={styles.sectionEyebrow}>{labels.pronunciation}</p>
-                      <h2 id={`reading-${pronunciation.publicId}`} className={styles.sectionTitle}>
-                        {pronunciation.pronunciation}
-                      </h2>
-                    </div>
-                    <span className={styles.sectionCount}>
-                      {pronunciation.readingItems.length} {labels.senses.toLowerCase()}
-                    </span>
-                  </div>
-                ) : null}
+        <div className={styles.entryBody}>
+          <section aria-labelledby="vocabulary-senses-title">
+            <h2 id="vocabulary-senses-title" className={styles.sectionTitle}>
+              {labels.sensesUsage}
+            </h2>
 
-                {posGroups.length > 1 ? (
-                  <nav className={styles.posNav} aria-label={labels.partOfSpeech}>
-                    <div className={styles.posTabs}>
-                      {posGroups.map(([posCode, items], posIndex) => {
-                        const posLabel =
-                          learnerFacingCode(posCode, interfaceLocale.code, POS_LABELS)
-                          ?? labels.partOfSpeech;
+            <div className={styles.readingFlow}>
+              {detail.pronunciations.map((pronunciation) => {
+                const posGroups = groupByPartOfSpeech(pronunciation.readingItems);
+                return (
+                  <section
+                    key={pronunciation.publicId}
+                    id={`reading-${pronunciation.publicId}`}
+                    className={styles.readingSection}
+                  >
+                    {hasReadingNavigation ? (
+                      <div className={styles.readingHeading}>
+                        <span className={styles.readingHeadingLabel}>{labels.pronunciation}</span>
+                        <strong>{pronunciation.pronunciation}</strong>
+                      </div>
+                    ) : null}
+
+                    <div className={styles.posFlow}>
+                      {posGroups.map(([posCode, items]) => {
+                        const learnerPosLabel = posLabel(
+                          posCode === "unspecified" ? null : posCode,
+                          interfaceLocale.code,
+                        );
                         return (
-                          <a
-                            key={posCode}
-                            href={`#pos-${pronunciation.publicId}-${posCode}`}
-                            className={styles.posTab}
-                            data-active={posIndex === 0}
+                          <section
+                            key={`${pronunciation.publicId}-${posCode}`}
+                            id={`pos-${posCode}`}
+                            className={styles.posSection}
                           >
-                            {posLabel} ({items.length})
-                          </a>
+                            {learnerPosLabel ? (
+                              <div className={styles.posSectionHead}>
+                                <span className={styles.posLabel}>{learnerPosLabel}</span>
+                                <span className={styles.posCount}>
+                                  {items.length} {items.length === 1 ? labels.sense : labels.senses}
+                                </span>
+                              </div>
+                            ) : null}
+
+                            <div className={styles.senseStack}>
+                              {items.map((item, index) => {
+                                const visibleTranslations = preferredTranslations(
+                                  item.translationEquivalents,
+                                  detail.requestedLocale,
+                                  detail.fallbackLocale,
+                                );
+                                const itemRegion = localizedCodeLabel(
+                                  item.regionProfileCode,
+                                  interfaceLocale.code,
+                                  REGION_LABELS,
+                                );
+
+                                return (
+                                  <article key={item.publicId} className={styles.sense}>
+                                    <div className={styles.senseHead}>
+                                      <span className={styles.senseNum}>{index + 1}</span>
+                                      <div className={styles.senseMain}>
+                                        {item.shortLabel ? (
+                                          <h3 className={styles.meaning}>{item.shortLabel}</h3>
+                                        ) : null}
+                                        {itemRegion ? (
+                                          <div className={styles.tags}>
+                                            <span className={styles.tag}>{itemRegion}</span>
+                                          </div>
+                                        ) : null}
+                                      </div>
+                                    </div>
+
+                                    {(item.fullExplanation || visibleTranslations.length > 0) ? (
+                                      <div className={styles.senseProfile}>
+                                        {item.fullExplanation ? (
+                                          <section className={styles.learningBlock}>
+                                            <h4>{labels.meaning}</h4>
+                                            <p>{item.fullExplanation}</p>
+                                          </section>
+                                        ) : null}
+
+                                        {visibleTranslations.length > 0 ? (
+                                          <section className={styles.translationBlock}>
+                                            <h4>{labels.translations}</h4>
+                                            <div className={styles.translationList}>
+                                              {visibleTranslations.map((translation) => (
+                                                <span
+                                                  key={translation.publicId}
+                                                  className={styles.translationChip}
+                                                >
+                                                  {translation.expression}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          </section>
+                                        ) : null}
+                                      </div>
+                                    ) : null}
+                                  </article>
+                                );
+                              })}
+                            </div>
+                          </section>
                         );
                       })}
                     </div>
-                  </nav>
-                ) : null}
-
-                {posGroups.map(([posCode, items]) => {
-                  const posLabel =
-                    learnerFacingCode(posCode, interfaceLocale.code, POS_LABELS)
-                    ?? null;
-                  return (
-                    <section
-                      key={`${pronunciation.publicId}-${posCode}`}
-                      id={`pos-${pronunciation.publicId}-${posCode}`}
-                    >
-                      <div className={styles.sectionHeading}>
-                        <div>
-                          <p className={styles.sectionEyebrow}>{labels.partOfSpeech}</p>
-                          <h2 className={styles.sectionTitle}>{posLabel ?? labels.senses}</h2>
-                        </div>
-                        <span className={styles.sectionCount}>
-                          {items.length} {labels.senses.toLowerCase()}
-                        </span>
-                      </div>
-
-                      <div className={styles.senseList}>
-                        {items.map((item, itemIndex) => {
-                          const regionLabel = learnerFacingCode(
-                            item.regionProfileCode,
-                            interfaceLocale.code,
-                            REGION_LABELS,
-                          );
-                          return (
-                            <article key={item.publicId} className={styles.senseCard}>
-                              <div className={styles.senseHeader}>
-                                <span className={styles.senseIndex}>{itemIndex + 1}</span>
-                                {posLabel ? (
-                                  <span className={styles.senseType}>{posLabel}</span>
-                                ) : null}
-                                {regionLabel ? (
-                                  <span className={styles.regionBadge}>{regionLabel}</span>
-                                ) : null}
-                              </div>
-
-                              {item.shortLabel ? (
-                                <div className={styles.meaningBlock}>
-                                  <p className={styles.metaLabel}>{labels.meaning}</p>
-                                  <p className={styles.meaning}>{item.shortLabel}</p>
-                                  {item.fullExplanation ? (
-                                    <p className={styles.explanation}>{item.fullExplanation}</p>
-                                  ) : null}
-                                </div>
-                              ) : null}
-
-                              {item.translationEquivalents.length > 0 ? (
-                                <div className={styles.translationBlock}>
-                                  <p className={styles.translationLabel}>{labels.translations}</p>
-                                  <div className={styles.translationList}>
-                                    {item.translationEquivalents.map((translation) => (
-                                      <span key={translation.publicId} className={styles.translationChip}>
-                                        <span className={styles.translationExpression}>
-                                          {translation.expression}
-                                        </span>
-                                        <span className={styles.translationLocale}>
-                                          {translation.localeCode}
-                                        </span>
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              ) : null}
-                            </article>
-                          );
-                        })}
-                      </div>
-                    </section>
-                  );
-                })}
-
-                {pronunciationIndex < detail.pronunciations.length - 1 ? (
-                  <div aria-hidden="true" style={{ height: "1.25rem" }} />
-                ) : null}
-              </section>
-            );
-          })}
+                  </section>
+                );
+              })}
+            </div>
+          </section>
         </div>
-
-        <aside className={styles.sideRail} aria-label={labels.entryInfo}>
-          <section className={styles.sideCard}>
-            <h2 className={styles.sideTitle}>{labels.forms}</h2>
-            <div className={styles.formList}>
-              {detail.forms.map((form) => (
-                <div key={form.publicId} className={styles.formListItem}>
-                  <span className={styles.formListText}>{form.text}</span>
-                  <span className={styles.formListRole}>
-                    {formLabel(form.scriptVariantCode, labels)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className={styles.sideCard}>
-            <h2 className={styles.sideTitle}>{labels.entryInfo}</h2>
-            <div className={styles.metaList}>
-              {languageVarietyLabel ? (
-                <div className={styles.metaRow}>
-                  <span className={styles.metaLabel}>{labels.languageVariety}</span>
-                  <span className={styles.metaValue}>{languageVarietyLabel}</span>
-                </div>
-              ) : null}
-              {entryRegionLabel ? (
-                <div className={styles.metaRow}>
-                  <span className={styles.metaLabel}>{labels.region}</span>
-                  <span className={styles.metaValue}>{entryRegionLabel}</span>
-                </div>
-              ) : null}
-              <div className={styles.metaRow}>
-                <span className={styles.metaLabel}>{labels.readings}</span>
-                <span className={styles.metaValue}>{readingCount}</span>
-              </div>
-              <div className={styles.metaRow}>
-                <span className={styles.metaLabel}>{labels.senses}</span>
-                <span className={styles.metaValue}>{totalSenseCount}</span>
-              </div>
-            </div>
-          </section>
-        </aside>
-      </div>
+      </article>
     </main>
   );
 }
