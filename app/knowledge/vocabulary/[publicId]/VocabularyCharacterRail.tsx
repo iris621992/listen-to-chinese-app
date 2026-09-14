@@ -1,6 +1,6 @@
 import type { VocabularyCharacterOccurrence } from "@/lib/vocabularyCharacterDelivery";
 import CharacterWritingPreview from "./CharacterWritingPreview";
-import styles from "./VocabularyDetail.module.css";
+import styles from "./VocabularyCharacterRail.module.css";
 
 type Labels = {
   characters: string;
