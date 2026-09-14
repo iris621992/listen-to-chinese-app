@@ -1,5 +1,4 @@
 import { getLearnerLocale } from "@/lib/learnerLocaleRegistry";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 const VOCABULARY_PUBLIC_ID_PATTERN = /^vocab_[a-f0-9]{64}$/u;
 const VOCABULARY_PROJECTION_CONTRACT = "K1C_VOCABULARY_TE_PUBLIC_PROJECTION_V1";
@@ -175,6 +174,7 @@ export async function loadVocabularyDetail(
   if (!learnerLocale) return { status: "DATABASE_ERROR" };
 
   try {
+    const { createServerSupabaseClient } = await import("@/lib/supabase/server");
     const supabase = createServerSupabaseClient();
     const { data, error } = await supabase.rpc("get_public_vocabulary_entry_v2", {
       p_public_entry_id: publicId,
