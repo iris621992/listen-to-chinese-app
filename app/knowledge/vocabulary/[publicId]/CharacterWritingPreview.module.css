@@ -1,0 +1,86 @@
+.wrap {
+  width: 100%;
+  margin-top: 0.45rem;
+}
+
+.trigger,
+.replay {
+  min-height: 36px;
+  border: 1px solid #d7d0c2;
+  border-radius: 0.7rem;
+  background: #fff;
+  padding: 0.38rem 0.58rem;
+  color: var(--interactive-secondary);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.trigger:hover,
+.trigger:focus-visible,
+.replay:hover,
+.replay:focus-visible {
+  border-color: #9eab94;
+  background: #f7faf5;
+}
+
+.panel {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid #ebe5d9;
+  padding-top: 0.55rem;
+}
+
+.canvas {
+  width: min(100%, 8.5rem);
+  aspect-ratio: 1;
+  border: 1px solid #e1dacd;
+  border-radius: 0.8rem;
+  background:
+    linear-gradient(90deg, transparent 49.5%, #f0eadf 50%, transparent 50.5%),
+    linear-gradient(transparent 49.5%, #f0eadf 50%, transparent 50.5%),
+    #fff;
+}
+
+.visibleStroke,
+.hiddenStroke {
+  fill: currentColor;
+  color: var(--text-primary);
+  transition: opacity 0.12s ease;
+}
+
+.visibleStroke {
+  opacity: 1;
+}
+
+.hiddenStroke {
+  opacity: 0.08;
+}
+
+.loading,
+.unavailable,
+.attribution {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.unavailable {
+  padding: 0.5rem 0;
+}
+
+.attribution {
+  overflow-wrap: anywhere;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visibleStroke,
+  .hiddenStroke {
+    transition: none;
+  }
+}
