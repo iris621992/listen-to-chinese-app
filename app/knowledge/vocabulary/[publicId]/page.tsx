@@ -299,7 +299,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
             </div>
           </header>
 
-          {allReadingItems.length > 0 ? (
+          {!hasReadingNavigation && allReadingItems.length > 0 ? (
             <div className={styles.posSummary} aria-label={labels.partOfSpeech}>
               {distinctPosCodes.map((code) => {
                 const count = allReadingItems.filter((item) => item.partOfSpeechCode === code).length;
