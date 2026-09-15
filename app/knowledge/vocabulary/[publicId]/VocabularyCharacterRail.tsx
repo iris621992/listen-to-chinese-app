@@ -147,7 +147,6 @@ export default function VocabularyCharacterRail({ occurrences, labels, detailAct
               labels={{
                 replay: labels.writingReplay,
                 unavailable: labels.writingUnavailable,
-                source: labels.writingSource,
               }}
             />
           ) : (
@@ -157,26 +156,56 @@ export default function VocabularyCharacterRail({ occurrences, labels, detailAct
             </div>
           )}
 
-          <dl className={styles.characterFacts}>
-            {selectedOccurrence.lexicalContextPronunciation ? (
-              <div><dt>Pinyin</dt><dd>{selectedOccurrence.lexicalContextPronunciation}</dd></div>
-            ) : null}
-            {character.hanViet ? (
-              <div><dt>{labels.hanViet}</dt><dd>{character.hanViet}</dd></div>
-            ) : null}
-            {structureValue ? (
-              <div className={styles.structureFact}>
-                <dt>{previewLabels.structure}</dt>
-                <dd>{structureValue}</dd>
+          <div className={styles.characterFacts}>
+            <div className={styles.characterFactLine}>
+              <span className={styles.bigChinese}>{character.glyph}</span>
+            </div>
+
+            {(selectedOccurrence.lexicalContextPronunciation || character.hanViet) ? (
+              <div className={styles.characterFactLine}>
+                {selectedOccurrence.lexicalContextPronunciation ? (
+                  <strong>{selectedOccurrence.lexicalContextPronunciation}</strong>
+                ) : null}
+                {selectedOccurrence.lexicalContextPronunciation && character.hanViet ? (
+                  <span aria-hidden="true"> · </span>
+                ) : null}
+                {character.hanViet ? <span>{character.hanViet}</span> : null}
               </div>
             ) : null}
-            {character.radical ? (
-              <div><dt>{labels.radical}</dt><dd className={styles.hanziValue}>{character.radical}</dd></div>
+
+            {structureValue ? (
+              <div className={styles.characterFactLine}>
+                <span>{previewLabels.structure}: </span>
+                <strong className={styles.structureValue}>{structureValue}</strong>
+              </div>
             ) : null}
-            {character.strokeCount ? (
-              <div><dt>{labels.strokes}</dt><dd>{character.strokeCount}</dd></div>
+
+            {(character.radical || character.strokeCount) ? (
+              <div className={styles.characterFactLine}>
+                {character.radical ? (
+                  <>
+                    <span>{labels.radical}: </span>
+                    <strong className={styles.bigChinese}>{character.radical}</strong>
+                  </>
+                ) : null}
+                {character.radical && character.strokeCount ? (
+                  <span aria-hidden="true"> · </span>
+                ) : null}
+                {character.strokeCount ? (
+                  <>
+                    <span>{labels.strokes}: </span>
+                    <strong>{character.strokeCount}</strong>
+                  </>
+                ) : null}
+              </div>
             ) : null}
-          </dl>
+          </div>
+
+          {character.writing ? (
+            <p className={styles.attribution}>
+              {labels.writingSource}: Hanzi Writer Data · {character.writing.licenseCode}
+            </p>
+          ) : null}
 
           {detailAction ? (
             <Link className={styles.detailAction} href={detailAction.href}>
