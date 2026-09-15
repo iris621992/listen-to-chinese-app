@@ -48,6 +48,7 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
   const selectedOccurrence =
     characters.find((occurrence) => occurrenceKey(occurrence) === selectedKey)
     ?? characters[0];
+  const selectedOccurrenceKey = occurrenceKey(selectedOccurrence);
   const character = selectedOccurrence.character;
 
   return (
@@ -58,29 +59,51 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
         <div className={styles.characterSelector} role="group" aria-label={labels.characters}>
           {characters.map((occurrence) => {
             const key = occurrenceKey(occurrence);
-            const selected = key === occurrenceKey(selectedOccurrence);
+            const selected = key === selectedOccurrenceKey;
             return (
               <button
                 key={key}
                 type="button"
                 className={styles.characterSelectorButton}
                 aria-pressed={selected}
+                aria-label={`${labels.characters}: ${occurrence.character.glyph}`}
                 onClick={() => setSelectedKey(key)}
               >
                 <span className={styles.selectorGlyph}>{occurrence.character.glyph}</span>
-                {occurrence.lexicalContextPronunciation ? (
-                  <span className={styles.selectorReading}>{occurrence.lexicalContextPronunciation}</span>
-                ) : null}
               </button>
             );
           })}
         </div>
 
         <article className={styles.selectedCharacter} aria-live="polite">
-          <div className={styles.characterTile}>{character.glyph}</div>
-          {selectedOccurrence.lexicalContextPronunciation ? (
-            <strong className={styles.characterReading}>{selectedOccurrence.lexicalContextPronunciation}</strong>
-          ) : null}
+          {character.writing ? (
+            <CharacterWritingPreview
+              key={`${selectedOccurrenceKey}:${character.writing.sourcePath}`}
+              glyph={character.glyph}
+              writing={character.writing}
+              labels={{
+                open: labels.writingOpen,
+                replay: labels.writingReplay,
+                unavailable: labels.writingUnavailable,
+                source: labels.writingSource,
+              }}
+            />
+          ) : (
+            <div className={styles.writingUnavailable}>
+              <span className={styles.fallbackGlyph}>{character.glyph}</span>
+              <p>{labels.writingUnavailable}</p>
+            </div>
+          )}
+
+          <div className={styles.characterIdentity}>
+            <span className={styles.identityGlyph}>{character.glyph}</span>
+            {selectedOccurrence.lexicalContextPronunciation ? (
+              <strong className={styles.characterReading}>{selectedOccurrence.lexicalContextPronunciation}</strong>
+            ) : null}
+            {character.hanViet ? (
+              <span className={styles.hanVietValue}>{character.hanViet}</span>
+            ) : null}
+          </div>
 
           <dl className={styles.characterFacts}>
             {character.hanViet ? (
@@ -93,20 +116,6 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
               <div><dt>{labels.strokes}</dt><dd>{character.strokeCount}</dd></div>
             ) : null}
           </dl>
-
-          {character.writing ? (
-            <CharacterWritingPreview
-              key={`${occurrenceKey(selectedOccurrence)}:${character.writing.sourcePath}`}
-              glyph={character.glyph}
-              writing={character.writing}
-              labels={{
-                open: labels.writingOpen,
-                replay: labels.writingReplay,
-                unavailable: labels.writingUnavailable,
-                source: labels.writingSource,
-              }}
-            />
-          ) : null}
         </article>
       </div>
     </aside>
