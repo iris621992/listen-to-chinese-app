@@ -28,6 +28,7 @@ export type VocabularyCharacterOccurrence = {
     radical: string | null;
     strokeCount: number | null;
     structureCode: string | null;
+    structureFormula: string | null;
     componentNote: string | null;
     writing: VocabularyCharacterWriting | null;
   };
@@ -84,6 +85,7 @@ function parseOccurrence(value: unknown): VocabularyCharacterOccurrence | null {
       radical: stringValue(character.radical),
       strokeCount: numberValue(character.stroke_count),
       structureCode: stringValue(character.structure_code),
+      structureFormula: stringValue(character.structure_formula),
       componentNote: stringValue(character.component_note),
       writing: parseWriting(character.writing),
     },
