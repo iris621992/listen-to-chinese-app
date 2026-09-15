@@ -7,7 +7,6 @@ import styles from "./VocabularyCharacterRail.module.css";
 
 type Labels = {
   characters: string;
-  pronunciation: string;
   radical: string;
   strokes: string;
   hanViet: string;
@@ -101,7 +100,7 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
 
           <dl className={styles.characterFacts}>
             {selectedOccurrence.lexicalContextPronunciation ? (
-              <div><dt>{labels.pronunciation}</dt><dd>{selectedOccurrence.lexicalContextPronunciation}</dd></div>
+              <div><dt>Pinyin</dt><dd>{selectedOccurrence.lexicalContextPronunciation}</dd></div>
             ) : null}
             {character.hanViet ? (
               <div><dt>{labels.hanViet}</dt><dd>{character.hanViet}</dd></div>
