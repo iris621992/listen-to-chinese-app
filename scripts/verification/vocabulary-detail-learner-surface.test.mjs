@@ -84,11 +84,13 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.match(characterRail, /character\.radical/);
   assert.match(characterRail, /character\.strokeCount/);
   assert.match(characterRail, /CharacterWritingPreview/);
+  assert.match(characterRail, /selectedOccurrenceKey/);
   assert.doesNotMatch(characterRail, /className=\{styles\.characterCard\}/);
   assert.doesNotMatch(characterRail, /活动|椅子|出租车|运动/);
   assert.match(characterRailStyles, /\.characterSelector/);
   assert.match(characterRailStyles, /\.characterSelectorButton\[aria-pressed="true"\]/);
   assert.match(characterRailStyles, /\.selectedCharacter/);
+  assert.match(characterRailStyles, /\.characterIdentity/);
   assert.doesNotMatch(characterRailStyles, /grid-template-columns:\s*repeat\(2/);
 
   assert.match(writing, /chanind\/hanzi-writer-data/);
@@ -96,7 +98,14 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.match(writing, /writing\.sourcePath !== `data\/\$\{glyph\}\.json`/);
   assert.match(writing, /prefers-reduced-motion: reduce/);
   assert.match(writing, /raw\.githubusercontent\.com/);
+  assert.match(writing, /STROKE_STEP_MS = 460/);
+  assert.match(writing, /setVisibleStrokeCount\(0\)/);
+  assert.match(writing, /setVisibleStrokeCount\(Math\.min\(count, strokes\.length\)\)/);
+  assert.match(writing, /setPlayNonce\(\(value\) => value \+ 1\)/);
+  assert.match(writing, /className=\{styles\.staticGlyph\}/);
   assert.match(writingStyles, /prefers-reduced-motion: reduce/);
+  assert.match(writingStyles, /\.hiddenStroke\s*\{\s*opacity:\s*0;/s);
+  assert.doesNotMatch(writingStyles, /\.hiddenStroke\s*\{[^}]*opacity:\s*0\.08/s);
 
   assert.match(rich, /item\.collocations\.length > 0/);
   assert.match(rich, /item\.classifiers\.length > 0/);
