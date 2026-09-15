@@ -35,43 +35,51 @@
 .characterSelector {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.42rem;
-  margin: 0.72rem 0 0.86rem;
+  align-items: center;
+  gap: 0.32rem;
+  margin: 0.6rem 0 0.78rem;
 }
 
 .characterSelectorButton {
   display: grid;
-  width: 2.45rem;
-  min-width: 2.45rem;
-  height: 2.45rem;
+  width: 2.12rem;
+  min-width: 2.12rem;
+  height: 2.12rem;
   place-items: center;
-  border: 1px solid #d7d0c2;
-  border-radius: 0.62rem;
-  background: #f8f4eb;
-  color: #30352f;
+  padding: 0;
+  border: 1px solid rgba(215, 208, 194, 0.78);
+  border-radius: 0.52rem;
+  background: rgba(248, 244, 235, 0.72);
+  color: #444a43;
   font: inherit;
   cursor: pointer;
+  box-shadow: none;
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease;
 }
 
 .characterSelectorButton[aria-pressed="true"] {
   border-color: #30352f;
   background: #30352f;
-  color: #fff;
+  color: #fffefb;
 }
 
-.characterSelectorButton:hover,
-.characterSelectorButton:focus-visible {
-  border-color: #687a61;
-  outline: none;
+.characterSelectorButton:not([aria-pressed="true"]):hover {
+  border-color: rgba(141, 153, 132, 0.72);
+  background: #f5f0e7;
 }
 
 .characterSelectorButton:focus-visible {
-  box-shadow: 0 0 0 2px rgba(104, 122, 97, 0.24);
+  outline: 2px solid rgba(104, 122, 97, 0.34);
+  outline-offset: 2px;
 }
 
 .selectorGlyph {
   font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 1.36rem;
+  font-size: 1.18rem;
+  font-weight: 500;
   line-height: 1;
 }
 
@@ -218,10 +226,19 @@
     padding: 0.95rem;
   }
 
+  .characterSelector {
+    gap: 0.38rem;
+  }
+
   .characterSelectorButton {
-    width: 2.7rem;
-    min-width: 2.7rem;
-    height: 2.7rem;
+    width: 2.38rem;
+    min-width: 2.38rem;
+    height: 2.38rem;
+    border-radius: 0.58rem;
+  }
+
+  .selectorGlyph {
+    font-size: 1.28rem;
   }
 
   .characterFacts div {
