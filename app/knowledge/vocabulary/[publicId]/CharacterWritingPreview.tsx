@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import HanziWriter from "hanzi-writer";
 import type { VocabularyCharacterWriting } from "@/lib/vocabularyCharacterDelivery";
 import styles from "./CharacterWritingPreview.module.css";
-
-type HanziWriterData = { strokes?: unknown };
 
 type Props = {
   glyph: string;
@@ -19,7 +18,6 @@ type Props = {
 
 const LOCKED_REPOSITORY = "chanind/hanzi-writer-data";
 const LOCKED_COMMIT = "68d10a4b21150cae5e1ebbd223eed289cf32d90c";
-const STROKE_STEP_MS = 460;
 
 function writingDataUrl(glyph: string, writing: VocabularyCharacterWriting) {
   if (
@@ -29,95 +27,139 @@ function writingDataUrl(glyph: string, writing: VocabularyCharacterWriting) {
   ) {
     return null;
   }
+
   return `https://raw.githubusercontent.com/${LOCKED_REPOSITORY}/${LOCKED_COMMIT}/data/${encodeURIComponent(glyph)}.json`;
 }
 
 export default function CharacterWritingPreview({ glyph, writing, labels }: Props) {
   const sourceUrl = useMemo(() => writingDataUrl(glyph, writing), [glyph, writing]);
+  const targetRef = useRef<HTMLDivElement | null>(null);
   const [opened, setOpened] = useState(false);
-  const [strokes, setStrokes] = useState<string[]>([]);
-  const [visibleStrokeCount, setVisibleStrokeCount] = useState(0);
-  const [playNonce, setPlayNonce] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [replayNonce, setReplayNonce] = useState(0);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
   useEffect(() => {
-    if (!opened || strokes.length > 0 || failed || !sourceUrl) return;
-    let cancelled = false;
-    fetch(sourceUrl)
-      .then((response) => {
-        if (!response.ok) throw new Error("writing-data-unavailable");
-        return response.json() as Promise<HanziWriterData>;
-      })
-      .then((payload) => {
-        if (cancelled || !Array.isArray(payload.strokes)) return;
-        const parsed = payload.strokes.filter(
-          (stroke): stroke is string => typeof stroke === "string" && stroke.length > 0,
-        );
-        if (parsed.length === 0) throw new Error("writing-data-empty");
-        setVisibleStrokeCount(0);
-        setStrokes(parsed);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncPreference = () => setPrefersReducedMotion(mediaQuery.matches);
+
+    syncPreference();
+    mediaQuery.addEventListener?.("change", syncPreference);
+    return () => mediaQuery.removeEventListener?.("change", syncPreference);
+  }, []);
+
+  useEffect(() => {
+    if (!opened || failed || !sourceUrl || !targetRef.current) return;
+
+    const target = targetRef.current;
+    let active = true;
+    let lastSize = 0;
+
+    const renderWriter = () => {
+      if (!active) return;
+      const measured = Math.floor(target.getBoundingClientRect().width);
+      if (measured < 1 || measured === lastSize) return;
+      lastSize = measured;
+      target.replaceChildren();
+      setLoading(true);
+
+      let writer: ReturnType<typeof HanziWriter.create> | null = null;
+      writer = HanziWriter.create(target, glyph, {
+        width: measured,
+        height: measured,
+        padding: Math.max(10, Math.round(measured * 0.07)),
+        showOutline: true,
+        showCharacter: prefersReducedMotion,
+        strokeColor: "#30352f",
+        outlineColor: "#ddd5c8",
+        strokeAnimationSpeed: 1.15,
+        delayBetweenStrokes: 140,
+        renderer: "svg",
+        charDataLoader: (character, onLoad, onError) => {
+          if (character !== glyph) {
+            onError(new Error("writing-character-mismatch"));
+            return;
+          }
+
+          fetch(sourceUrl, { cache: "force-cache" })
+            .then((response) => {
+              if (!response.ok) throw new Error("writing-data-unavailable");
+              return response.json();
+            })
+            .then((payload) => {
+              if (
+                !payload
+                || typeof payload !== "object"
+                || !Array.isArray(payload.strokes)
+                || !Array.isArray(payload.medians)
+                || payload.strokes.length === 0
+                || payload.medians.length !== payload.strokes.length
+              ) {
+                throw new Error("writing-data-invalid");
+              }
+              if (active) onLoad(payload);
+            })
+            .catch((error) => {
+              if (active) onError(error);
+            });
+        },
+        onLoadCharDataSuccess: () => {
+          if (!active) return;
+          setLoading(false);
+          if (!prefersReducedMotion) {
+            void writer?.animateCharacter();
+          }
+        },
+        onLoadCharDataError: () => {
+          if (!active) return;
+          setLoading(false);
+          setFailed(true);
+        },
       });
-    return () => { cancelled = true; };
-  }, [failed, opened, sourceUrl, strokes.length]);
+    };
 
-  useEffect(() => {
-    if (!opened || strokes.length === 0) return;
+    renderWriter();
+    const resizeObserver = new ResizeObserver(renderWriter);
+    resizeObserver.observe(target);
 
-    let count = 0;
-    const timer = window.setInterval(() => {
-      count += 1;
-      setVisibleStrokeCount(Math.min(count, strokes.length));
-      if (count >= strokes.length) window.clearInterval(timer);
-    }, STROKE_STEP_MS);
-
-    return () => window.clearInterval(timer);
-  }, [opened, playNonce, strokes]);
+    return () => {
+      active = false;
+      resizeObserver.disconnect();
+      target.replaceChildren();
+    };
+  }, [failed, glyph, opened, prefersReducedMotion, replayNonce, sourceUrl]);
 
   if (!sourceUrl) return null;
 
   const openWriting = () => {
     setFailed(false);
     setOpened(true);
-    if (strokes.length > 0) {
-      setVisibleStrokeCount(0);
-      setPlayNonce((value) => value + 1);
-    }
+    setReplayNonce((value) => value + 1);
   };
 
   const replay = () => {
-    setVisibleStrokeCount(0);
-    setPlayNonce((value) => value + 1);
+    setFailed(false);
+    setReplayNonce((value) => value + 1);
   };
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.writingPad} aria-live="polite">
+      <div
+        className={styles.writingPad}
+        role="img"
+        aria-label={`${labels.open}: ${glyph}`}
+        aria-busy={opened && loading}
+      >
         {!opened ? (
           <span className={styles.staticGlyph} aria-hidden="true">{glyph}</span>
         ) : failed ? (
           <p className={styles.unavailable}>{labels.unavailable}</p>
-        ) : strokes.length > 0 ? (
-          <svg
-            className={styles.canvas}
-            viewBox="0 0 1024 1024"
-            role="img"
-            aria-label={`${labels.open}: ${glyph}`}
-          >
-            <g transform="translate(0 900) scale(1 -1)">
-              {strokes.map((stroke, index) => (
-                <path
-                  key={`${glyph}-${index}`}
-                  d={stroke}
-                  className={index < visibleStrokeCount ? styles.visibleStroke : styles.hiddenStroke}
-                />
-              ))}
-            </g>
-          </svg>
         ) : (
-          <span className={styles.loading} aria-hidden="true">…</span>
+          <>
+            <div ref={targetRef} className={styles.writerTarget} aria-hidden="true" />
+            {loading ? <span className={styles.loading} aria-hidden="true">…</span> : null}
+          </>
         )}
       </div>
 
@@ -126,7 +168,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
           <button type="button" className={styles.trigger} onClick={openWriting}>
             {labels.open}
           </button>
-        ) : strokes.length > 0 ? (
+        ) : !prefersReducedMotion && !loading ? (
           <button type="button" className={styles.replay} onClick={replay}>
             {labels.replay}
           </button>
