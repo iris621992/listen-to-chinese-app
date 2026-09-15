@@ -56,7 +56,6 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
       <div className={styles.characterRailInner}>
         <header className={styles.header}>
           <h2 id="characters-title">{labels.characters}</h2>
-          <p>{labels.writingOpen}</p>
         </header>
 
         <div className={styles.characterSelector} role="group" aria-label={labels.characters}>
@@ -85,7 +84,6 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
               glyph={character.glyph}
               writing={character.writing}
               labels={{
-                open: labels.writingOpen,
                 replay: labels.writingReplay,
                 unavailable: labels.writingUnavailable,
                 source: labels.writingSource,
