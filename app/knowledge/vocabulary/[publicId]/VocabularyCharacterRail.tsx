@@ -24,6 +24,12 @@ type DetailAction = {
   label: string;
 };
 
+type Props = {
+  occurrences: VocabularyCharacterOccurrence[];
+  labels: Labels;
+  detailAction?: DetailAction | null;
+};
+
 type QuickPreviewLabels = {
   title: string;
   writing: string;
