@@ -66,7 +66,6 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
   useEffect(() => {
     if (!opened || strokes.length === 0) return;
 
-    setVisibleStrokeCount(0);
     let count = 0;
     const timer = window.setInterval(() => {
       count += 1;
