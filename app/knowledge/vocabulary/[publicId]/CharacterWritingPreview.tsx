@@ -20,6 +20,9 @@ const LOCKED_COMMIT = "68d10a4b21150cae5e1ebbd223eed289cf32d90c";
 const AUTOPLAY_DELAY_MS = 420;
 const STROKE_ANIMATION_SPEED = 0.55;
 const DELAY_BETWEEN_STROKES_MS = 260;
+// Stroke-order playback is essential learning content, not decorative motion.
+// Keep the full character hidden before playback even when the OS asks to reduce motion.
+const prefersReducedMotion = false;
 
 function writingDataUrl(glyph: string, writing: VocabularyCharacterWriting) {
   if (
@@ -72,7 +75,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
         height: measured,
         padding: Math.max(10, Math.round(measured * 0.07)),
         showOutline: true,
-        showCharacter: false,
+        showCharacter: prefersReducedMotion,
         strokeColor: "#30352f",
         outlineColor: "#ddd5c8",
         strokeAnimationSpeed: STROKE_ANIMATION_SPEED,
@@ -112,8 +115,8 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
           setLoading(false);
           clearAutoplayTimer();
           autoplayTimerRef.current = setTimeout(() => {
-            if (!active || !writerRef.current) return;
-            void writerRef.current.animateCharacter();
+            if (!active || !writer) return;
+            void writer?.animateCharacter();
             autoplayTimerRef.current = null;
           }, AUTOPLAY_DELAY_MS);
         },
