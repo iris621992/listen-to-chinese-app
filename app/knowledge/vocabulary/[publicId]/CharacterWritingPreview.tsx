@@ -119,8 +119,8 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
           setLoading(false);
           clearAutoplayTimer();
           autoplayTimerRef.current = setTimeout(() => {
-            if (!active || !writer) return;
-            void writer.animateCharacter();
+            if (!active) return;
+            void writer?.animateCharacter();
             autoplayTimerRef.current = null;
           }, AUTOPLAY_DELAY_MS);
         },
