@@ -24,15 +24,8 @@ type DetailAction = {
   label: string;
 };
 
-type Props = {
-  occurrences: VocabularyCharacterOccurrence[];
-  labels: Labels;
-  detailAction?: DetailAction | null;
-};
-
 type QuickPreviewLabels = {
   title: string;
-  helper: string;
   writing: string;
   structure: string;
   single: string;
@@ -67,7 +60,6 @@ function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
   if (labels.characters === "Hán tự") {
     return {
       title: "Hán tự trong từ này",
-      helper: "Xem nhanh hình chữ và cách viết mà không rời khỏi phần Từ vựng.",
       writing: "Cách viết",
       structure: labels.structure ?? "Kết cấu",
       single: labels.structureSingle ?? "Độc thể",
@@ -77,7 +69,6 @@ function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
   if (labels.characters === "الحروف الصينية") {
     return {
       title: "الحروف الصينية في هذه الكلمة",
-      helper: "نظرة سريعة على شكل الحرف وطريقة كتابته دون مغادرة صفحة المفردة.",
       writing: "طريقة الكتابة",
       structure: labels.structure ?? "البنية",
       single: labels.structureSingle ?? "حرف مفرد البنية",
@@ -86,7 +77,6 @@ function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
 
   return {
     title: "Characters in this word",
-    helper: "Quickly review the character form and writing without leaving the vocabulary entry.",
     writing: "Writing",
     structure: labels.structure ?? "Structure",
     single: labels.structureSingle ?? "Single-component",
@@ -120,7 +110,6 @@ export default function VocabularyCharacterRail({ occurrences, labels, detailAct
       <div className={styles.characterRailInner}>
         <header className={styles.header}>
           <h2 id="characters-title">{previewLabels.title}</h2>
-          <p>{previewLabels.helper}</p>
         </header>
 
         <div className={styles.characterSelector} role="group" aria-label={labels.characters}>
