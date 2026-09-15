@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { VocabularyCharacterOccurrence } from "@/lib/vocabularyCharacterDelivery";
 import CharacterWritingPreview from "./CharacterWritingPreview";
 import styles from "./VocabularyCharacterRail.module.css";
@@ -18,11 +21,15 @@ type Props = {
   labels: Labels;
 };
 
+function occurrenceKey(occurrence: VocabularyCharacterOccurrence) {
+  return `${occurrence.character.publicId}:${occurrence.lexicalContextPronunciation ?? ""}`;
+}
+
 function uniqueCharacters(occurrences: VocabularyCharacterOccurrence[]) {
   const result: VocabularyCharacterOccurrence[] = [];
   const seen = new Set<string>();
   for (const occurrence of occurrences) {
-    const key = `${occurrence.character.publicId}:${occurrence.lexicalContextPronunciation ?? ""}`;
+    const key = occurrenceKey(occurrence);
     if (seen.has(key)) continue;
     seen.add(key);
     result.push(occurrence);
@@ -32,48 +39,75 @@ function uniqueCharacters(occurrences: VocabularyCharacterOccurrence[]) {
 
 export default function VocabularyCharacterRail({ occurrences, labels }: Props) {
   const characters = uniqueCharacters(occurrences);
+  const [selectedKey, setSelectedKey] = useState(() => (
+    characters.length > 0 ? occurrenceKey(characters[0]) : ""
+  ));
+
   if (characters.length === 0) return null;
+
+  const selectedOccurrence =
+    characters.find((occurrence) => occurrenceKey(occurrence) === selectedKey)
+    ?? characters[0];
+  const character = selectedOccurrence.character;
 
   return (
     <aside id="characters" className={styles.characterRail} aria-labelledby="characters-title">
       <div className={styles.characterRailInner}>
         <h2 id="characters-title">{labels.characters}</h2>
-        <div className={styles.characterList}>
+
+        <div className={styles.characterSelector} role="group" aria-label={labels.characters}>
           {characters.map((occurrence) => {
-            const character = occurrence.character;
+            const key = occurrenceKey(occurrence);
+            const selected = key === occurrenceKey(selectedOccurrence);
             return (
-              <article key={`${character.publicId}-${occurrence.lexicalContextPronunciation ?? "context"}`} className={styles.characterCard}>
-                <div className={styles.characterTile}>{character.glyph}</div>
+              <button
+                key={key}
+                type="button"
+                className={styles.characterSelectorButton}
+                aria-pressed={selected}
+                onClick={() => setSelectedKey(key)}
+              >
+                <span className={styles.selectorGlyph}>{occurrence.character.glyph}</span>
                 {occurrence.lexicalContextPronunciation ? (
-                  <strong className={styles.characterReading}>{occurrence.lexicalContextPronunciation}</strong>
+                  <span className={styles.selectorReading}>{occurrence.lexicalContextPronunciation}</span>
                 ) : null}
-                <dl className={styles.characterFacts}>
-                  {character.hanViet ? (
-                    <div><dt>{labels.hanViet}</dt><dd>{character.hanViet}</dd></div>
-                  ) : null}
-                  {character.radical ? (
-                    <div><dt>{labels.radical}</dt><dd>{character.radical}</dd></div>
-                  ) : null}
-                  {character.strokeCount ? (
-                    <div><dt>{labels.strokes}</dt><dd>{character.strokeCount}</dd></div>
-                  ) : null}
-                </dl>
-                {character.writing ? (
-                  <CharacterWritingPreview
-                    glyph={character.glyph}
-                    writing={character.writing}
-                    labels={{
-                      open: labels.writingOpen,
-                      replay: labels.writingReplay,
-                      unavailable: labels.writingUnavailable,
-                      source: labels.writingSource,
-                    }}
-                  />
-                ) : null}
-              </article>
+              </button>
             );
           })}
         </div>
+
+        <article className={styles.selectedCharacter} aria-live="polite">
+          <div className={styles.characterTile}>{character.glyph}</div>
+          {selectedOccurrence.lexicalContextPronunciation ? (
+            <strong className={styles.characterReading}>{selectedOccurrence.lexicalContextPronunciation}</strong>
+          ) : null}
+
+          <dl className={styles.characterFacts}>
+            {character.hanViet ? (
+              <div><dt>{labels.hanViet}</dt><dd>{character.hanViet}</dd></div>
+            ) : null}
+            {character.radical ? (
+              <div><dt>{labels.radical}</dt><dd>{character.radical}</dd></div>
+            ) : null}
+            {character.strokeCount ? (
+              <div><dt>{labels.strokes}</dt><dd>{character.strokeCount}</dd></div>
+            ) : null}
+          </dl>
+
+          {character.writing ? (
+            <CharacterWritingPreview
+              key={`${occurrenceKey(selectedOccurrence)}:${character.writing.sourcePath}`}
+              glyph={character.glyph}
+              writing={character.writing}
+              labels={{
+                open: labels.writingOpen,
+                replay: labels.writingReplay,
+                unavailable: labels.writingUnavailable,
+                source: labels.writingSource,
+              }}
+            />
+          ) : null}
+        </article>
       </div>
     </aside>
   );
