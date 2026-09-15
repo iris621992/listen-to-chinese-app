@@ -123,8 +123,8 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
           if (!prefersReducedMotion) {
             clearAutoplayTimer();
             autoplayTimerRef.current = setTimeout(() => {
-              if (!active || !writerRef.current) return;
-              void writerRef.current.animateCharacter();
+              if (!active || !writer) return;
+              void writer?.animateCharacter();
               autoplayTimerRef.current = null;
             }, AUTOPLAY_DELAY_MS);
           }
