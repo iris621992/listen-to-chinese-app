@@ -10,6 +10,9 @@ type Labels = {
   radical: string;
   strokes: string;
   hanViet: string;
+  structure: string;
+  structureLeftRight: string;
+  structureSingle: string;
   writingOpen: string;
   writingReplay: string;
   writingUnavailable: string;
@@ -37,8 +40,23 @@ function uniqueCharacters(occurrences: VocabularyCharacterOccurrence[]) {
   return result;
 }
 
+function simplifiedMainlandCharacters(occurrences: VocabularyCharacterOccurrence[]) {
+  return uniqueCharacters(
+    occurrences.filter((occurrence) => (
+      occurrence.scriptVariantCode === "simplified"
+      || occurrence.scriptProfileCode === "simplified_mainland"
+    )),
+  );
+}
+
+function structureLabel(code: string | null, labels: Labels) {
+  if (code === "left-right") return labels.structureLeftRight;
+  if (code === "single") return labels.structureSingle;
+  return null;
+}
+
 export default function VocabularyCharacterRail({ occurrences, labels }: Props) {
-  const characters = uniqueCharacters(occurrences);
+  const characters = simplifiedMainlandCharacters(occurrences);
   const [selectedKey, setSelectedKey] = useState(() => (
     characters.length > 0 ? occurrenceKey(characters[0]) : ""
   ));
@@ -50,6 +68,7 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
     ?? characters[0];
   const selectedOccurrenceKey = occurrenceKey(selectedOccurrence);
   const character = selectedOccurrence.character;
+  const localizedStructure = structureLabel(character.structureCode, labels);
 
   return (
     <aside id="characters" className={styles.characterRail} aria-labelledby="characters-title">
@@ -102,6 +121,9 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
             ) : null}
             {character.hanViet ? (
               <div><dt>{labels.hanViet}</dt><dd>{character.hanViet}</dd></div>
+            ) : null}
+            {localizedStructure ? (
+              <div><dt>{labels.structure}</dt><dd>{localizedStructure}</dd></div>
             ) : null}
             {character.radical ? (
               <div><dt>{labels.radical}</dt><dd>{character.radical}</dd></div>
