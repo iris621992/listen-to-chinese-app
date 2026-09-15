@@ -39,15 +39,6 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
   const [visibleStrokeCount, setVisibleStrokeCount] = useState(0);
   const [playNonce, setPlayNonce] = useState(0);
   const [failed, setFailed] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReducedMotion(media.matches);
-    sync();
-    media.addEventListener?.("change", sync);
-    return () => media.removeEventListener?.("change", sync);
-  }, []);
 
   useEffect(() => {
     if (!opened || strokes.length > 0 || failed || !sourceUrl) return;
@@ -74,10 +65,6 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
 
   useEffect(() => {
     if (!opened || strokes.length === 0) return;
-    if (reducedMotion) {
-      setVisibleStrokeCount(strokes.length);
-      return;
-    }
 
     setVisibleStrokeCount(0);
     let count = 0;
@@ -88,7 +75,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
     }, STROKE_STEP_MS);
 
     return () => window.clearInterval(timer);
-  }, [opened, playNonce, reducedMotion, strokes]);
+  }, [opened, playNonce, strokes]);
 
   if (!sourceUrl) return null;
 
