@@ -33,6 +33,7 @@ type Props = {
 type QuickPreviewLabels = {
   title: string;
   writing: string;
+  pinyin: string;
   structure: string;
   single: string;
 };
@@ -67,6 +68,7 @@ function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
     return {
       title: "Hán tự trong từ này",
       writing: "Cách viết",
+      pinyin: "Pinyin",
       structure: labels.structure ?? "Kết cấu",
       single: labels.structureSingle ?? "Độc thể",
     };
@@ -76,6 +78,7 @@ function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
     return {
       title: "الحروف الصينية في هذه الكلمة",
       writing: "طريقة الكتابة",
+      pinyin: "Pinyin",
       structure: labels.structure ?? "البنية",
       single: labels.structureSingle ?? "حرف مفرد البنية",
     };
@@ -84,6 +87,7 @@ function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
   return {
     title: "Characters in this word",
     writing: "Writing",
+    pinyin: "Pinyin",
     structure: labels.structure ?? "Structure",
     single: labels.structureSingle ?? "Single-component",
   };
@@ -161,15 +165,17 @@ export default function VocabularyCharacterRail({ occurrences, labels, detailAct
               <span className={styles.bigChinese}>{character.glyph}</span>
             </div>
 
-            {(selectedOccurrence.lexicalContextPronunciation || character.hanViet) ? (
+            {selectedOccurrence.lexicalContextPronunciation ? (
               <div className={styles.characterFactLine}>
-                {selectedOccurrence.lexicalContextPronunciation ? (
-                  <strong>{selectedOccurrence.lexicalContextPronunciation}</strong>
-                ) : null}
-                {selectedOccurrence.lexicalContextPronunciation && character.hanViet ? (
-                  <span aria-hidden="true"> · </span>
-                ) : null}
-                {character.hanViet ? <span>{character.hanViet}</span> : null}
+                <span>{previewLabels.pinyin}: </span>
+                <strong>{selectedOccurrence.lexicalContextPronunciation}</strong>
+              </div>
+            ) : null}
+
+            {character.hanViet ? (
+              <div className={styles.characterFactLine}>
+                <span>{labels.hanViet}: </span>
+                <strong>{character.hanViet}</strong>
               </div>
             ) : null}
 
@@ -180,23 +186,17 @@ export default function VocabularyCharacterRail({ occurrences, labels, detailAct
               </div>
             ) : null}
 
-            {(character.radical || character.strokeCount) ? (
+            {character.radical ? (
               <div className={styles.characterFactLine}>
-                {character.radical ? (
-                  <>
-                    <span>{labels.radical}: </span>
-                    <strong className={styles.bigChinese}>{character.radical}</strong>
-                  </>
-                ) : null}
-                {character.radical && character.strokeCount ? (
-                  <span aria-hidden="true"> · </span>
-                ) : null}
-                {character.strokeCount ? (
-                  <>
-                    <span>{labels.strokes}: </span>
-                    <strong>{character.strokeCount}</strong>
-                  </>
-                ) : null}
+                <span>{labels.radical}: </span>
+                <strong className={styles.bigChinese}>{character.radical}</strong>
+              </div>
+            ) : null}
+
+            {character.strokeCount ? (
+              <div className={styles.characterFactLine}>
+                <span>{labels.strokes}: </span>
+                <strong>{character.strokeCount}</strong>
               </div>
             ) : null}
           </div>
