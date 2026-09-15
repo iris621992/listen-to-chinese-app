@@ -41,19 +41,9 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [reloadNonce, setReloadNonce] = useState(0);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const syncPreference = () => setPrefersReducedMotion(mediaQuery.matches);
-
-    syncPreference();
-    mediaQuery.addEventListener?.("change", syncPreference);
-    return () => mediaQuery.removeEventListener?.("change", syncPreference);
-  }, []);
-
-  useEffect(() => {
-    if (failed || !sourceUrl || !targetRef.current || prefersReducedMotion === null) return;
+    if (failed || !sourceUrl || !targetRef.current) return;
 
     const target = targetRef.current;
     let active = true;
@@ -82,7 +72,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
         height: measured,
         padding: Math.max(10, Math.round(measured * 0.07)),
         showOutline: true,
-        showCharacter: prefersReducedMotion,
+        showCharacter: false,
         strokeColor: "#30352f",
         outlineColor: "#ddd5c8",
         strokeAnimationSpeed: STROKE_ANIMATION_SPEED,
@@ -120,14 +110,12 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
           if (!active) return;
           writerRef.current = writer;
           setLoading(false);
-          if (!prefersReducedMotion) {
-            clearAutoplayTimer();
-            autoplayTimerRef.current = setTimeout(() => {
-              if (!active || !writer) return;
-              void writer?.animateCharacter();
-              autoplayTimerRef.current = null;
-            }, AUTOPLAY_DELAY_MS);
-          }
+          clearAutoplayTimer();
+          autoplayTimerRef.current = setTimeout(() => {
+            if (!active || !writerRef.current) return;
+            void writerRef.current.animateCharacter();
+            autoplayTimerRef.current = null;
+          }, AUTOPLAY_DELAY_MS);
         },
         onLoadCharDataError: () => {
           if (!active) return;
@@ -150,13 +138,11 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
       writerRef.current = null;
       target.replaceChildren();
     };
-  }, [failed, glyph, prefersReducedMotion, reloadNonce, sourceUrl]);
+  }, [failed, glyph, reloadNonce, sourceUrl]);
 
   if (!sourceUrl) return null;
 
   const replay = () => {
-    if (prefersReducedMotion) return;
-
     if (autoplayTimerRef.current !== null) {
       clearTimeout(autoplayTimerRef.current);
       autoplayTimerRef.current = null;
@@ -183,7 +169,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
           </>
         )}
 
-        {prefersReducedMotion === false && !loading ? (
+        {!loading ? (
           <button
             type="button"
             className={styles.replayIcon}
