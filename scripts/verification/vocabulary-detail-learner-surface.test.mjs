@@ -5,7 +5,7 @@ import test from "node:test";
 const read = (path) => readFile(path, "utf8");
 
 test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Character delivery", async () => {
-  const [loader, characterLoader, page, styles, characterRail, characterRailStyles, writing, writingStyles, sticky, rich, richStyles, knowledge, header] = await Promise.all([
+  const [loader, characterLoader, page, styles, characterRail, characterRailStyles, writing, writingStyles, sticky, rich, richStyles, knowledge, header, packageJson] = await Promise.all([
     read("lib/vocabularyDetail.ts"),
     read("lib/vocabularyCharacterDelivery.ts"),
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
@@ -19,6 +19,7 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css"),
     read("app/knowledge/page.tsx"),
     read("components/Header.tsx"),
+    read("package.json"),
   ]);
 
   assert.match(loader, /get_public_vocabulary_entry_v3/);
@@ -86,26 +87,38 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.match(characterRail, /CharacterWritingPreview/);
   assert.match(characterRail, /selectedOccurrenceKey/);
   assert.doesNotMatch(characterRail, /className=\{styles\.characterCard\}/);
+  assert.doesNotMatch(characterRail, /characterIdentity|identityGlyph|hanVietValue/);
   assert.doesNotMatch(characterRail, /活动|椅子|出租车|运动/);
   assert.match(characterRailStyles, /\.characterSelector/);
   assert.match(characterRailStyles, /\.characterSelectorButton\[aria-pressed="true"\]/);
+  assert.match(characterRailStyles, /background:\s*#30352f/);
+  assert.match(characterRailStyles, /color:\s*#fff/);
   assert.match(characterRailStyles, /\.selectedCharacter/);
-  assert.match(characterRailStyles, /\.characterIdentity/);
+  assert.doesNotMatch(characterRailStyles, /\.characterIdentity/);
   assert.doesNotMatch(characterRailStyles, /grid-template-columns:\s*repeat\(2/);
 
+  assert.match(packageJson, /"hanzi-writer":\s*"3\.7\.3"/);
+  assert.match(writing, /import HanziWriter from "hanzi-writer"/);
   assert.match(writing, /chanind\/hanzi-writer-data/);
   assert.match(writing, /68d10a4b21150cae5e1ebbd223eed289cf32d90c/);
   assert.match(writing, /writing\.sourcePath !== `data\/\$\{glyph\}\.json`/);
   assert.match(writing, /raw\.githubusercontent\.com/);
-  assert.match(writing, /STROKE_STEP_MS = 460/);
-  assert.match(writing, /setVisibleStrokeCount\(0\)/);
-  assert.match(writing, /setVisibleStrokeCount\(Math\.min\(count, strokes\.length\)\)/);
-  assert.match(writing, /setPlayNonce\(\(value\) => value \+ 1\)/);
+  assert.match(writing, /charDataLoader/);
+  assert.match(writing, /character !== glyph/);
+  assert.match(writing, /Array\.isArray\(payload\.strokes\)/);
+  assert.match(writing, /Array\.isArray\(payload\.medians\)/);
+  assert.match(writing, /HanziWriter\.create/);
+  assert.match(writing, /animateCharacter\(\)/);
+  assert.match(writing, /setReplayNonce\(\(value\) => value \+ 1\)/);
+  assert.match(writing, /prefers-reduced-motion: reduce|prefersReducedMotion/);
+  assert.match(writing, /showCharacter:\s*prefersReducedMotion/);
   assert.match(writing, /className=\{styles\.staticGlyph\}/);
+  assert.doesNotMatch(writing, /STROKE_STEP_MS|visibleStrokeCount|hiddenStroke|setInterval/);
+  assert.match(writingStyles, /linear-gradient\(45deg/);
+  assert.match(writingStyles, /linear-gradient\(-45deg/);
   assert.match(writingStyles, /prefers-reduced-motion: reduce/);
-  assert.match(writingStyles, /\.hiddenStroke\s*\{\s*opacity:\s*0;/s);
-  assert.match(writingStyles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.hiddenStroke[\s\S]*opacity:\s*1;/);
-  assert.doesNotMatch(writingStyles, /\.hiddenStroke\s*\{[^}]*opacity:\s*0\.08/s);
+  assert.doesNotMatch(writingStyles, /\.hiddenStroke|\.visibleStroke/);
+  assert.doesNotMatch(writingStyles, /opacity:\s*0\.08/);
 
   assert.match(rich, /item\.collocations\.length > 0/);
   assert.match(rich, /item\.classifiers\.length > 0/);
