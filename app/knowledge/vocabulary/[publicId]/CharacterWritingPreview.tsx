@@ -19,7 +19,10 @@ const LOCKED_COMMIT = "68d10a4b21150cae5e1ebbd223eed289cf32d90c";
 const AUTOPLAY_DELAY_MS = 420;
 const STROKE_ANIMATION_SPEED = 0.55;
 const DELAY_BETWEEN_STROKES_MS = 260;
-const GLYPH_PADDING_RATIO = 0.205;
+// The demo's 104px static glyph occupies materially more visual ink than a 104px Hanzi Writer
+// viewport because the source stroke geometry has its own internal whitespace. 16% padding keeps
+// the real stroke drawing close to that approved visual footprint without changing the 176px pad.
+const GLYPH_PADDING_RATIO = 0.16;
 // Stroke-order playback is essential learning content, not decorative motion.
 // Keep the full character hidden before playback even when the OS asks to reduce motion.
 const prefersReducedMotion = false;
