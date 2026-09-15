@@ -48,10 +48,6 @@
   font: inherit;
   cursor: pointer;
   box-shadow: none;
-  transition:
-    background-color 120ms ease,
-    border-color 120ms ease,
-    color 120ms ease;
 }
 
 .characterSelectorButton[aria-pressed="true"] {
@@ -94,52 +90,39 @@
 .characterFacts {
   display: grid;
   gap: 5px;
-  margin: 10px 0 0;
-  border: 0;
+  margin-top: 10px;
 }
 
-.characterFacts div {
-  display: flex;
+.characterFactLine {
   min-width: 0;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 0;
-  border: 0;
   color: #5b6158;
   font-size: 13px;
   line-height: 1.5;
-}
-
-.characterFacts dt,
-.characterFacts dd {
-  margin: 0;
-}
-
-.characterFacts dt {
-  flex: 0 0 auto;
-  color: #5b6158;
-  font-weight: 500;
-}
-
-.characterFacts dd {
-  min-width: 0;
-  color: #30352f;
-  font-size: 13px;
-  font-weight: 700;
-  text-align: end;
   overflow-wrap: anywhere;
 }
 
-.structureFact dd {
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 14px;
-  letter-spacing: 0.01em;
+.characterFactLine strong {
+  color: #30352f;
+  font-weight: 700;
 }
 
-.hanziValue {
+.bigChinese {
   font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 15px !important;
+  font-size: 17px;
+  color: #30352f;
+}
+
+.structureValue {
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: 15px;
+}
+
+.attribution {
+  margin: 8px 0 0;
+  color: #686d65;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .detailAction {
@@ -208,9 +191,12 @@
     font-size: 16px;
   }
 
-  .characterFacts div,
-  .characterFacts dd {
-    font-size: 11px;
+  .characterFactLine {
+    font-size: 13px;
+  }
+
+  .bigChinese {
+    font-size: 15px;
   }
 
   .writingUnavailable {
@@ -255,8 +241,7 @@
     font-size: 17px;
   }
 
-  .characterFacts div,
-  .characterFacts dd {
+  .characterFactLine {
     font-size: 13px;
   }
 }
