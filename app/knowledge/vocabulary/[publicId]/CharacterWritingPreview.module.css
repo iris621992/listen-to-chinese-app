@@ -1,121 +1,132 @@
 .wrap {
+  display: grid;
+  gap: 0.58rem;
   width: 100%;
 }
 
 .writingPad {
+  position: relative;
   display: grid;
   width: 100%;
-  min-height: 10.8rem;
+  aspect-ratio: 1;
   place-items: center;
   overflow: hidden;
-  border: 1px solid #e1dacd;
-  border-radius: 0.9rem;
+  border: 1px solid #d7d0c2;
+  border-radius: 0.95rem;
   background:
-    linear-gradient(90deg, transparent 49.5%, #f0eadf 50%, transparent 50.5%),
-    linear-gradient(transparent 49.5%, #f0eadf 50%, transparent 50.5%),
-    #fff;
+    linear-gradient(to right, transparent calc(50% - 0.5px), rgba(177, 166, 147, 0.35) 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(177, 166, 147, 0.35) 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(45deg, transparent calc(50% - 0.5px), rgba(177, 166, 147, 0.22) 50%, transparent calc(50% + 0.5px)),
+    linear-gradient(-45deg, transparent calc(50% - 0.5px), rgba(177, 166, 147, 0.22) 50%, transparent calc(50% + 0.5px)),
+    #fbf7ef;
 }
 
 .staticGlyph {
-  color: var(--text-primary);
+  position: relative;
+  z-index: 1;
+  color: #30352f;
   font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 5rem;
+  font-size: clamp(5.5rem, 11vw, 7.8rem);
+  font-weight: 560;
   line-height: 1;
 }
 
-.canvas {
+.writerTarget {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  aspect-ratio: 1;
+  height: 100%;
 }
 
-.visibleStroke,
-.hiddenStroke {
-  fill: currentColor;
-  color: var(--text-primary);
+.writerTarget :global(svg) {
+  display: block;
 }
 
-.visibleStroke {
-  opacity: 1;
-  transition: opacity 0.16s ease;
-}
-
-.hiddenStroke {
-  opacity: 0;
-}
-
-.controls {
-  display: flex;
-  justify-content: center;
-  margin-top: 0.55rem;
-}
-
-.trigger,
-.replay {
-  min-height: 38px;
-  border: 1px solid #d7d0c2;
-  border-radius: 0.7rem;
-  background: #fff;
-  padding: 0.4rem 0.7rem;
-  color: var(--interactive-secondary);
-  font: inherit;
-  font-size: 0.74rem;
-  font-weight: 720;
-  cursor: pointer;
-}
-
-.trigger:hover,
-.trigger:focus-visible,
-.replay:hover,
-.replay:focus-visible {
-  border-color: #9eab94;
-  background: #f7faf5;
-  outline: none;
-}
-
-.loading,
-.unavailable,
-.attribution {
+.loading {
+  position: absolute;
+  inset: auto 0 0.48rem;
+  z-index: 2;
   margin: 0;
-  color: var(--text-muted);
-  font-size: 0.68rem;
-  line-height: 1.45;
+  color: #787d74;
+  font-size: 0.82rem;
   text-align: center;
 }
 
 .unavailable {
-  max-width: 10rem;
-  padding: 0.75rem;
+  position: relative;
+  z-index: 1;
+  max-width: 12rem;
+  margin: 0;
+  padding: 1rem;
+  color: #656a62;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.controls {
+  display: flex;
+  justify-content: stretch;
+}
+
+.trigger,
+.replay {
+  width: 100%;
+  min-height: 2.45rem;
+  border-radius: 0.72rem;
+  padding: 0.55rem 0.75rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 720;
+  cursor: pointer;
+}
+
+.trigger {
+  border: 1px solid #687a61;
+  background: #687a61;
+  color: #fff;
+}
+
+.replay {
+  border: 1px solid #b8b09f;
+  background: #fffefb;
+  color: #465043;
+}
+
+.trigger:hover,
+.trigger:focus-visible {
+  background: #596a53;
+  border-color: #596a53;
+}
+
+.replay:hover,
+.replay:focus-visible {
+  background: #f5f0e7;
+  border-color: #8d9984;
+}
+
+.trigger:focus-visible,
+.replay:focus-visible {
+  outline: 2px solid #687a61;
+  outline-offset: 2px;
 }
 
 .attribution {
-  margin-top: 0.45rem;
+  margin: -0.05rem 0 0;
   overflow-wrap: anywhere;
+  color: #7a7d76;
+  font-size: 0.64rem;
+  line-height: 1.35;
 }
 
-@media (max-width: 1100px) {
-  .writingPad {
-    min-height: 9rem;
-  }
-
+@media (max-width: 900px) {
   .staticGlyph {
-    font-size: 4.35rem;
-  }
-}
-
-@media (max-width: 639px), (max-width: 900px) and (max-height: 520px) {
-  .writingPad {
-    min-height: 12rem;
-  }
-
-  .staticGlyph {
-    font-size: 5.25rem;
+    font-size: clamp(5rem, 22vw, 8rem);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .visibleStroke,
-  .hiddenStroke {
-    opacity: 1;
-    transition: none;
+  .writingPad {
+    scroll-behavior: auto;
   }
 }
