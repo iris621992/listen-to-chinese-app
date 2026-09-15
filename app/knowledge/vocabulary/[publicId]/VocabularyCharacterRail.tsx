@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import type { VocabularyCharacterOccurrence } from "@/lib/vocabularyCharacterDelivery";
 import CharacterWritingPreview from "./CharacterWritingPreview";
@@ -11,7 +12,6 @@ type Labels = {
   strokes: string;
   hanViet: string;
   structure?: string;
-  structureLeftRight?: string;
   structureSingle?: string;
   writingOpen: string;
   writingReplay: string;
@@ -19,21 +19,23 @@ type Labels = {
   writingSource: string;
 };
 
+type DetailAction = {
+  href: string;
+  label: string;
+};
+
 type Props = {
   occurrences: VocabularyCharacterOccurrence[];
   labels: Labels;
+  detailAction?: DetailAction | null;
 };
 
-type StructureLabels = {
+type QuickPreviewLabels = {
   title: string;
-  leftRight: string;
+  helper: string;
+  writing: string;
+  structure: string;
   single: string;
-};
-
-const EN_STRUCTURE_LABELS: StructureLabels = {
-  title: "Structure",
-  leftRight: "left–right",
-  single: "single-component",
 };
 
 function occurrenceKey(occurrence: VocabularyCharacterOccurrence) {
@@ -61,41 +63,43 @@ function simplifiedMainlandCharacters(occurrences: VocabularyCharacterOccurrence
   );
 }
 
-function resolvedStructureLabels(labels: Labels): StructureLabels {
-  if (labels.structure && labels.structureLeftRight && labels.structureSingle) {
-    return {
-      title: labels.structure,
-      leftRight: labels.structureLeftRight,
-      single: labels.structureSingle,
-    };
-  }
-
+function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
   if (labels.characters === "Hán tự") {
     return {
-      title: "Kết cấu",
-      leftRight: "trái–phải",
-      single: "độc thể",
+      title: "Hán tự trong từ này",
+      helper: "Xem nhanh hình chữ và cách viết mà không rời khỏi phần Từ vựng.",
+      writing: "Cách viết",
+      structure: labels.structure ?? "Kết cấu",
+      single: labels.structureSingle ?? "Độc thể",
     };
   }
 
   if (labels.characters === "الحروف الصينية") {
     return {
-      title: "البنية",
-      leftRight: "يسار–يمين",
-      single: "مكوّن واحد",
+      title: "الحروف الصينية في هذه الكلمة",
+      helper: "نظرة سريعة على شكل الحرف وطريقة كتابته دون مغادرة صفحة المفردة.",
+      writing: "طريقة الكتابة",
+      structure: labels.structure ?? "البنية",
+      single: labels.structureSingle ?? "حرف مفرد البنية",
     };
   }
 
-  return EN_STRUCTURE_LABELS;
+  return {
+    title: "Characters in this word",
+    helper: "Quickly review the character form and writing without leaving the vocabulary entry.",
+    writing: "Writing",
+    structure: labels.structure ?? "Structure",
+    single: labels.structureSingle ?? "Single-component",
+  };
 }
 
-function structureLabel(code: string | null, labels: StructureLabels) {
-  if (code === "left-right") return labels.leftRight;
-  if (code === "single") return labels.single;
+function learnerStructureValue(occurrence: VocabularyCharacterOccurrence, labels: QuickPreviewLabels) {
+  if (occurrence.character.structureFormula) return occurrence.character.structureFormula;
+  if (occurrence.character.structureCode === "single") return labels.single;
   return null;
 }
 
-export default function VocabularyCharacterRail({ occurrences, labels }: Props) {
+export default function VocabularyCharacterRail({ occurrences, labels, detailAction = null }: Props) {
   const characters = simplifiedMainlandCharacters(occurrences);
   const [selectedKey, setSelectedKey] = useState(() => (
     characters.length > 0 ? occurrenceKey(characters[0]) : ""
@@ -108,14 +112,15 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
     ?? characters[0];
   const selectedOccurrenceKey = occurrenceKey(selectedOccurrence);
   const character = selectedOccurrence.character;
-  const structureLabels = resolvedStructureLabels(labels);
-  const localizedStructure = structureLabel(character.structureCode, structureLabels);
+  const previewLabels = quickPreviewLabels(labels);
+  const structureValue = learnerStructureValue(selectedOccurrence, previewLabels);
 
   return (
     <aside id="characters" className={styles.characterRail} aria-labelledby="characters-title">
       <div className={styles.characterRailInner}>
         <header className={styles.header}>
-          <h2 id="characters-title">{labels.characters}</h2>
+          <h2 id="characters-title">{previewLabels.title}</h2>
+          <p>{previewLabels.helper}</p>
         </header>
 
         <div className={styles.characterSelector} role="group" aria-label={labels.characters}>
@@ -138,6 +143,7 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
         </div>
 
         <article className={styles.selectedCharacter} aria-live="polite">
+          <div className={styles.writingLabel}>{previewLabels.writing}</div>
           {character.writing ? (
             <CharacterWritingPreview
               key={`${selectedOccurrenceKey}:${character.writing.sourcePath}`}
@@ -163,16 +169,25 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
             {character.hanViet ? (
               <div><dt>{labels.hanViet}</dt><dd>{character.hanViet}</dd></div>
             ) : null}
-            {localizedStructure ? (
-              <div><dt>{structureLabels.title}</dt><dd>{localizedStructure}</dd></div>
+            {structureValue ? (
+              <div className={styles.structureFact}>
+                <dt>{previewLabels.structure}</dt>
+                <dd>{structureValue}</dd>
+              </div>
             ) : null}
             {character.radical ? (
-              <div><dt>{labels.radical}</dt><dd>{character.radical}</dd></div>
+              <div><dt>{labels.radical}</dt><dd className={styles.hanziValue}>{character.radical}</dd></div>
             ) : null}
             {character.strokeCount ? (
               <div><dt>{labels.strokes}</dt><dd>{character.strokeCount}</dd></div>
             ) : null}
           </dl>
+
+          {detailAction ? (
+            <Link className={styles.detailAction} href={detailAction.href}>
+              {detailAction.label}
+            </Link>
+          ) : null}
         </article>
       </div>
     </aside>
