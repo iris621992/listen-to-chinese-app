@@ -108,16 +108,19 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.match(writing, /Array\.isArray\(payload\.strokes\)/);
   assert.match(writing, /Array\.isArray\(payload\.medians\)/);
   assert.match(writing, /HanziWriter\.create/);
-  assert.match(writing, /animateCharacter\(\)/);
-  assert.match(writing, /setReplayNonce\(\(value\) => value \+ 1\)/);
+  assert.match(writing, /onLoadCharDataSuccess/);
+  assert.match(writing, /void writer\?\.animateCharacter\(\)/);
+  assert.match(writing, /void writerRef\.current\.animateCharacter\(\)/);
   assert.match(writing, /prefers-reduced-motion: reduce|prefersReducedMotion/);
   assert.match(writing, /showCharacter:\s*prefersReducedMotion/);
-  assert.match(writing, /className=\{styles\.staticGlyph\}/);
+  assert.match(writing, /className=\{styles\.replayIcon\}/);
+  assert.doesNotMatch(writing, /opened|setOpened|openWriting|styles\.trigger|staticGlyph/);
   assert.doesNotMatch(writing, /STROKE_STEP_MS|visibleStrokeCount|hiddenStroke|setInterval/);
   assert.match(writingStyles, /linear-gradient\(45deg/);
   assert.match(writingStyles, /linear-gradient\(-45deg/);
+  assert.match(writingStyles, /\.replayIcon/);
   assert.match(writingStyles, /prefers-reduced-motion: reduce/);
-  assert.doesNotMatch(writingStyles, /\.hiddenStroke|\.visibleStroke/);
+  assert.doesNotMatch(writingStyles, /\.trigger|\.hiddenStroke|\.visibleStroke|\.staticGlyph/);
   assert.doesNotMatch(writingStyles, /opacity:\s*0\.08/);
 
   assert.match(rich, /item\.collocations\.length > 0/);
