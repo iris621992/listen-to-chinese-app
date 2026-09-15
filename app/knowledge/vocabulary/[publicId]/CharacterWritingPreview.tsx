@@ -19,6 +19,7 @@ type Props = {
 
 const LOCKED_REPOSITORY = "chanind/hanzi-writer-data";
 const LOCKED_COMMIT = "68d10a4b21150cae5e1ebbd223eed289cf32d90c";
+const STROKE_STEP_MS = 460;
 
 function writingDataUrl(glyph: string, writing: VocabularyCharacterWriting) {
   if (
@@ -38,6 +39,15 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
   const [visibleStrokeCount, setVisibleStrokeCount] = useState(0);
   const [playNonce, setPlayNonce] = useState(0);
   const [failed, setFailed] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReducedMotion(media.matches);
+    sync();
+    media.addEventListener?.("change", sync);
+    return () => media.removeEventListener?.("change", sync);
+  }, []);
 
   useEffect(() => {
     if (!opened || strokes.length > 0 || failed || !sourceUrl) return;
@@ -49,8 +59,11 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
       })
       .then((payload) => {
         if (cancelled || !Array.isArray(payload.strokes)) return;
-        const parsed = payload.strokes.filter((stroke): stroke is string => typeof stroke === "string" && stroke.length > 0);
+        const parsed = payload.strokes.filter(
+          (stroke): stroke is string => typeof stroke === "string" && stroke.length > 0,
+        );
         if (parsed.length === 0) throw new Error("writing-data-empty");
+        setVisibleStrokeCount(0);
         setStrokes(parsed);
       })
       .catch(() => {
@@ -61,17 +74,32 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
 
   useEffect(() => {
     if (!opened || strokes.length === 0) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (reducedMotion) {
+      setVisibleStrokeCount(strokes.length);
+      return;
+    }
+
+    setVisibleStrokeCount(0);
     let count = 0;
     const timer = window.setInterval(() => {
       count += 1;
       setVisibleStrokeCount(Math.min(count, strokes.length));
       if (count >= strokes.length) window.clearInterval(timer);
-    }, 220);
+    }, STROKE_STEP_MS);
+
     return () => window.clearInterval(timer);
-  }, [opened, playNonce, strokes]);
+  }, [opened, playNonce, reducedMotion, strokes]);
 
   if (!sourceUrl) return null;
+
+  const openWriting = () => {
+    setFailed(false);
+    setOpened(true);
+    if (strokes.length > 0) {
+      setVisibleStrokeCount(0);
+      setPlayNonce((value) => value + 1);
+    }
+  };
 
   const replay = () => {
     setVisibleStrokeCount(0);
@@ -80,42 +108,49 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
 
   return (
     <div className={styles.wrap}>
-      <button type="button" className={styles.trigger} onClick={() => setOpened((value) => !value)}>
-        {labels.open}
-      </button>
+      <div className={styles.writingPad} aria-live="polite">
+        {!opened ? (
+          <span className={styles.staticGlyph} aria-hidden="true">{glyph}</span>
+        ) : failed ? (
+          <p className={styles.unavailable}>{labels.unavailable}</p>
+        ) : strokes.length > 0 ? (
+          <svg
+            className={styles.canvas}
+            viewBox="0 0 1024 1024"
+            role="img"
+            aria-label={`${labels.open}: ${glyph}`}
+          >
+            <g transform="translate(0 900) scale(1 -1)">
+              {strokes.map((stroke, index) => (
+                <path
+                  key={`${glyph}-${index}`}
+                  d={stroke}
+                  className={index < visibleStrokeCount ? styles.visibleStroke : styles.hiddenStroke}
+                />
+              ))}
+            </g>
+          </svg>
+        ) : (
+          <span className={styles.loading} aria-hidden="true">…</span>
+        )}
+      </div>
+
+      <div className={styles.controls}>
+        {!opened || failed ? (
+          <button type="button" className={styles.trigger} onClick={openWriting}>
+            {labels.open}
+          </button>
+        ) : strokes.length > 0 ? (
+          <button type="button" className={styles.replay} onClick={replay}>
+            {labels.replay}
+          </button>
+        ) : null}
+      </div>
+
       {opened ? (
-        <div className={styles.panel}>
-          {failed ? (
-            <p className={styles.unavailable}>{labels.unavailable}</p>
-          ) : strokes.length > 0 ? (
-            <>
-              <svg
-                className={styles.canvas}
-                viewBox="0 0 1024 1024"
-                role="img"
-                aria-label={`${labels.open}: ${glyph}`}
-              >
-                <g transform="translate(0 900) scale(1 -1)">
-                  {strokes.map((stroke, index) => (
-                    <path
-                      key={`${glyph}-${index}`}
-                      d={stroke}
-                      className={index < visibleStrokeCount ? styles.visibleStroke : styles.hiddenStroke}
-                    />
-                  ))}
-                </g>
-              </svg>
-              <button type="button" className={styles.replay} onClick={replay}>
-                {labels.replay}
-              </button>
-            </>
-          ) : (
-            <span className={styles.loading} aria-hidden="true">…</span>
-          )}
-          <p className={styles.attribution}>
-            {labels.source}: Hanzi Writer Data · {writing.licenseCode}
-          </p>
-        </div>
+        <p className={styles.attribution}>
+          {labels.source}: Hanzi Writer Data · {writing.licenseCode}
+        </p>
       ) : null}
     </div>
   );
