@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import "./VocabularyDemoFidelity.module.css";
+import "./VocabularyTypographyRuntime.module.css";
 import styles from "./VocabularyDetail.module.css";
 
 type NavItem = {
