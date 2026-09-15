@@ -6,51 +6,45 @@
 .characterRailInner {
   position: sticky;
   top: 6.8rem;
-  border: 1px solid rgba(215, 208, 194, 0.82);
-  border-radius: 1.05rem;
-  background: #fffefb;
-  padding: 0.95rem;
-  box-shadow: 0 6px 18px rgba(45, 48, 42, 0.035);
+  border: 1px solid #d9d2c5;
+  border-radius: 16px;
+  background: rgba(255, 254, 251, 0.76);
+  padding: 14px;
+  box-shadow: none;
 }
 
 .header {
-  margin-bottom: 0.78rem;
+  margin: 0;
 }
 
 .characterRail h2 {
-  margin: 0;
+  margin: 0 0 3px;
   color: #30352f;
-  font-size: 0.96rem;
+  font-size: 13px;
   font-weight: 760;
-  letter-spacing: -0.01em;
-}
-
-.header p {
-  margin: 0.26rem 0 0;
-  color: #6f746c;
-  font-size: 0.78rem;
-  line-height: 1.48;
+  letter-spacing: 0;
+  line-height: 1.45;
 }
 
 .characterSelector {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.3rem;
-  margin: 0.58rem 0 0.76rem;
+  gap: 6px;
+  margin: 8px 0 10px;
 }
 
 .characterSelectorButton {
   display: grid;
-  width: 2.62rem;
-  min-width: 2.62rem;
-  height: 2rem;
+  width: 34px;
+  min-width: 34px;
+  height: 32px;
   place-items: center;
-  padding: 0 0.42rem;
-  border: 1px solid rgba(215, 208, 194, 0.76);
-  border-radius: 0.5rem;
-  background: rgba(248, 244, 235, 0.7);
-  color: #444a43;
+  padding: 0;
+  border: 1px solid #d7d0c2;
+  border-radius: 10px;
+  background: #f8f6ef;
+  color: #30352f;
   font: inherit;
   cursor: pointer;
   box-shadow: none;
@@ -63,22 +57,22 @@
 .characterSelectorButton[aria-pressed="true"] {
   border-color: #30352f;
   background: #30352f;
-  color: #fffefb;
+  color: #fff;
 }
 
 .characterSelectorButton:not([aria-pressed="true"]):hover {
-  border-color: rgba(141, 153, 132, 0.72);
-  background: #f5f0e7;
+  border-color: #b9b09f;
+  background: #f5f1e7;
 }
 
 .characterSelectorButton:focus-visible {
-  outline: 2px solid rgba(104, 122, 97, 0.34);
+  outline: 3px solid rgba(54, 95, 122, 0.28);
   outline-offset: 2px;
 }
 
 .selectorGlyph {
   font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 1.1rem;
+  font-size: 17px;
   font-weight: 500;
   line-height: 1;
 }
@@ -88,19 +82,20 @@
 }
 
 .writingLabel {
-  margin: 0 0 0.5rem;
-  color: #6f746c;
-  font-size: 0.72rem;
-  font-weight: 760;
-  letter-spacing: 0.075em;
+  margin: 0 0 8px;
+  color: #5f655c;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
   text-transform: uppercase;
 }
 
 .characterFacts {
   display: grid;
-  gap: 0;
-  margin: 0.78rem 0 0;
-  border-top: 1px solid rgba(215, 208, 194, 0.72);
+  gap: 5px;
+  margin: 10px 0 0;
+  border: 0;
 }
 
 .characterFacts div {
@@ -108,16 +103,12 @@
   min-width: 0;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.85rem;
-  padding: 0.58rem 0;
-  border-bottom: 1px solid rgba(215, 208, 194, 0.46);
-  color: #73776f;
-  font-size: 0.84rem;
-  line-height: 1.45;
-}
-
-.characterFacts div:last-child {
-  border-bottom: 0;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  color: #5b6158;
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .characterFacts dt,
@@ -127,91 +118,114 @@
 
 .characterFacts dt {
   flex: 0 0 auto;
-  font-weight: 520;
+  color: #5b6158;
+  font-weight: 500;
 }
 
 .characterFacts dd {
   min-width: 0;
   color: #30352f;
-  font-size: 0.92rem;
-  font-weight: 720;
+  font-size: 13px;
+  font-weight: 700;
   text-align: end;
   overflow-wrap: anywhere;
 }
 
 .structureFact dd {
   font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 1.04rem;
-  letter-spacing: 0.015em;
+  font-size: 14px;
+  letter-spacing: 0.01em;
 }
 
 .hanziValue {
   font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 1.02rem !important;
+  font-size: 15px !important;
 }
 
 .detailAction {
   display: flex;
   width: 100%;
-  min-height: 2.5rem;
+  min-height: 38px;
   align-items: center;
   justify-content: center;
-  margin-top: 0.8rem;
-  border-radius: 0.72rem;
-  background: #607259;
+  margin-top: 10px;
+  border-radius: 12px;
+  background: #596a4e;
   color: #fff;
-  font-size: 0.86rem;
+  padding: 7px 10px;
+  font-size: 13px;
   font-weight: 700;
   text-decoration: none;
 }
 
 .detailAction:hover,
 .detailAction:focus-visible {
-  background: #52644c;
+  background: #4e6045;
 }
 
 .detailAction:focus-visible {
-  outline: 2px solid rgba(82, 100, 76, 0.38);
+  outline: 3px solid rgba(54, 95, 122, 0.28);
   outline-offset: 2px;
 }
 
 .writingUnavailable {
   display: grid;
-  min-height: 10rem;
-  aspect-ratio: 1;
+  height: 176px;
   place-items: center;
-  gap: 0.45rem;
+  gap: 6px;
   border: 1px solid #d7d0c2;
-  border-radius: 0.95rem;
-  background: #fbf7ef;
-  padding: 0.8rem;
+  border-radius: 18px;
+  background: #faf9f5;
+  padding: 12px;
 }
 
 .fallbackGlyph {
   font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 4.5rem;
+  font-size: 84px;
   line-height: 1;
 }
 
 .writingUnavailable p {
   margin: 0;
-  color: #6f746c;
-  font-size: 0.76rem;
+  color: #5b6158;
+  font-size: 12px;
   line-height: 1.45;
   text-align: center;
 }
 
 @media (max-width: 1100px) {
   .characterRailInner {
-    padding: 0.82rem;
+    padding: 11px;
   }
 
-  .characterFacts div {
-    font-size: 0.8rem;
+  .characterSelectorButton {
+    width: 31px;
+    min-width: 31px;
+    height: 30px;
   }
 
+  .selectorGlyph {
+    font-size: 16px;
+  }
+
+  .characterFacts div,
   .characterFacts dd {
-    font-size: 0.88rem;
+    font-size: 11px;
+  }
+
+  .writingUnavailable {
+    height: 146px;
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 800px) and (min-width: 640px) and (min-height: 521px) {
+  .writingLabel {
+    font-size: 9px;
+  }
+
+  .writingUnavailable {
+    height: 132px;
   }
 }
 
@@ -223,31 +237,26 @@
 
   .characterRailInner {
     position: static;
-    padding: 0.95rem;
+    padding: 14px;
   }
 
   .characterSelector {
-    gap: 0.36rem;
+    gap: 6px;
   }
 
   .characterSelectorButton {
-    width: 2.86rem;
-    min-width: 2.86rem;
-    height: 2.16rem;
-    padding-inline: 0.48rem;
-    border-radius: 0.54rem;
+    width: 34px;
+    min-width: 34px;
+    height: 32px;
+    border-radius: 10px;
   }
 
   .selectorGlyph {
-    font-size: 1.2rem;
+    font-size: 17px;
   }
 
-  .characterFacts div {
-    padding: 0.62rem 0;
-    font-size: 0.86rem;
-  }
-
+  .characterFacts div,
   .characterFacts dd {
-    font-size: 0.94rem;
+    font-size: 13px;
   }
 }
