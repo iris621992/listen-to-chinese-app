@@ -96,7 +96,6 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.match(writing, /chanind\/hanzi-writer-data/);
   assert.match(writing, /68d10a4b21150cae5e1ebbd223eed289cf32d90c/);
   assert.match(writing, /writing\.sourcePath !== `data\/\$\{glyph\}\.json`/);
-  assert.match(writing, /prefers-reduced-motion: reduce/);
   assert.match(writing, /raw\.githubusercontent\.com/);
   assert.match(writing, /STROKE_STEP_MS = 460/);
   assert.match(writing, /setVisibleStrokeCount\(0\)/);
@@ -105,6 +104,7 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.match(writing, /className=\{styles\.staticGlyph\}/);
   assert.match(writingStyles, /prefers-reduced-motion: reduce/);
   assert.match(writingStyles, /\.hiddenStroke\s*\{\s*opacity:\s*0;/s);
+  assert.match(writingStyles, /@media \(prefers-reduced-motion: reduce\)[\s\S]*\.hiddenStroke[\s\S]*opacity:\s*1;/);
   assert.doesNotMatch(writingStyles, /\.hiddenStroke\s*\{[^}]*opacity:\s*0\.08/s);
 
   assert.match(rich, /item\.collocations\.length > 0/);
