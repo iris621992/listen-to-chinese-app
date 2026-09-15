@@ -12,7 +12,6 @@ type Labels = {
   strokes: string;
   hanViet: string;
   structure?: string;
-  structureSingle?: string;
   writingOpen: string;
   writingReplay: string;
   writingUnavailable: string;
@@ -35,7 +34,6 @@ type QuickPreviewLabels = {
   writing: string;
   pinyin: string;
   structure: string;
-  single: string;
 };
 
 function occurrenceKey(occurrence: VocabularyCharacterOccurrence) {
@@ -70,7 +68,6 @@ function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
       writing: "Cách viết",
       pinyin: "Pinyin",
       structure: labels.structure ?? "Kết cấu",
-      single: labels.structureSingle ?? "Độc thể",
     };
   }
 
@@ -80,7 +77,6 @@ function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
       writing: "طريقة الكتابة",
       pinyin: "Pinyin",
       structure: labels.structure ?? "البنية",
-      single: labels.structureSingle ?? "حرف مفرد البنية",
     };
   }
 
@@ -89,14 +85,11 @@ function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
     writing: "Writing",
     pinyin: "Pinyin",
     structure: labels.structure ?? "Structure",
-    single: labels.structureSingle ?? "Single-component",
   };
 }
 
-function learnerStructureValue(occurrence: VocabularyCharacterOccurrence, labels: QuickPreviewLabels) {
-  if (occurrence.character.structureFormula) return occurrence.character.structureFormula;
-  if (occurrence.character.structureCode === "single") return labels.single;
-  return null;
+function learnerStructureValue(occurrence: VocabularyCharacterOccurrence) {
+  return occurrence.character.structureFormula;
 }
 
 export default function VocabularyCharacterRail({ occurrences, labels, detailAction = null }: Props) {
@@ -113,7 +106,7 @@ export default function VocabularyCharacterRail({ occurrences, labels, detailAct
   const selectedOccurrenceKey = occurrenceKey(selectedOccurrence);
   const character = selectedOccurrence.character;
   const previewLabels = quickPreviewLabels(labels);
-  const structureValue = learnerStructureValue(selectedOccurrence, previewLabels);
+  const structureValue = learnerStructureValue(selectedOccurrence);
 
   return (
     <aside id="characters" className={styles.characterRail} aria-labelledby="characters-title">
