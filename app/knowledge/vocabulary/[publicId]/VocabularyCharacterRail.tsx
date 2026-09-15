@@ -10,9 +10,9 @@ type Labels = {
   radical: string;
   strokes: string;
   hanViet: string;
-  structure: string;
-  structureLeftRight: string;
-  structureSingle: string;
+  structure?: string;
+  structureLeftRight?: string;
+  structureSingle?: string;
   writingOpen: string;
   writingReplay: string;
   writingUnavailable: string;
@@ -22,6 +22,18 @@ type Labels = {
 type Props = {
   occurrences: VocabularyCharacterOccurrence[];
   labels: Labels;
+};
+
+type StructureLabels = {
+  title: string;
+  leftRight: string;
+  single: string;
+};
+
+const EN_STRUCTURE_LABELS: StructureLabels = {
+  title: "Structure",
+  leftRight: "left–right",
+  single: "single-component",
 };
 
 function occurrenceKey(occurrence: VocabularyCharacterOccurrence) {
@@ -49,9 +61,37 @@ function simplifiedMainlandCharacters(occurrences: VocabularyCharacterOccurrence
   );
 }
 
-function structureLabel(code: string | null, labels: Labels) {
-  if (code === "left-right") return labels.structureLeftRight;
-  if (code === "single") return labels.structureSingle;
+function resolvedStructureLabels(labels: Labels): StructureLabels {
+  if (labels.structure && labels.structureLeftRight && labels.structureSingle) {
+    return {
+      title: labels.structure,
+      leftRight: labels.structureLeftRight,
+      single: labels.structureSingle,
+    };
+  }
+
+  if (labels.characters === "Hán tự") {
+    return {
+      title: "Kết cấu",
+      leftRight: "trái–phải",
+      single: "độc thể",
+    };
+  }
+
+  if (labels.characters === "الحروف الصينية") {
+    return {
+      title: "البنية",
+      leftRight: "يسار–يمين",
+      single: "مكوّن واحد",
+    };
+  }
+
+  return EN_STRUCTURE_LABELS;
+}
+
+function structureLabel(code: string | null, labels: StructureLabels) {
+  if (code === "left-right") return labels.leftRight;
+  if (code === "single") return labels.single;
   return null;
 }
 
@@ -68,7 +108,8 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
     ?? characters[0];
   const selectedOccurrenceKey = occurrenceKey(selectedOccurrence);
   const character = selectedOccurrence.character;
-  const localizedStructure = structureLabel(character.structureCode, labels);
+  const structureLabels = resolvedStructureLabels(labels);
+  const localizedStructure = structureLabel(character.structureCode, structureLabels);
 
   return (
     <aside id="characters" className={styles.characterRail} aria-labelledby="characters-title">
@@ -123,7 +164,7 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
               <div><dt>{labels.hanViet}</dt><dd>{character.hanViet}</dd></div>
             ) : null}
             {localizedStructure ? (
-              <div><dt>{labels.structure}</dt><dd>{localizedStructure}</dd></div>
+              <div><dt>{structureLabels.title}</dt><dd>{localizedStructure}</dd></div>
             ) : null}
             {character.radical ? (
               <div><dt>{labels.radical}</dt><dd>{character.radical}</dd></div>
