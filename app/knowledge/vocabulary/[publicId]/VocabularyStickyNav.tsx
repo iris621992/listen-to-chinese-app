@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import "./VocabularyDemoFidelity.module.css";
 import styles from "./VocabularyDetail.module.css";
 
 type NavItem = {
