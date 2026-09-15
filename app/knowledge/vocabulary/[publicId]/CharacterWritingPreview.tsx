@@ -11,7 +11,6 @@ type Props = {
   labels: {
     replay: string;
     unavailable: string;
-    source: string;
   };
 };
 
@@ -20,6 +19,7 @@ const LOCKED_COMMIT = "68d10a4b21150cae5e1ebbd223eed289cf32d90c";
 const AUTOPLAY_DELAY_MS = 420;
 const STROKE_ANIMATION_SPEED = 0.55;
 const DELAY_BETWEEN_STROKES_MS = 260;
+const GLYPH_PADDING_RATIO = 0.205;
 // Stroke-order playback is essential learning content, not decorative motion.
 // Keep the full character hidden before playback even when the OS asks to reduce motion.
 const prefersReducedMotion = false;
@@ -77,11 +77,11 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
       writer = HanziWriter.create(target, glyph, {
         width,
         height,
-        padding: Math.max(10, Math.round(shortEdge * 0.07)),
+        padding: Math.round(shortEdge * GLYPH_PADDING_RATIO),
         showOutline: true,
         showCharacter: prefersReducedMotion,
-        strokeColor: "#30352f",
-        outlineColor: "#ddd5c8",
+        strokeColor: "#2f4b3a",
+        outlineColor: "#d9ded7",
         strokeAnimationSpeed: STROKE_ANIMATION_SPEED,
         delayBetweenStrokes: DELAY_BETWEEN_STROKES_MS,
         renderer: "svg",
@@ -188,10 +188,6 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
           </button>
         ) : null}
       </div>
-
-      <p className={styles.attribution}>
-        {labels.source}: Hanzi Writer Data · {writing.licenseCode}
-      </p>
     </div>
   );
 }
