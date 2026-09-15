@@ -12,9 +12,9 @@ type Props = {
 };
 
 export default function VocabularyRichSupport({ item, labels }: Props) {
+  const hasSentenceBehavior = item.collocations.length > 0 || item.classifiers.length > 0;
   const hasRichSupport =
-    item.collocations.length > 0
-    || item.classifiers.length > 0
+    hasSentenceBehavior
     || item.examples.length > 0
     || item.quickDistinctions.length > 0;
 
@@ -22,31 +22,35 @@ export default function VocabularyRichSupport({ item, labels }: Props) {
 
   return (
     <div className={styles.supportStack}>
-      {item.collocations.length > 0 ? (
-        <section className={styles.supportBlock}>
-          <h4>{labels.collocations}</h4>
-          <div className={styles.chips}>
-            {item.collocations.map((collocation) => (
-              <span key={collocation.publicId} className={styles.chip}>
-                {collocation.expression}
-              </span>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {item.classifiers.length > 0 ? (
-        <section className={styles.supportBlock}>
-          <h4>{labels.classifiers}</h4>
-          <div className={styles.classifierList}>
-            {item.classifiers.map((classifier) => (
-              <div key={classifier.publicId} className={styles.classifierItem}>
-                <strong>{classifier.expression}</strong>
-                {classifier.learnerNote ? <p>{classifier.learnerNote}</p> : null}
+      {hasSentenceBehavior ? (
+        <div className={styles.behaviorGrid}>
+          {item.collocations.length > 0 ? (
+            <section className={styles.behaviorItem}>
+              <h4>{labels.collocations}</h4>
+              <div className={styles.collocationList}>
+                {item.collocations.map((collocation) => (
+                  <span key={collocation.publicId} className={styles.collocationExpression}>
+                    {collocation.expression}
+                  </span>
+                ))}
               </div>
-            ))}
-          </div>
-        </section>
+            </section>
+          ) : null}
+
+          {item.classifiers.length > 0 ? (
+            <section className={styles.behaviorItem}>
+              <h4>{labels.classifiers}</h4>
+              <div className={styles.classifierList}>
+                {item.classifiers.map((classifier) => (
+                  <div key={classifier.publicId} className={styles.classifierItem}>
+                    <strong>{classifier.expression}</strong>
+                    {classifier.learnerNote ? <p>{classifier.learnerNote}</p> : null}
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </div>
       ) : null}
 
       {item.examples.length > 0 ? (
@@ -69,7 +73,7 @@ export default function VocabularyRichSupport({ item, labels }: Props) {
       ) : null}
 
       {item.quickDistinctions.length > 0 ? (
-        <section className={styles.supportBlock}>
+        <section className={`${styles.supportBlock} ${styles.distinctionBlock}`}>
           <h4>{labels.quickDistinction}</h4>
           <div className={styles.distinctionList}>
             {item.quickDistinctions.map((distinction) => (

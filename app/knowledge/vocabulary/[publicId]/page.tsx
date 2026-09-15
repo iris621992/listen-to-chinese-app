@@ -58,6 +58,13 @@ type VocabularyNavItem = {
   mobileOnly?: boolean;
 };
 
+type PosGroup = {
+  key: string;
+  posCode: string;
+  items: VocabularyReadingItem[];
+  startIndex: number;
+};
+
 const LABELS: Record<string, Labels> = {
   en: {
     knowledge: "Knowledge",
@@ -97,11 +104,11 @@ const LABELS: Record<string, Labels> = {
     sensesUsage: "Nghĩa & cách dùng",
     sense: "nghĩa",
     senses: "nghĩa",
-    meaning: "Nghĩa",
+    meaning: "Hiểu nghĩa này",
     usage: "Cách dùng",
-    usageNote: "Lưu ý cách dùng",
+    usageNote: "Phạm vi sử dụng",
     memoryTip: "Gợi ý ghi nhớ",
-    collocations: "Kết hợp thường gặp",
+    collocations: "Kết hợp tự nhiên",
     classifiers: "Lượng từ",
     example: "Ví dụ",
     quickDistinction: "Phân biệt nhanh",
@@ -127,9 +134,9 @@ const LABELS: Record<string, Labels> = {
     senses: "معانٍ",
     meaning: "المعنى",
     usage: "الاستعمال",
-    usageNote: "ملاحظة الاستعمال",
+    usageNote: "نطاق الاستعمال",
     memoryTip: "تلميح للتذكر",
-    collocations: "تراكيب شائعة",
+    collocations: "تراكيب طبيعية",
     classifiers: "كلمات القياس",
     example: "مثال",
     quickDistinction: "تمييز سريع",
@@ -179,47 +186,73 @@ const localizedCodeLabel = (
 const posLabel = (code: string | null, localeCode: string) =>
   code ? POS_LABELS[code]?.[localeCode] ?? POS_LABELS[code]?.en ?? null : null;
 
-const preferredTranslations = (
+const requestedLocaleTranslations = (
   translations: VocabularyTranslationEquivalent[],
   requestedLocale: string,
-  fallbackLocale: string,
 ) => {
   const language = requestedLocale.split("-")[0];
-  const exactOrRegional = translations.filter((translation) => {
-    const translationLanguage = translation.localeCode.split("-")[0];
-    return translation.localeCode === requestedLocale || translationLanguage === language;
-  });
-  if (exactOrRegional.length > 0) return exactOrRegional;
-
-  const fallbackLanguage = fallbackLocale.split("-")[0];
   return translations.filter((translation) => {
     const translationLanguage = translation.localeCode.split("-")[0];
-    return translation.localeCode === fallbackLocale || translationLanguage === fallbackLanguage;
+    return translation.localeCode === requestedLocale || translationLanguage === language;
   });
 };
 
 const learnerMeaningParts = (
   item: VocabularyReadingItem,
   requestedLocale: string,
-  fallbackLocale: string,
+  _fallbackLocale: string,
 ) => {
   const parts = [
     item.shortLabel,
-    ...preferredTranslations(item.translationEquivalents, requestedLocale, fallbackLocale)
+    ...requestedLocaleTranslations(item.translationEquivalents, requestedLocale)
       .map((translation) => translation.expression),
   ].filter((part): part is string => Boolean(part));
+
   return [...new Set(parts.map((part) => part.trim()).filter(Boolean))];
 };
 
-const groupByPartOfSpeech = (items: VocabularyReadingItem[]) => {
-  const groups = new Map<string, VocabularyReadingItem[]>();
-  for (const item of items) {
-    const key = item.partOfSpeechCode ?? "unspecified";
-    const current = groups.get(key) ?? [];
-    current.push(item);
-    groups.set(key, current);
+// Preserve the projection's authored learner order. POS is presentation context only:
+// repeated POS values in non-contiguous Reading Items must not be regrouped across intervening RIs.
+const groupByPartOfSpeech = (items: VocabularyReadingItem[]): PosGroup[] => {
+  const groups: PosGroup[] = [];
+  items.forEach((item, index) => {
+    const posCode = item.partOfSpeechCode ?? "unspecified";
+    const current = groups[groups.length - 1];
+    if (current?.posCode === posCode) {
+      current.items.push(item);
+      return;
+    }
+    groups.push({
+      key: `${posCode}-${index}`,
+      posCode,
+      items: [item],
+      startIndex: index,
+    });
+  });
+  return groups;
+};
+
+const distinctPosCodes = (items: VocabularyReadingItem[]) => [
+  ...new Set(items.map((item) => item.partOfSpeechCode).filter((code): code is string => Boolean(code))),
+];
+
+const posAnchorMap = (pronunciationPublicId: string, groups: PosGroup[]) => {
+  const occurrences = new Map<string, PosGroup[]>();
+  for (const group of groups) {
+    if (group.posCode === "unspecified") continue;
+    const current = occurrences.get(group.posCode) ?? [];
+    current.push(group);
+    occurrences.set(group.posCode, current);
   }
-  return [...groups.entries()];
+
+  const anchors = new Map<string, string>();
+  for (const [code, matchingGroups] of occurrences) {
+    if (matchingGroups.length === 1) {
+      const group = matchingGroups[0];
+      anchors.set(code, `#pos-${pronunciationPublicId}-${group.key}`);
+    }
+  }
+  return anchors;
 };
 
 export default async function VocabularyDetailPage({ params, searchParams }: Props) {
@@ -233,6 +266,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
     levelSystem: query?.levelSystem,
     level: query?.level,
   });
+
   const [result, characterResult] = await Promise.all([
     loadVocabularyDetail(publicId, query?.lang ?? query?.uiLang),
     loadVocabularyCharacterDelivery(publicId, query?.lang ?? query?.uiLang),
@@ -265,12 +299,19 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
   const singleSummary = allReadingItems.length === 1
     ? learnerMeaningParts(allReadingItems[0], detail.requestedLocale, detail.fallbackLocale).join(", ")
     : null;
-  const distinctPosCodes = [...new Set(
-    allReadingItems.map((item) => item.partOfSpeechCode).filter((code): code is string => Boolean(code)),
-  )];
+  const allPosCodes = distinctPosCodes(allReadingItems);
   const hasReadingNavigation = detail.pronunciations.length > 1;
-  const hasPosNavigation = distinctPosCodes.length > 1;
   const characters = characterResult.status === "FOUND" ? characterResult.characters : [];
+
+  const primaryGroups = primaryPronunciation
+    ? groupByPartOfSpeech(primaryPronunciation.readingItems)
+    : [];
+  const primaryPosAnchors = primaryPronunciation
+    ? posAnchorMap(primaryPronunciation.publicId, primaryGroups)
+    : new Map<string, string>();
+  const hasPosNavigation = !hasReadingNavigation
+    && allPosCodes.length > 1
+    && allPosCodes.every((code) => primaryPosAnchors.has(code));
 
   const navItems: VocabularyNavItem[] = hasReadingNavigation
     ? detail.pronunciations.map((pronunciation) => ({
@@ -278,9 +319,9 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
         href: `#reading-${pronunciation.publicId}`,
       }))
     : hasPosNavigation
-      ? distinctPosCodes.map((code) => ({
+      ? allPosCodes.map((code) => ({
           label: posLabel(code, interfaceLocale.code) ?? code,
-          href: `#pos-${primaryPronunciation.publicId}-${code}`,
+          href: primaryPosAnchors.get(code)!,
         }))
       : [];
 
@@ -323,9 +364,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
                 </div>
               ) : null}
 
-              {singleSummary ? (
-                <p className={styles.entrySummary}>{singleSummary}</p>
-              ) : null}
+              {singleSummary ? <p className={styles.entrySummary}>{singleSummary}</p> : null}
 
               {hasReadingNavigation ? (
                 <div className={styles.readingSelector} aria-label={labels.readings}>
@@ -348,20 +387,23 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
 
           {!hasReadingNavigation && allReadingItems.length > 0 ? (
             <div className={styles.posSummary} aria-label={labels.partOfSpeech}>
-              {distinctPosCodes.map((code) => {
+              {allPosCodes.map((code) => {
                 const count = allReadingItems.filter((item) => item.partOfSpeechCode === code).length;
                 const learnerLabel = posLabel(code, interfaceLocale.code);
-                return learnerLabel ? (
-                  <a
-                    key={code}
-                    className={styles.posSummaryChip}
-                    href={`#pos-${primaryPronunciation.publicId}-${code}`}
-                  >
+                const anchor = primaryPosAnchors.get(code);
+                if (!learnerLabel) return null;
+                const content = (
+                  <>
                     <strong>{learnerLabel}</strong>
                     <span aria-hidden="true"> · </span>
                     {count} {count === 1 ? labels.sense : labels.senses}
-                  </a>
-                ) : null;
+                  </>
+                );
+                return anchor ? (
+                  <a key={code} className={styles.posSummaryChip} href={anchor}>{content}</a>
+                ) : (
+                  <span key={code} className={styles.posSummaryChip}>{content}</span>
+                );
               })}
             </div>
           ) : null}
@@ -374,8 +416,8 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
                       {pronunciation.pronunciation}
                     </a>
                   ))
-                : distinctPosCodes.map((code) => (
-                    <a key={code} href={`#pos-${primaryPronunciation.publicId}-${code}`}>
+                : allPosCodes.map((code) => (
+                    <a key={code} href={primaryPosAnchors.get(code)}>
                       {posLabel(code, interfaceLocale.code)}
                     </a>
                   ))}
@@ -395,7 +437,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
                     <section
                       key={pronunciation.publicId}
                       id={`reading-${pronunciation.publicId}`}
-                      className={`${styles.readingSection} ${pronunciation.publicId === primaryPronunciation.publicId ? styles.defaultReading : ""}`}
+                      className={`${styles.readingSection} ${pronunciation.publicId === primaryPronunciation?.publicId ? styles.defaultReading : ""}`}
                     >
                       {hasReadingNavigation ? (
                         <div className={styles.readingHeading}>
@@ -405,28 +447,28 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
                       ) : null}
 
                       <div className={styles.posFlow}>
-                        {posGroups.map(([posCode, items]) => {
+                        {posGroups.map((group) => {
                           const learnerPosLabel = posLabel(
-                            posCode === "unspecified" ? null : posCode,
+                            group.posCode === "unspecified" ? null : group.posCode,
                             interfaceLocale.code,
                           );
                           return (
                             <section
-                              key={`${pronunciation.publicId}-${posCode}`}
-                              id={`pos-${pronunciation.publicId}-${posCode}`}
+                              key={`${pronunciation.publicId}-${group.key}`}
+                              id={`pos-${pronunciation.publicId}-${group.key}`}
                               className={styles.posSection}
                             >
                               {learnerPosLabel ? (
                                 <div className={styles.posSectionHead}>
                                   <span className={styles.posLabel}>{learnerPosLabel}</span>
                                   <span className={styles.posCount}>
-                                    {items.length} {items.length === 1 ? labels.sense : labels.senses}
+                                    {group.items.length} {group.items.length === 1 ? labels.sense : labels.senses}
                                   </span>
                                 </div>
                               ) : null}
 
                               <div className={styles.senseStack}>
-                                {items.map((item, index) => {
+                                {group.items.map((item, itemIndex) => {
                                   const meaningParts = learnerMeaningParts(
                                     item,
                                     detail.requestedLocale,
@@ -447,7 +489,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
                                       className={`${styles.sense} ${(item.isSubsense || item.parentPublicId) ? styles.subsense : ""}`}
                                     >
                                       <div className={styles.senseHead}>
-                                        <span className={styles.senseNum}>{index + 1}</span>
+                                        <span className={styles.senseNum}>{group.startIndex + itemIndex + 1}</span>
                                         <div className={styles.senseMain}>
                                           {item.itemType === "usage" ? (
                                             <span className={styles.usageType}>{labels.usage}</span>
@@ -472,13 +514,13 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
                                             </section>
                                           ) : null}
                                           {item.usageNote ? (
-                                            <section className={styles.learningBlock}>
+                                            <section className={`${styles.learningBlock} ${styles.learningBlockSoft}`}>
                                               <h4>{labels.usageNote}</h4>
                                               <p>{item.usageNote}</p>
                                             </section>
                                           ) : null}
                                           {item.memoryTip ? (
-                                            <section className={styles.learningBlock}>
+                                            <section className={`${styles.learningBlock} ${styles.learningBlockAccent}`}>
                                               <h4>{labels.memoryTip}</h4>
                                               <p>{item.memoryTip}</p>
                                             </section>
