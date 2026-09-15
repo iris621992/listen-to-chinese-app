@@ -5,12 +5,13 @@ import test from "node:test";
 const read = (path) => readFile(path, "utf8");
 
 test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Character delivery", async () => {
-  const [loader, characterLoader, page, styles, characterRail, writing, writingStyles, sticky, rich, richStyles, knowledge, header] = await Promise.all([
+  const [loader, characterLoader, page, styles, characterRail, characterRailStyles, writing, writingStyles, sticky, rich, richStyles, knowledge, header] = await Promise.all([
     read("lib/vocabularyDetail.ts"),
     read("lib/vocabularyCharacterDelivery.ts"),
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetail.module.css"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.module.css"),
     read("app/knowledge/vocabulary/[publicId]/CharacterWritingPreview.tsx"),
     read("app/knowledge/vocabulary/[publicId]/CharacterWritingPreview.module.css"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyStickyNav.tsx"),
@@ -72,12 +73,23 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.doesNotMatch(page, /formLabel\(/);
   assert.doesNotMatch(page, /languageVarietyLabel/);
 
+  assert.match(characterRail, /^"use client";/);
+  assert.match(characterRail, /useState/);
+  assert.match(characterRail, /occurrenceKey/);
+  assert.match(characterRail, /selectedOccurrence/);
+  assert.match(characterRail, /aria-pressed=\{selected\}/);
+  assert.match(characterRail, /setSelectedKey\(key\)/);
   assert.match(characterRail, /lexicalContextPronunciation/);
   assert.match(characterRail, /character\.hanViet/);
   assert.match(characterRail, /character\.radical/);
   assert.match(characterRail, /character\.strokeCount/);
   assert.match(characterRail, /CharacterWritingPreview/);
+  assert.doesNotMatch(characterRail, /className=\{styles\.characterCard\}/);
   assert.doesNotMatch(characterRail, /活动|椅子|出租车|运动/);
+  assert.match(characterRailStyles, /\.characterSelector/);
+  assert.match(characterRailStyles, /\.characterSelectorButton\[aria-pressed="true"\]/);
+  assert.match(characterRailStyles, /\.selectedCharacter/);
+  assert.doesNotMatch(characterRailStyles, /grid-template-columns:\s*repeat\(2/);
 
   assert.match(writing, /chanind\/hanzi-writer-data/);
   assert.match(writing, /68d10a4b21150cae5e1ebbd223eed289cf32d90c/);
@@ -88,10 +100,13 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
 
   assert.match(rich, /item\.collocations\.length > 0/);
   assert.match(rich, /item\.classifiers\.length > 0/);
+  assert.match(rich, /classifier\.learnerNote/);
   assert.match(rich, /item\.examples\.length > 0/);
   assert.match(rich, /item\.quickDistinctions\.length > 0/);
+  assert.match(rich, /distinction\.learnerExplanation/);
   assert.match(rich, /return null/);
   assert.doesNotMatch(rich, /活动|椅子|出租车|运动|搬椅子|一把椅子/);
+  assert.doesNotMatch(rich, /reviewed semantic zones|Sense \/ RI|translation boundary|missing_data_behavior|INTERNAL SAMPLE|provisional/i);
   assert.match(richStyles, /\.supportStack/);
   assert.match(richStyles, /\.exampleChinese/);
 
