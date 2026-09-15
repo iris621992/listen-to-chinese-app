@@ -9,7 +9,6 @@ type Props = {
   glyph: string;
   writing: VocabularyCharacterWriting;
   labels: {
-    open: string;
     replay: string;
     unavailable: string;
     source: string;
@@ -34,11 +33,11 @@ function writingDataUrl(glyph: string, writing: VocabularyCharacterWriting) {
 export default function CharacterWritingPreview({ glyph, writing, labels }: Props) {
   const sourceUrl = useMemo(() => writingDataUrl(glyph, writing), [glyph, writing]);
   const targetRef = useRef<HTMLDivElement | null>(null);
-  const [opened, setOpened] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const writerRef = useRef<ReturnType<typeof HanziWriter.create> | null>(null);
+  const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
-  const [replayNonce, setReplayNonce] = useState(0);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+  const [reloadNonce, setReloadNonce] = useState(0);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean | null>(null);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -50,7 +49,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
   }, []);
 
   useEffect(() => {
-    if (!opened || failed || !sourceUrl || !targetRef.current) return;
+    if (failed || !sourceUrl || !targetRef.current || prefersReducedMotion === null) return;
 
     const target = targetRef.current;
     let active = true;
@@ -62,6 +61,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
       if (measured < 1 || measured === lastSize) return;
       lastSize = measured;
       target.replaceChildren();
+      writerRef.current = null;
       setLoading(true);
 
       let writer: ReturnType<typeof HanziWriter.create> | null = null;
@@ -106,6 +106,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
         },
         onLoadCharDataSuccess: () => {
           if (!active) return;
+          writerRef.current = writer;
           setLoading(false);
           if (!prefersReducedMotion) {
             void writer?.animateCharacter();
@@ -113,6 +114,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
         },
         onLoadCharDataError: () => {
           if (!active) return;
+          writerRef.current = null;
           setLoading(false);
           setFailed(true);
         },
@@ -126,34 +128,29 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
     return () => {
       active = false;
       resizeObserver.disconnect();
+      writerRef.current = null;
       target.replaceChildren();
     };
-  }, [failed, glyph, opened, prefersReducedMotion, replayNonce, sourceUrl]);
+  }, [failed, glyph, prefersReducedMotion, reloadNonce, sourceUrl]);
 
   if (!sourceUrl) return null;
 
-  const openWriting = () => {
-    setFailed(false);
-    setOpened(true);
-    setReplayNonce((value) => value + 1);
-  };
-
   const replay = () => {
-    setFailed(false);
-    setReplayNonce((value) => value + 1);
+    if (prefersReducedMotion) return;
+
+    if (failed || !writerRef.current) {
+      setFailed(false);
+      setReloadNonce((value) => value + 1);
+      return;
+    }
+
+    void writerRef.current.animateCharacter();
   };
 
   return (
     <div className={styles.wrap}>
-      <div
-        className={styles.writingPad}
-        role="img"
-        aria-label={`${labels.open}: ${glyph}`}
-        aria-busy={opened && loading}
-      >
-        {!opened ? (
-          <span className={styles.staticGlyph} aria-hidden="true">{glyph}</span>
-        ) : failed ? (
+      <div className={styles.writingPad} aria-busy={loading}>
+        {failed ? (
           <p className={styles.unavailable}>{labels.unavailable}</p>
         ) : (
           <>
@@ -161,25 +158,23 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
             {loading ? <span className={styles.loading} aria-hidden="true">…</span> : null}
           </>
         )}
-      </div>
 
-      <div className={styles.controls}>
-        {!opened || failed ? (
-          <button type="button" className={styles.trigger} onClick={openWriting}>
-            {labels.open}
-          </button>
-        ) : !prefersReducedMotion && !loading ? (
-          <button type="button" className={styles.replay} onClick={replay}>
-            {labels.replay}
+        {prefersReducedMotion === false && !loading ? (
+          <button
+            type="button"
+            className={styles.replayIcon}
+            onClick={replay}
+            aria-label={labels.replay}
+            title={labels.replay}
+          >
+            <span aria-hidden="true">↻</span>
           </button>
         ) : null}
       </div>
 
-      {opened ? (
-        <p className={styles.attribution}>
-          {labels.source}: Hanzi Writer Data · {writing.licenseCode}
-        </p>
-      ) : null}
+      <p className={styles.attribution}>
+        {labels.source}: Hanzi Writer Data · {writing.licenseCode}
+      </p>
     </div>
   );
 }
