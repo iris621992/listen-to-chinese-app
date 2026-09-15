@@ -7,6 +7,7 @@ import styles from "./VocabularyCharacterRail.module.css";
 
 type Labels = {
   characters: string;
+  pronunciation: string;
   radical: string;
   strokes: string;
   hanViet: string;
@@ -54,7 +55,10 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
   return (
     <aside id="characters" className={styles.characterRail} aria-labelledby="characters-title">
       <div className={styles.characterRailInner}>
-        <h2 id="characters-title">{labels.characters}</h2>
+        <header className={styles.header}>
+          <h2 id="characters-title">{labels.characters}</h2>
+          <p>{labels.writingOpen}</p>
+        </header>
 
         <div className={styles.characterSelector} role="group" aria-label={labels.characters}>
           {characters.map((occurrence) => {
@@ -95,17 +99,10 @@ export default function VocabularyCharacterRail({ occurrences, labels }: Props) 
             </div>
           )}
 
-          <div className={styles.characterIdentity}>
-            <span className={styles.identityGlyph}>{character.glyph}</span>
-            {selectedOccurrence.lexicalContextPronunciation ? (
-              <strong className={styles.characterReading}>{selectedOccurrence.lexicalContextPronunciation}</strong>
-            ) : null}
-            {character.hanViet ? (
-              <span className={styles.hanVietValue}>{character.hanViet}</span>
-            ) : null}
-          </div>
-
           <dl className={styles.characterFacts}>
+            {selectedOccurrence.lexicalContextPronunciation ? (
+              <div><dt>{labels.pronunciation}</dt><dd>{selectedOccurrence.lexicalContextPronunciation}</dd></div>
+            ) : null}
             {character.hanViet ? (
               <div><dt>{labels.hanViet}</dt><dd>{character.hanViet}</dd></div>
             ) : null}
