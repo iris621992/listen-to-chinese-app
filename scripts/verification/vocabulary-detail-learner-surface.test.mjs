@@ -51,6 +51,8 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.match(characterLoader, /source_repository/);
   assert.match(characterLoader, /source_commit/);
   assert.match(characterLoader, /source_path/);
+  assert.match(characterLoader, /structure_formula/);
+  assert.match(characterLoader, /structureFormula:\s*stringValue\(character\.structure_formula\)/);
 
   assert.match(page, /params:\s*Promise<\{ publicId: string \}>/);
   assert.match(page, /loadVocabularyDetail\(publicId/);
@@ -86,6 +88,9 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.match(characterRail, /character\.strokeCount/);
   assert.match(characterRail, /CharacterWritingPreview/);
   assert.match(characterRail, /selectedOccurrenceKey/);
+  assert.match(characterRail, /return occurrence\.character\.structureFormula/);
+  assert.doesNotMatch(characterRail, /structureCode\s*===\s*["']single["']/);
+  assert.doesNotMatch(characterRail, /structureSingle|Single-component|Độc thể/);
   assert.doesNotMatch(characterRail, /className=\{styles\.characterCard\}/);
   assert.doesNotMatch(characterRail, /characterIdentity|identityGlyph|hanVietValue/);
   assert.doesNotMatch(characterRail, /活动|椅子|出租车|运动/);
