@@ -1,0 +1,150 @@
+.supportStack {
+  display: grid;
+  gap: 0.92rem;
+  margin: 0.95rem 0 0 2.5rem;
+}
+
+.supportBlock,
+.behaviorItem {
+  border: 1px solid #d8d1c4;
+  border-radius: 0.95rem;
+  background: #fffefb;
+  padding: 0.9rem 0.95rem;
+  box-shadow: 0 1px 0 rgba(45, 48, 42, 0.025);
+}
+
+.supportBlock h4,
+.behaviorItem h4 {
+  margin: 0 0 0.48rem;
+  color: #5f655c;
+  font-size: 0.78rem;
+  font-weight: 760;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.behaviorGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.behaviorItem {
+  min-width: 0;
+  background: #fbf9f3;
+}
+
+.collocationList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.collocationExpression {
+  display: inline-flex;
+  min-height: 2rem;
+  align-items: center;
+  border: 1px solid #d7d0c2;
+  border-radius: 999px;
+  background: #fffefb;
+  padding: 0.28rem 0.58rem;
+  color: var(--text-primary);
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.classifierList,
+.exampleList,
+.distinctionList {
+  display: grid;
+  gap: 0.72rem;
+}
+
+.classifierItem,
+.distinctionItem {
+  display: grid;
+  gap: 0.24rem;
+}
+
+.classifierItem + .classifierItem,
+.distinctionItem + .distinctionItem,
+.exampleItem + .exampleItem {
+  padding-top: 0.72rem;
+  border-top: 1px dashed #ded8ca;
+}
+
+.classifierItem strong,
+.distinctionItem strong {
+  color: var(--text-primary);
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: 1.02rem;
+}
+
+.classifierItem p,
+.distinctionItem p {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.94rem;
+  line-height: 1.62;
+}
+
+.exampleItem {
+  display: grid;
+  gap: 0.18rem;
+}
+
+.exampleChinese {
+  color: var(--text-primary);
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: 1.18rem;
+  line-height: 1.55;
+}
+
+.examplePinyin {
+  color: #765835;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.exampleTranslation {
+  color: var(--text-primary);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.distinctionBlock {
+  border-color: #e2cda9;
+  background: #fff8ee;
+}
+
+@media (max-width: 1100px) {
+  .behaviorGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .supportStack {
+    margin-inline-start: 0;
+    gap: 0.75rem;
+  }
+
+  .supportBlock,
+  .behaviorItem {
+    padding: 0.86rem 0.9rem;
+  }
+
+  .behaviorGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .collocationList {
+    display: grid;
+    gap: 0.42rem;
+  }
+
+  .collocationExpression {
+    width: fit-content;
+  }
+}

@@ -1,0 +1,30 @@
+/* Vocabulary Detail typography runtime reconciliation.
+   Direct authority: YunChinese_Vocabulary_Detail_v4_1_Typography_Surface_Hierarchy_Correction.html.
+
+   Root cause fixed here: app/globals.css currently starts body font-family with
+   var(--font-geist-sans), but that custom property is not defined by app/layout.tsx.
+   A missing custom property without a var() fallback invalidates that whole declaration,
+   allowing the browser's serif default to leak into Vocabulary Detail. Keep the fix local
+   to this learner surface so the established global shell is not redesigned. */
+
+:global(body:has(#vocabulary-entry-card) > main) {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Noto Sans", Arial,
+    "Noto Sans CJK SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 16px;
+  line-height: 1.62;
+}
+
+/* Chinese learner-facing typography remains the exact Songti-family stack from the demo.
+   Component-level selectors already own their exact size/weight/line-height; this rule only
+   protects the intended family at runtime without introducing any new font asset. */
+:global(#vocabulary-entry-header h1),
+:global(#vocabulary-entry-header h1 ~ span),
+:global(#vocabulary-entry-card [class*="exampleChinese"]),
+:global(#vocabulary-entry-card [class*="collocationExpression"]),
+:global(#vocabulary-entry-card [class*="classifierItem"] strong),
+:global(#vocabulary-entry-card [class*="distinctionItem"] strong),
+:global(#characters [class*="selectorGlyph"]),
+:global(#characters [class*="bigChinese"]),
+:global(#characters [class*="structureValue"]) {
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+}

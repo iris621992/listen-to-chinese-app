@@ -1,0 +1,247 @@
+.characterRail {
+  min-width: 0;
+  scroll-margin-top: 10.5rem;
+}
+
+.characterRailInner {
+  position: sticky;
+  top: 6.8rem;
+  border: 1px solid #d9d2c5;
+  border-radius: 16px;
+  background: rgba(255, 254, 251, 0.76);
+  padding: 14px;
+  box-shadow: none;
+}
+
+.header {
+  margin: 0;
+}
+
+.characterRail h2 {
+  margin: 0 0 3px;
+  color: #30352f;
+  font-size: 13px;
+  font-weight: 760;
+  letter-spacing: 0;
+  line-height: 1.45;
+}
+
+.characterSelector {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 10px;
+}
+
+.characterSelectorButton {
+  display: grid;
+  width: 34px;
+  min-width: 34px;
+  height: 32px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #d7d0c2;
+  border-radius: 10px;
+  background: #f8f6ef;
+  color: #30352f;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: none;
+}
+
+.characterSelectorButton[aria-pressed="true"] {
+  border-color: #30352f;
+  background: #30352f;
+  color: #fff;
+}
+
+.characterSelectorButton:not([aria-pressed="true"]):hover {
+  border-color: #b9b09f;
+  background: #f5f1e7;
+}
+
+.characterSelectorButton:focus-visible {
+  outline: 3px solid rgba(54, 95, 122, 0.28);
+  outline-offset: 2px;
+}
+
+.selectorGlyph {
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.selectedCharacter {
+  min-width: 0;
+}
+
+.writingLabel {
+  margin: 0 0 8px;
+  color: #5f655c;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.characterFacts {
+  display: grid;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.characterFactLine {
+  min-width: 0;
+  color: #5b6158;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.characterFactLine strong {
+  color: #30352f;
+  font-weight: 700;
+}
+
+.bigChinese {
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: 17px;
+  color: #30352f;
+}
+
+.structureValue {
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: 15px;
+}
+
+.attribution {
+  margin: 8px 0 0;
+  color: #686d65;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.detailAction {
+  display: flex;
+  width: 100%;
+  min-height: 38px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 10px;
+  border-radius: 12px;
+  background: #596a4e;
+  color: #fff;
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.detailAction:hover,
+.detailAction:focus-visible {
+  background: #4e6045;
+}
+
+.detailAction:focus-visible {
+  outline: 3px solid rgba(54, 95, 122, 0.28);
+  outline-offset: 2px;
+}
+
+.writingUnavailable {
+  display: grid;
+  height: 176px;
+  place-items: center;
+  gap: 6px;
+  border: 1px solid #d7d0c2;
+  border-radius: 18px;
+  background: #faf9f5;
+  padding: 12px;
+}
+
+.fallbackGlyph {
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: 84px;
+  line-height: 1;
+}
+
+.writingUnavailable p {
+  margin: 0;
+  color: #5b6158;
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+@media (max-width: 1100px) {
+  .characterRailInner {
+    padding: 11px;
+  }
+
+  .characterSelectorButton {
+    width: 31px;
+    min-width: 31px;
+    height: 30px;
+  }
+
+  .selectorGlyph {
+    font-size: 16px;
+  }
+
+  .characterFactLine {
+    font-size: 13px;
+  }
+
+  .bigChinese {
+    font-size: 15px;
+  }
+
+  .writingUnavailable {
+    height: 146px;
+    border-radius: 14px;
+  }
+}
+
+@media (max-width: 800px) and (min-width: 640px) and (min-height: 521px) {
+  .writingLabel {
+    font-size: 9px;
+  }
+
+  .writingUnavailable {
+    height: 132px;
+  }
+}
+
+@media (max-width: 639px), (max-width: 900px) and (max-height: 520px) {
+  .characterRail {
+    width: 100%;
+    order: 2;
+  }
+
+  .characterRailInner {
+    position: static;
+    padding: 14px;
+  }
+
+  .characterSelector {
+    gap: 6px;
+  }
+
+  .characterSelectorButton {
+    width: 34px;
+    min-width: 34px;
+    height: 32px;
+    border-radius: 10px;
+  }
+
+  .selectorGlyph {
+    font-size: 17px;
+  }
+
+  .characterFactLine {
+    font-size: 13px;
+  }
+}

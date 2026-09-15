@@ -1,0 +1,226 @@
+/* Exact presentation reconciliation against
+   YunChinese_Vocabulary_Detail_v4_1_Typography_Surface_Hierarchy_Correction.html.
+   This file intentionally changes presentation only. Semantic content remains data-driven. */
+
+:global(#vocabulary-entry-card) {
+  border: 1px solid #d7d0c2;
+  border-radius: 26px;
+  background: #fffefb;
+  box-shadow: 0 12px 34px rgba(45, 48, 42, 0.08);
+}
+
+:global(#vocabulary-entry-header) {
+  padding: 28px 30px 20px;
+  border-bottom: 1px solid #d7d0c2;
+  background: #fffefb;
+}
+
+:global(#vocabulary-entry-header > div > div:first-child) {
+  gap: 12px;
+}
+
+:global(#vocabulary-entry-header h1) {
+  margin: 0;
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: clamp(46px, 5.1vw, 72px);
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+}
+
+:global(#vocabulary-entry-header h1 + span),
+:global(#vocabulary-entry-header h1 ~ span) {
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: 26px;
+  font-weight: 520;
+  color: #555b52;
+}
+
+/* Pinyin line. Entry-level Hán Việt is deliberately not synthesized here.
+   When Engineering delivers the authoritative field, it can occupy the demo's adjacent slot. */
+:global(#vocabulary-entry-header > div > div:nth-child(2)) {
+  margin-top: 12px;
+  gap: 9px;
+}
+
+:global(#vocabulary-entry-header > div > div:nth-child(2) > span) {
+  font-size: 21px;
+  font-weight: 650;
+  color: #7b603b;
+}
+
+:global(#vocabulary-entry-header p) {
+  max-width: 720px;
+  margin-top: 14px;
+  font-size: 19px;
+  font-weight: 720;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+
+/* Demo keeps the in-card navigation in normal document flow; the separate compact
+   sticky stack handles scroll persistence. */
+:global(#vocabulary-entry-card > nav) {
+  position: static;
+  top: auto;
+  z-index: auto;
+  display: flex;
+  gap: 20px;
+  padding: 10px 30px;
+  border-bottom: 1px solid #d7d0c2;
+  background: #fff;
+  backdrop-filter: none;
+  overflow-x: auto;
+  font-size: 13px;
+  scrollbar-width: thin;
+}
+
+:global(#vocabulary-entry-card > nav a) {
+  min-height: auto;
+  padding: 3px 0;
+  border-bottom: 2px solid transparent;
+  color: #555b52;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+:global(#vocabulary-entry-card > nav a:hover),
+:global(#vocabulary-entry-card > nav a:focus-visible) {
+  color: #2d302a;
+  border-bottom-color: #79906d;
+}
+
+/* The POS summary and body use the exact desktop geometry from the demo. */
+:global(#vocabulary-entry-card > div[aria-label]) {
+  gap: 8px;
+  padding: 14px 30px;
+}
+
+:global(#vocabulary-entry-card > div[aria-label] > *) {
+  min-height: auto;
+  padding: 7px 11px;
+  font-size: 13px;
+}
+
+:global(#vocabulary-entry-card > div:last-child) {
+  padding: 24px 30px 34px;
+}
+
+:global(#vocabulary-entry-card section h2) {
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.09em;
+}
+
+:global(#vocabulary-entry-card article) {
+  border-top-color: #d7d0c2;
+}
+
+:global(#vocabulary-entry-card article h3) {
+  font-size: 20px;
+  line-height: 1.45;
+}
+
+/* Learner-facing copy follows the typography correction pass in the demo. */
+:global(#vocabulary-entry-card article section p) {
+  font-size: 16px;
+  line-height: 1.64;
+}
+
+@media (max-width: 1100px) {
+  :global(#vocabulary-entry-header) {
+    padding-left: 21px;
+    padding-right: 21px;
+  }
+
+  :global(#vocabulary-entry-card > nav),
+  :global(#vocabulary-entry-card > div[aria-label]),
+  :global(#vocabulary-entry-card > div:last-child) {
+    padding-left: 21px;
+    padding-right: 21px;
+  }
+}
+
+/* Tablet portrait remains a two-column composition exactly as the demo specifies. */
+@media (max-width: 800px) and (min-width: 640px) and (min-height: 521px) {
+  :global(#vocabulary-entry-header) {
+    padding: 20px 18px 16px;
+  }
+
+  :global(#vocabulary-entry-header h1) {
+    font-size: 48px;
+  }
+
+  :global(#vocabulary-entry-header h1 + span),
+  :global(#vocabulary-entry-header h1 ~ span) {
+    font-size: 20px;
+  }
+
+  :global(#vocabulary-entry-header > div > div:nth-child(2) > span) {
+    font-size: 17px;
+  }
+
+  :global(#vocabulary-entry-card > nav),
+  :global(#vocabulary-entry-card > div[aria-label]) {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  :global(#vocabulary-entry-card > div:last-child) {
+    padding: 20px 18px 28px;
+  }
+}
+
+/* Mobile is a semantic reflow, never a squeezed desktop card. */
+@media (max-width: 639px) {
+  :global(#vocabulary-entry-card) {
+    border-radius: 18px;
+  }
+
+  :global(#vocabulary-entry-header) {
+    padding: 20px 16px 15px;
+  }
+
+  :global(#vocabulary-entry-header h1) {
+    font-size: 45px;
+    line-height: 1.1;
+  }
+
+  :global(#vocabulary-entry-header h1 + span),
+  :global(#vocabulary-entry-header h1 ~ span) {
+    font-size: 21px;
+  }
+
+  :global(#vocabulary-entry-header > div > div:first-child) {
+    gap: 8px;
+  }
+
+  :global(#vocabulary-entry-header > div > div:nth-child(2) > span) {
+    font-size: 18px;
+  }
+
+  :global(#vocabulary-entry-card > nav) {
+    gap: 17px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  :global(#vocabulary-entry-card > div[aria-label]) {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  :global(#vocabulary-entry-card > div:last-child) {
+    padding: 20px 16px 28px;
+  }
+
+  :global(#vocabulary-entry-card article h3) {
+    font-size: 18px;
+  }
+
+  :global(#vocabulary-entry-card article section p) {
+    font-size: 16px;
+    line-height: 1.66;
+  }
+}
