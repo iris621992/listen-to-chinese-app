@@ -50,7 +50,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
 
     const target = targetRef.current;
     let active = true;
-    let lastSize = 0;
+    let lastDimensions = "";
 
     const clearAutoplayTimer = () => {
       if (autoplayTimerRef.current !== null) {
@@ -61,19 +61,23 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
 
     const renderWriter = () => {
       if (!active) return;
-      const measured = Math.floor(target.getBoundingClientRect().width);
-      if (measured < 1 || measured === lastSize) return;
-      lastSize = measured;
+      const bounds = target.getBoundingClientRect();
+      const width = Math.floor(bounds.width);
+      const height = Math.floor(bounds.height);
+      const dimensions = `${width}:${height}`;
+      if (width < 1 || height < 1 || dimensions === lastDimensions) return;
+      lastDimensions = dimensions;
       clearAutoplayTimer();
       target.replaceChildren();
       writerRef.current = null;
       setLoading(true);
 
+      const shortEdge = Math.min(width, height);
       let writer: ReturnType<typeof HanziWriter.create> | null = null;
       writer = HanziWriter.create(target, glyph, {
-        width: measured,
-        height: measured,
-        padding: Math.max(10, Math.round(measured * 0.07)),
+        width,
+        height,
+        padding: Math.max(10, Math.round(shortEdge * 0.07)),
         showOutline: true,
         showCharacter: prefersReducedMotion,
         strokeColor: "#30352f",
@@ -116,7 +120,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
           clearAutoplayTimer();
           autoplayTimerRef.current = setTimeout(() => {
             if (!active || !writer) return;
-            void writer?.animateCharacter();
+            void writer.animateCharacter();
             autoplayTimerRef.current = null;
           }, AUTOPLAY_DELAY_MS);
         },
