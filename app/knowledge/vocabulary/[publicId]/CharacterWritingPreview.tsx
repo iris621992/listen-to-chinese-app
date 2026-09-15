@@ -17,6 +17,9 @@ type Props = {
 
 const LOCKED_REPOSITORY = "chanind/hanzi-writer-data";
 const LOCKED_COMMIT = "68d10a4b21150cae5e1ebbd223eed289cf32d90c";
+const AUTOPLAY_DELAY_MS = 420;
+const STROKE_ANIMATION_SPEED = 0.55;
+const DELAY_BETWEEN_STROKES_MS = 260;
 
 function writingDataUrl(glyph: string, writing: VocabularyCharacterWriting) {
   if (
@@ -34,6 +37,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
   const sourceUrl = useMemo(() => writingDataUrl(glyph, writing), [glyph, writing]);
   const targetRef = useRef<HTMLDivElement | null>(null);
   const writerRef = useRef<ReturnType<typeof HanziWriter.create> | null>(null);
+  const autoplayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [loading, setLoading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [reloadNonce, setReloadNonce] = useState(0);
@@ -55,11 +59,19 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
     let active = true;
     let lastSize = 0;
 
+    const clearAutoplayTimer = () => {
+      if (autoplayTimerRef.current !== null) {
+        clearTimeout(autoplayTimerRef.current);
+        autoplayTimerRef.current = null;
+      }
+    };
+
     const renderWriter = () => {
       if (!active) return;
       const measured = Math.floor(target.getBoundingClientRect().width);
       if (measured < 1 || measured === lastSize) return;
       lastSize = measured;
+      clearAutoplayTimer();
       target.replaceChildren();
       writerRef.current = null;
       setLoading(true);
@@ -73,8 +85,8 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
         showCharacter: prefersReducedMotion,
         strokeColor: "#30352f",
         outlineColor: "#ddd5c8",
-        strokeAnimationSpeed: 1.15,
-        delayBetweenStrokes: 140,
+        strokeAnimationSpeed: STROKE_ANIMATION_SPEED,
+        delayBetweenStrokes: DELAY_BETWEEN_STROKES_MS,
         renderer: "svg",
         charDataLoader: (character, onLoad, onError) => {
           if (character !== glyph) {
@@ -109,11 +121,17 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
           writerRef.current = writer;
           setLoading(false);
           if (!prefersReducedMotion) {
-            void writer?.animateCharacter();
+            clearAutoplayTimer();
+            autoplayTimerRef.current = setTimeout(() => {
+              if (!active || !writerRef.current) return;
+              void writerRef.current.animateCharacter();
+              autoplayTimerRef.current = null;
+            }, AUTOPLAY_DELAY_MS);
           }
         },
         onLoadCharDataError: () => {
           if (!active) return;
+          clearAutoplayTimer();
           writerRef.current = null;
           setLoading(false);
           setFailed(true);
@@ -127,6 +145,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
 
     return () => {
       active = false;
+      clearAutoplayTimer();
       resizeObserver.disconnect();
       writerRef.current = null;
       target.replaceChildren();
@@ -137,6 +156,11 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
 
   const replay = () => {
     if (prefersReducedMotion) return;
+
+    if (autoplayTimerRef.current !== null) {
+      clearTimeout(autoplayTimerRef.current);
+      autoplayTimerRef.current = null;
+    }
 
     if (failed || !writerRef.current) {
       setFailed(false);
