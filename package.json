@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:architecture-direction && next build && npm run test:vocabulary-detail",
+    "build": "npm run test:architecture-direction && npm run test:vocabulary-search && next build && npm run test:vocabulary-detail",
     "start": "next start",
     "lint": "eslint .",
     "test:architecture-direction": "node --test scripts/verification/architecture-direction.test.mjs",
     "test:vocabulary-detail": "node --test scripts/verification/vocabulary-detail-learner-surface.test.mjs",
+    "test:vocabulary-search": "node --test scripts/verification/vocabulary-search-learner-flow.test.mjs",
     "test:db001": "node --test scripts/verification/db001-application-cutover.test.mjs",
     "test:supabase-config": "node --test scripts/verification/supabase-public-config.test.mjs",
     "test:hc1": "node --test scripts/verification/hc1-locale-context-boundary.test.mjs",
