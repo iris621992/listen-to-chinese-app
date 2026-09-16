@@ -329,11 +329,11 @@ function LocalizedHeader() {
 
   function handleLanguageChange(nextInterfaceLocaleCode: string) {
     if (!visibleInterfaceLocales.some((locale) => locale.code === nextInterfaceLocaleCode)) return;
-    const next = new URLSearchParams(searchParams.toString());
-    next.set(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode);
-    next.set("lang", nextInterfaceLocaleCode);
-    next.delete("cursor");
-    const query = next.toString();
+    const nextSearchParams = new URLSearchParams(searchParams.toString());
+    nextSearchParams.set(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode);
+    nextSearchParams.set("lang", nextInterfaceLocaleCode);
+    nextSearchParams.delete("cursor");
+    const query = nextSearchParams.toString();
     router.push(query ? `${pathname}?${query}` : pathname);
   }
 
