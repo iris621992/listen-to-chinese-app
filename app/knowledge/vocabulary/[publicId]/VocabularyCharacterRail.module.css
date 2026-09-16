@@ -3,6 +3,14 @@
   scroll-margin-top: 154px;
 }
 
+.desktopRail {
+  display: block;
+}
+
+.embedded {
+  display: none;
+}
+
 .characterRailInner {
   position: sticky;
   top: 84px;
@@ -92,6 +100,14 @@
   letter-spacing: 0.08em;
   line-height: 1.4;
   text-transform: uppercase;
+}
+
+.embeddedContent {
+  display: block;
+}
+
+.embeddedFactsColumn {
+  min-width: 0;
 }
 
 .characterFacts {
@@ -231,36 +247,70 @@
 }
 
 @media (max-width: 620px), (max-width: 900px) and (max-height: 520px) {
-  .characterRail {
-    width: 100%;
-    order: 2;
+  .desktopRail {
+    display: none;
   }
 
-  .characterRailInner {
+  .embedded {
+    display: block;
+    width: 100%;
+    margin-top: 30px;
+    padding-top: 24px;
+    border-top: 1px solid #d8d0c2;
+  }
+
+  .embedded .characterRailInner {
     position: static;
+    border-radius: 16px;
+    background: #fff;
     padding: 14px;
   }
 
-  .railSubtitle {
-    font-size: 12.5px;
+  .embedded .header {
+    margin-bottom: 8px;
   }
 
-  .characterSelector {
-    gap: 6px;
+  .embedded .railSubtitle {
+    font-size: 13px;
   }
 
-  .characterSelectorButton {
+  .embedded .characterSelector {
+    margin-bottom: 12px;
+  }
+
+  .embedded .characterSelectorButton {
     width: 34px;
     min-width: 34px;
     height: 32px;
     border-radius: 10px;
   }
 
-  .selectorGlyph {
+  .embedded .selectorGlyph {
     font-size: 17px;
   }
 
-  .characterFactLine {
+  .embedded .embeddedContent {
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .embedded .characterFacts {
+    margin-top: 0;
+  }
+
+  .embedded .characterFactLine {
     font-size: 13px;
+  }
+
+  .embedded .attribution {
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .embedded .embeddedContent {
+    grid-template-columns: 1fr;
   }
 }
