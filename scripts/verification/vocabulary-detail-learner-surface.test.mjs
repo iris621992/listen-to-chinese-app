@@ -4,8 +4,8 @@ import test from "node:test";
 
 const read = (path) => readFile(path, "utf8");
 
-test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Character delivery", async () => {
-  const [loader, characterLoader, page, styles, characterRail, characterRailStyles, writing, writingStyles, sticky, rich, richStyles, knowledge, header, packageJson] = await Promise.all([
+test("Vocabulary detail preserves K1B-K1F depth and authoritative Character delivery", async () => {
+  const [loader, characterLoader, page, styles, characterRail, characterRailStyles, writing, writingStyles, sticky, rich, richStyles, pronunciationMeta, pronunciationMetaStyles, knowledge, header, packageJson] = await Promise.all([
     read("lib/vocabularyDetail.ts"),
     read("lib/vocabularyCharacterDelivery.ts"),
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
@@ -17,16 +17,24 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
     read("app/knowledge/vocabulary/[publicId]/VocabularyStickyNav.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyPronunciationMeta.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyPronunciationMeta.module.css"),
     read("app/knowledge/page.tsx"),
     read("components/Header.tsx"),
     read("package.json"),
   ]);
 
+  assert.match(loader, /get_public_vocabulary_entry_v5/);
+  assert.match(loader, /get_public_vocabulary_entry_v4/);
   assert.match(loader, /get_public_vocabulary_entry_v3/);
   assert.match(loader, /get_public_vocabulary_entry_v2/);
-  assert.match(loader, /isMissingV3Rpc/);
+  assert.match(loader, /isMissingRpc/);
+  assert.match(loader, /K1F_VOCABULARY_LOCALIZED_DETAIL_PUBLIC_PROJECTION_V1/);
+  assert.match(loader, /K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1D_VOCABULARY_RICH_SUPPORT_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1C_VOCABULARY_TE_PUBLIC_PROJECTION_V1/);
+  assert.match(loader, /hanViet:\s*contract === K1F_PROJECTION_CONTRACT \? parseHanViet\(entry\.han_viet\) : null/);
+  assert.match(loader, /learnerMeaning:\s*stringValue\(row\.learner_meaning\)/);
   assert.match(loader, /translation_equivalents/);
   assert.match(loader, /collocations/);
   assert.match(loader, /classifiers/);
@@ -43,6 +51,7 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.match(loader, /applicable_form_public_ids/);
   assert.match(loader, /context_restriction/);
   assert.match(loader, /preference_status/);
+  assert.doesNotMatch(loader, /Ỷ TỬ|搬椅子|一把椅子/);
 
   assert.match(characterLoader, /get_public_vocabulary_entry_v4/);
   assert.match(characterLoader, /K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1/);
@@ -61,6 +70,10 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.match(page, /detail\.pronunciations/);
   assert.match(page, /groupByPartOfSpeech/);
   assert.match(page, /learnerMeaningParts/);
+  assert.match(page, /form\.publicId !== primaryForm\.publicId/);
+  assert.doesNotMatch(page, /form\.text !== primaryForm\.text/);
+  assert.match(page, /VocabularyPronunciationMeta/);
+  assert.match(page, /hanViet=\{detail\.hanViet\?\.text \?\? null\}/);
   assert.doesNotMatch(page, /extractHanCharacters/);
   assert.doesNotMatch(page, /Script=Han/);
   assert.match(page, /VocabularyStickyNav/);
@@ -75,6 +88,18 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.doesNotMatch(page, /translations:\s*"Từ tương đương"/);
   assert.doesNotMatch(page, /formLabel\(/);
   assert.doesNotMatch(page, /languageVarietyLabel/);
+  assert.doesNotMatch(page, /Ỷ TỬ|搬椅子|一把椅子/);
+
+  assert.match(pronunciationMeta, /hanViet:\s*string \| null/);
+  assert.match(pronunciationMeta, /hanViet \? \(/);
+  assert.match(pronunciationMeta, /styles\.dot/);
+  assert.match(pronunciationMeta, /styles\.hanViet/);
+  assert.doesNotMatch(pronunciationMeta, /Ỷ TỬ|活动|椅子/);
+  assert.match(pronunciationMetaStyles, /\.pinyin/);
+  assert.match(pronunciationMetaStyles, /font-size:\s*21px/);
+  assert.match(pronunciationMetaStyles, /\.hanViet/);
+  assert.match(pronunciationMetaStyles, /font-size:\s*17px/);
+  assert.match(pronunciationMetaStyles, /\.dot/);
 
   assert.match(characterRail, /^"use client";/);
   assert.match(characterRail, /useState/);
@@ -131,6 +156,9 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.match(rich, /item\.collocations\.length > 0/);
   assert.match(rich, /item\.classifiers\.length > 0/);
   assert.match(rich, /classifier\.learnerNote/);
+  assert.match(rich, /collocation\.learnerMeaning/);
+  assert.match(rich, /styles\.collocationMeaning/);
+  assert.ok(rich.indexOf("item.classifiers.length > 0") < rich.indexOf("item.collocations.length > 0 ? ("));
   assert.match(rich, /item\.examples\.length > 0/);
   assert.match(rich, /item\.quickDistinctions\.length > 0/);
   assert.match(rich, /distinction\.learnerExplanation/);
@@ -138,6 +166,7 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.doesNotMatch(rich, /活动|椅子|出租车|运动|搬椅子|一把椅子/);
   assert.doesNotMatch(rich, /reviewed semantic zones|Sense \/ RI|translation boundary|missing_data_behavior|INTERNAL SAMPLE|provisional/i);
   assert.match(richStyles, /\.supportStack/);
+  assert.match(richStyles, /\.collocationMeaning/);
   assert.match(richStyles, /\.exampleChinese/);
 
   assert.match(styles, /\.workspace/);
@@ -154,7 +183,7 @@ test("Vocabulary detail preserves K1B/K1C/K1D depth and authoritative K1E Charac
   assert.match(sticky, /styles\.compactSticky/);
   assert.match(sticky, /styles\.landscapeRail/);
 
-  for (const source of [loader, characterLoader, page, characterRail, sticky, rich]) {
+  for (const source of [loader, characterLoader, page, characterRail, sticky, rich, pronunciationMeta]) {
     assert.doesNotMatch(source, /出租车|出租車|chūzūchē|xe taxi/);
     assert.doesNotMatch(source, /fake example|fake collocation|fake grammar|fake classifier/i);
   }
