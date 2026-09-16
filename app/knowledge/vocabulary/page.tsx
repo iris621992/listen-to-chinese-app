@@ -22,10 +22,15 @@ type Labels = {
   intro: string;
   search: string;
   searchPlaceholder: string;
-  results: string;
-  emptyPrompt: string;
-  noResults: string;
-  unavailable: string;
+  hint: string;
+  resultsFor: (query: string) => string;
+  resultNote: string;
+  emptyTitle: string;
+  emptyBody: string;
+  noResultsTitle: string;
+  noResultsBody: string;
+  unavailableTitle: string;
+  unavailableBody: string;
   open: string;
 };
 
@@ -34,40 +39,55 @@ const LABELS: Record<string, Labels> = {
     knowledge: "Knowledge",
     vocabulary: "Vocabulary",
     title: "Find a word",
-    intro: "Search by Chinese characters, Pinyin, or a learner meaning. Results come from published Vocabulary knowledge.",
+    intro: "Search by Chinese characters, Pinyin, or meaning. Results show only what you need to identify the right entry; detailed explanations live on the Vocabulary detail page.",
     search: "Search",
     searchPlaceholder: "Chinese, Pinyin, or meaning…",
-    results: "Search results",
-    emptyPrompt: "Start with a Chinese word, Pinyin, or a meaning you want to look up.",
-    noResults: "No published vocabulary entries matched this search.",
-    unavailable: "Vocabulary search is temporarily unavailable.",
-    open: "Open entry",
+    hint: "Examples: 椅子 · yizi · chair · activity",
+    resultsFor: (query) => `Results for “${query}”`,
+    resultNote: "Choose an entry to see meaning, usage, and related learning content.",
+    emptyTitle: "What do you want to look up?",
+    emptyBody: "Start with Chinese characters, Pinyin, or a meaning. YunChinese searches published Vocabulary entries only.",
+    noResultsTitle: "No matching entry found",
+    noResultsBody: "Try Chinese characters, Pinyin, or another meaning. YunChinese does not fabricate results when no published entry matches.",
+    unavailableTitle: "Vocabulary search is temporarily unavailable",
+    unavailableBody: "The search service could not return published Vocabulary data right now. Please try again later.",
+    open: "View entry",
   },
   vi: {
     knowledge: "Kiến thức",
     vocabulary: "Từ vựng",
     title: "Tra từ",
-    intro: "Tìm bằng chữ Hán, Pinyin hoặc nghĩa dành cho người học. Kết quả lấy từ dữ liệu Từ vựng đã xuất bản.",
+    intro: "Tìm bằng chữ Hán, Pinyin hoặc nghĩa. Kết quả chỉ hiển thị thông tin cần thiết để bạn nhận ra đúng mục từ; phần giải thích chi tiết nằm trong trang Từ vựng.",
     search: "Tìm kiếm",
     searchPlaceholder: "Chữ Hán, Pinyin hoặc nghĩa…",
-    results: "Kết quả tìm kiếm",
-    emptyPrompt: "Nhập một từ tiếng Trung, Pinyin hoặc nghĩa bạn muốn tra.",
-    noResults: "Không tìm thấy mục từ đã xuất bản phù hợp.",
-    unavailable: "Tìm kiếm Từ vựng hiện tạm thời không khả dụng.",
-    open: "Mở mục từ",
+    hint: "Ví dụ: 椅子 · yizi · ghế · activity",
+    resultsFor: (query) => `Kết quả cho “${query}”`,
+    resultNote: "Chọn một mục từ để xem nghĩa, cách dùng và các nội dung liên quan.",
+    emptyTitle: "Bạn muốn tra từ gì?",
+    emptyBody: "Bắt đầu bằng chữ Hán, Pinyin hoặc một nghĩa. YunChinese chỉ tìm trong các mục Từ vựng đã xuất bản.",
+    noResultsTitle: "Không tìm thấy mục phù hợp",
+    noResultsBody: "Thử chữ Hán, Pinyin hoặc một nghĩa khác. YunChinese không tạo kết quả giả khi chưa có mục từ đã xuất bản phù hợp.",
+    unavailableTitle: "Tìm kiếm Từ vựng hiện tạm thời không khả dụng",
+    unavailableBody: "Hệ thống hiện chưa lấy được dữ liệu Từ vựng đã xuất bản. Vui lòng thử lại sau.",
+    open: "Xem mục từ",
   },
   ar: {
     knowledge: "المعرفة",
     vocabulary: "المفردات",
     title: "ابحث عن كلمة",
-    intro: "ابحث بالحروف الصينية أو الـ Pinyin أو معنى متاح للمتعلم. تأتي النتائج من بيانات المفردات المنشورة.",
+    intro: "ابحث بالحروف الصينية أو الـ Pinyin أو المعنى. تعرض النتائج فقط ما تحتاجه للتعرّف على المدخل الصحيح، بينما تبقى الشروح التفصيلية في صفحة المفردة.",
     search: "بحث",
     searchPlaceholder: "حروف صينية أو Pinyin أو معنى…",
-    results: "نتائج البحث",
-    emptyPrompt: "ابدأ بكلمة صينية أو Pinyin أو معنى تريد البحث عنه.",
-    noResults: "لم يتم العثور على مدخلات مفردات منشورة مطابقة.",
-    unavailable: "بحث المفردات غير متاح مؤقتًا.",
-    open: "فتح المدخل",
+    hint: "أمثلة: 椅子 · yizi · chair · activity",
+    resultsFor: (query) => `نتائج “${query}”`,
+    resultNote: "اختر مدخلاً لعرض المعنى والاستعمال والمحتوى التعليمي المرتبط.",
+    emptyTitle: "ما الذي تريد البحث عنه؟",
+    emptyBody: "ابدأ بحروف صينية أو Pinyin أو معنى. يبحث YunChinese فقط في مدخلات المفردات المنشورة.",
+    noResultsTitle: "لم يتم العثور على مدخل مطابق",
+    noResultsBody: "جرّب الحروف الصينية أو Pinyin أو معنى آخر. لا ينشئ YunChinese نتائج غير موجودة.",
+    unavailableTitle: "بحث المفردات غير متاح مؤقتًا",
+    unavailableBody: "تعذر حاليًا تحميل بيانات المفردات المنشورة. يرجى المحاولة لاحقًا.",
+    open: "عرض المدخل",
   },
 };
 
@@ -84,6 +104,18 @@ const POS_LABELS: Record<string, Record<string, string>> = {
   particle: { en: "Particle", vi: "Trợ từ", ar: "أداة" },
   measure_word: { en: "Measure word", vi: "Lượng từ", ar: "كلمة قياس" },
 };
+
+function SearchState({ title, body }: { title: string; body: string }) {
+  return (
+    <div className={styles.stateCard}>
+      <span className={styles.stateIcon} aria-hidden="true">⌕</span>
+      <div>
+        <h2>{title}</h2>
+        <p>{body}</p>
+      </div>
+    </div>
+  );
+}
 
 export default async function VocabularySearchPage({ searchParams }: Props) {
   const query = await searchParams;
@@ -107,31 +139,39 @@ export default async function VocabularySearchPage({ searchParams }: Props) {
       </nav>
 
       <section className={styles.hero}>
-        <p className={styles.eyebrow}>{labels.vocabulary}</p>
-        <h1>{labels.title}</h1>
-        <p className={styles.intro}>{labels.intro}</p>
-        <VocabularySearchForm
-          query={searchQuery}
-          context={learnerContextQuery}
-          placeholder={labels.searchPlaceholder}
-          submitLabel={labels.search}
-          ariaLabel={labels.search}
-          className={styles.searchForm}
-        />
+        <div className={styles.heroCopy}>
+          <p className={styles.eyebrow}>{labels.vocabulary}</p>
+          <h1>{labels.title}</h1>
+          <p className={styles.intro}>{labels.intro}</p>
+        </div>
+        <div className={styles.searchPanel}>
+          <VocabularySearchForm
+            query={searchQuery}
+            context={learnerContextQuery}
+            placeholder={labels.searchPlaceholder}
+            submitLabel={labels.search}
+            ariaLabel={labels.search}
+            className={styles.searchForm}
+          />
+          <p className={styles.hint}>{labels.hint}</p>
+        </div>
       </section>
 
       <section className={styles.results} aria-live="polite">
         {result.status === "EMPTY" ? (
-          <p className={styles.stateMessage}>{labels.emptyPrompt}</p>
+          <SearchState title={labels.emptyTitle} body={labels.emptyBody} />
         ) : result.status === "DATABASE_ERROR" || result.status === "INVALID_INPUT" ? (
-          <p className={styles.stateMessage}>{labels.unavailable}</p>
+          <SearchState title={labels.unavailableTitle} body={labels.unavailableBody} />
         ) : result.items.length === 0 ? (
-          <p className={styles.stateMessage}>{labels.noResults}</p>
+          <SearchState title={labels.noResultsTitle} body={labels.noResultsBody} />
         ) : (
           <>
             <div className={styles.resultsHead}>
-              <h2>{labels.results}</h2>
-              <span>{result.items.length}</span>
+              <div>
+                <h2>{labels.resultsFor(searchQuery)}</h2>
+                <p>{labels.resultNote}</p>
+              </div>
+              <span className={styles.resultCount}>{result.items.length}</span>
             </div>
             <div className={styles.resultList}>
               {result.items.map((item) => (
@@ -150,7 +190,9 @@ export default async function VocabularySearchPage({ searchParams }: Props) {
                   <div className={styles.resultMeaning}>
                     <strong>{item.learnerSummary}</strong>
                     {item.partOfSpeechCode ? (
-                      <span>{POS_LABELS[item.partOfSpeechCode]?.[interfaceLocale.code] ?? POS_LABELS[item.partOfSpeechCode]?.en ?? item.partOfSpeechCode}</span>
+                      <div className={styles.resultMeta}>
+                        <span>{POS_LABELS[item.partOfSpeechCode]?.[interfaceLocale.code] ?? POS_LABELS[item.partOfSpeechCode]?.en ?? item.partOfSpeechCode}</span>
+                      </div>
                     ) : null}
                   </div>
                   <span className={styles.openLabel}>{labels.open} →</span>
