@@ -118,11 +118,10 @@ export default function VocabularyStickyNav({ headword, pronunciation, navItems 
       setGeometry((previous) => sameGeometry(previous, nextGeometry) ? previous : nextGeometry);
       setActive(headerRect.bottom <= offset + 4 && cardRect.bottom > offset + 96);
 
-      const visibleItems = effectiveNavItems
-        .map((item) => ({ item, target: targetFor(item) }))
-        .filter((entry): entry is { item: NavItem; target: HTMLElement } => (
-          Boolean(entry.target) && entry.target.offsetParent !== null
-        ));
+      const visibleItems = effectiveNavItems.flatMap((item) => {
+        const target = targetFor(item);
+        return target && target.offsetParent !== null ? [{ item, target }] : [];
+      });
 
       if (visibleItems.length > 0) {
         const threshold = offset + 84;
