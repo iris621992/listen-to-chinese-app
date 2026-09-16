@@ -9,6 +9,7 @@ import {
   type VocabularyTranslationEquivalent,
 } from "@/lib/vocabularyDetail";
 import VocabularyCharacterRail from "./VocabularyCharacterRail";
+import VocabularyPronunciationMeta from "./VocabularyPronunciationMeta";
 import VocabularyRichSupport from "./VocabularyRichSupport";
 import VocabularyStickyNav from "./VocabularyStickyNav";
 import styles from "./VocabularyDetail.module.css";
@@ -211,8 +212,6 @@ const learnerMeaningParts = (
   return [...new Set(parts.map((part) => part.trim()).filter(Boolean))];
 };
 
-// Preserve the projection's authored learner order. POS is presentation context only:
-// repeated POS values in non-contiguous Reading Items must not be regrouped across intervening RIs.
 const groupByPartOfSpeech = (items: VocabularyReadingItem[]): PosGroup[] => {
   const groups: PosGroup[] = [];
   items.forEach((item, index) => {
@@ -292,9 +291,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
   const primaryPronunciation =
     detail.pronunciations.find((item) => item.isDefault) ?? detail.pronunciations[0];
   const primaryForm = detail.forms.find((form) => form.isPrimary) ?? detail.forms[0];
-  const secondaryForms = detail.forms.filter(
-    (form) => form.publicId !== primaryForm.publicId && form.text !== primaryForm.text,
-  );
+  const secondaryForms = detail.forms.filter((form) => form.publicId !== primaryForm.publicId);
   const allReadingItems = detail.pronunciations.flatMap((item) => item.readingItems);
   const singleSummary = allReadingItems.length === 1
     ? learnerMeaningParts(allReadingItems[0], detail.requestedLocale, detail.fallbackLocale).join(", ")
@@ -370,9 +367,10 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
               </div>
 
               {primaryPronunciation ? (
-                <div className={styles.pronLine}>
-                  <span className={styles.pinyin}>{primaryPronunciation.pronunciation}</span>
-                </div>
+                <VocabularyPronunciationMeta
+                  pronunciation={primaryPronunciation.pronunciation}
+                  hanViet={detail.hanViet?.text ?? null}
+                />
               ) : null}
 
               {singleSummary ? <p className={styles.entrySummary}>{singleSummary}</p> : null}
