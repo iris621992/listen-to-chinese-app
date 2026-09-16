@@ -37,9 +37,41 @@ function sameGeometry(a: StickyGeometry | null, b: StickyGeometry) {
     && Math.abs(a.width - b.width) < 0.5;
 }
 
+function sameNavItems(a: NavItem[], b: NavItem[]) {
+  return a.length === b.length
+    && a.every((item, index) => (
+      item.label === b[index]?.label
+      && item.href === b[index]?.href
+      && Boolean(item.mobileOnly) === Boolean(b[index]?.mobileOnly)
+    ));
+}
+
 function targetFor(item: NavItem) {
   if (!item.href.startsWith("#")) return null;
   return document.getElementById(item.href.slice(1));
+}
+
+function resolveEffectiveNavItems(navItems: NavItem[]) {
+  const hasReadingNavigation = navItems.some((item) => item.href.startsWith("#reading-"));
+  const hasPosNavigation = navItems.some((item) => item.href.startsWith("#pos-"));
+  const hasCharacterNavigation = navItems.some((item) => item.href === "#characters");
+
+  if (hasReadingNavigation || hasPosNavigation || !hasCharacterNavigation) return navItems;
+
+  const posSections = Array.from(
+    document.querySelectorAll<HTMLElement>("#vocabulary-entry-card section[id^='pos-']"),
+  );
+  if (posSections.length !== 1) return navItems;
+
+  const label =
+    posSections[0].querySelector<HTMLElement>("[class*='posLabel']")?.textContent?.trim()
+    ?? posSections[0].querySelector<HTMLElement>("span")?.textContent?.trim();
+  if (!label) return navItems;
+
+  return [
+    { label, href: `#${posSections[0].id}`, mobileOnly: true },
+    ...navItems,
+  ];
 }
 
 export default function VocabularyStickyNav({ headword, pronunciation, navItems }: Props) {
@@ -48,38 +80,6 @@ export default function VocabularyStickyNav({ headword, pronunciation, navItems 
   const [effectiveNavItems, setEffectiveNavItems] = useState(navItems);
   const [activeHref, setActiveHref] = useState<string | null>(navItems[0]?.href ?? null);
   const [geometry, setGeometry] = useState<StickyGeometry | null>(null);
-
-  useEffect(() => {
-    const hasReadingNavigation = navItems.some((item) => item.href.startsWith("#reading-"));
-    const hasPosNavigation = navItems.some((item) => item.href.startsWith("#pos-"));
-    const hasCharacterNavigation = navItems.some((item) => item.href === "#characters");
-
-    if (hasReadingNavigation || hasPosNavigation || !hasCharacterNavigation) {
-      setEffectiveNavItems(navItems);
-      return;
-    }
-
-    const posSections = Array.from(
-      document.querySelectorAll<HTMLElement>("#vocabulary-entry-card section[id^='pos-']"),
-    );
-    if (posSections.length !== 1) {
-      setEffectiveNavItems(navItems);
-      return;
-    }
-
-    const label =
-      posSections[0].querySelector<HTMLElement>("[class*='posLabel']")?.textContent?.trim()
-      ?? posSections[0].querySelector<HTMLElement>("span")?.textContent?.trim();
-    if (!label) {
-      setEffectiveNavItems(navItems);
-      return;
-    }
-
-    setEffectiveNavItems([
-      { label, href: `#${posSections[0].id}`, mobileOnly: true },
-      ...navItems,
-    ]);
-  }, [navItems]);
 
   useEffect(() => {
     const syncPronunciation = () => {
@@ -107,6 +107,9 @@ export default function VocabularyStickyNav({ headword, pronunciation, navItems 
         return;
       }
 
+      const resolvedItems = resolveEffectiveNavItems(navItems);
+      setEffectiveNavItems((previous) => sameNavItems(previous, resolvedItems) ? previous : resolvedItems);
+
       const offset = learnerHeaderOffset();
       const headerRect = header.getBoundingClientRect();
       const cardRect = card.getBoundingClientRect();
@@ -118,7 +121,7 @@ export default function VocabularyStickyNav({ headword, pronunciation, navItems 
       setGeometry((previous) => sameGeometry(previous, nextGeometry) ? previous : nextGeometry);
       setActive(headerRect.bottom <= offset + 4 && cardRect.bottom > offset + 96);
 
-      const visibleItems = effectiveNavItems.flatMap((item) => {
+      const visibleItems = resolvedItems.flatMap((item) => {
         const target = targetFor(item);
         return target && target.offsetParent !== null ? [{ item, target }] : [];
       });
@@ -148,7 +151,7 @@ export default function VocabularyStickyNav({ headword, pronunciation, navItems 
       window.removeEventListener("hashchange", schedule);
       if (frame) window.cancelAnimationFrame(frame);
     };
-  }, [effectiveNavItems]);
+  }, [navItems]);
 
   useEffect(() => {
     const links = document.querySelectorAll<HTMLAnchorElement>("#vocabulary-entry-card > nav a[href^='#']");
