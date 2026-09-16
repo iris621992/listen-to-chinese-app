@@ -27,7 +27,7 @@ type Props = {
   occurrences: VocabularyCharacterOccurrence[];
   labels: Labels;
   detailAction?: DetailAction | null;
-  variant?: "rail" | "embedded";
+  variant?: "responsive" | "rail" | "embedded";
   anchorId?: string;
 };
 
@@ -102,16 +102,59 @@ export default function VocabularyCharacterRail({
   occurrences,
   labels,
   detailAction = null,
-  variant = "rail",
-  anchorId = "characters",
+  variant = "responsive",
+  anchorId,
 }: Props) {
   const characters = simplifiedMainlandCharacters(occurrences);
-  const [selectedKey, setSelectedKey] = useState(() => (
-    characters.length > 0 ? occurrenceKey(characters[0]) : ""
-  ));
 
   if (characters.length === 0) return null;
 
+  if (variant === "responsive") {
+    return (
+      <>
+        <VocabularyCharacterRail
+          occurrences={occurrences}
+          labels={labels}
+          detailAction={detailAction}
+          variant="rail"
+          anchorId="characters-rail"
+        />
+        <VocabularyCharacterRail
+          occurrences={occurrences}
+          labels={labels}
+          detailAction={detailAction}
+          variant="embedded"
+          anchorId="characters"
+        />
+      </>
+    );
+  }
+
+  return (
+    <CharacterSurface
+      characters={characters}
+      labels={labels}
+      detailAction={detailAction}
+      variant={variant}
+      anchorId={anchorId ?? (variant === "embedded" ? "characters" : "characters-rail")}
+    />
+  );
+}
+
+function CharacterSurface({
+  characters,
+  labels,
+  detailAction,
+  variant,
+  anchorId,
+}: {
+  characters: VocabularyCharacterOccurrence[];
+  labels: Labels;
+  detailAction: DetailAction | null;
+  variant: "rail" | "embedded";
+  anchorId: string;
+}) {
+  const [selectedKey, setSelectedKey] = useState(() => occurrenceKey(characters[0]));
   const selectedOccurrence =
     characters.find((occurrence) => occurrenceKey(occurrence) === selectedKey)
     ?? characters[0];
