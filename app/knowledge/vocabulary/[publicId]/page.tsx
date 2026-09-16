@@ -329,6 +329,17 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
     navItems.push({ label: labels.characters, href: "#characters", mobileOnly: true });
   }
 
+  const characterLabels = {
+    characters: labels.characters,
+    radical: labels.radical,
+    strokes: labels.strokes,
+    hanViet: labels.hanViet,
+    writingOpen: labels.writingOpen,
+    writingReplay: labels.writingReplay,
+    writingUnavailable: labels.writingUnavailable,
+    writingSource: labels.writingSource,
+  };
+
   return (
     <main className={styles.page} dir={interfaceLocale.direction}>
       <nav className={styles.breadcrumb} aria-label="Breadcrumb">
@@ -550,21 +561,25 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
                 })}
               </div>
             </section>
+
+            {characters.length > 0 ? (
+              <div className={styles.mobileCharacterPanel}>
+                <VocabularyCharacterRail
+                  occurrences={characters}
+                  labels={characterLabels}
+                  variant="embedded"
+                  anchorId="characters"
+                />
+              </div>
+            ) : null}
           </div>
         </article>
 
         <VocabularyCharacterRail
           occurrences={characters}
-          labels={{
-            characters: labels.characters,
-            radical: labels.radical,
-            strokes: labels.strokes,
-            hanViet: labels.hanViet,
-            writingOpen: labels.writingOpen,
-            writingReplay: labels.writingReplay,
-            writingUnavailable: labels.writingUnavailable,
-            writingSource: labels.writingSource,
-          }}
+          labels={characterLabels}
+          variant="rail"
+          anchorId="characters-rail"
         />
       </div>
     </main>
