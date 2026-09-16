@@ -68,6 +68,13 @@
   white-space: nowrap;
 }
 
+.collocationMeaning {
+  padding-top: 2px;
+  color: #6b6f66;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
 .classifierItem,
 .distinctionItem {
   display: grid;
