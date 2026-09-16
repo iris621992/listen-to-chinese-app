@@ -1,6 +1,8 @@
 import { getLearnerLocale } from "@/lib/learnerLocaleRegistry";
 
 const VOCABULARY_PUBLIC_ID_PATTERN = /^vocab_[a-f0-9]{64}$/u;
+const K1F_PROJECTION_CONTRACT = "K1F_VOCABULARY_LOCALIZED_DETAIL_PUBLIC_PROJECTION_V1";
+const K1E_PROJECTION_CONTRACT = "K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1";
 const K1D_PROJECTION_CONTRACT = "K1D_VOCABULARY_RICH_SUPPORT_PUBLIC_PROJECTION_V1";
 const K1C_PROJECTION_CONTRACT = "K1C_VOCABULARY_TE_PUBLIC_PROJECTION_V1";
 
@@ -14,6 +16,11 @@ export type VocabularyForm = {
   isPrimary: boolean;
   scriptProfileCode: string | null;
   scriptVariantCode: string | null;
+};
+
+export type VocabularyHanViet = {
+  text: string;
+  contentLocale: string;
 };
 
 export type VocabularyTranslationEquivalent = {
@@ -32,6 +39,8 @@ export type VocabularyCollocation = {
   readingItemPublicId: string;
   expression: string;
   collocationType: string;
+  learnerMeaning: string | null;
+  contentLocale: string | null;
 };
 
 export type VocabularyClassifier = {
@@ -99,6 +108,7 @@ export type VocabularyDetail = {
   regionProfileCode: string | null;
   requestedLocale: string;
   fallbackLocale: string;
+  hanViet: VocabularyHanViet | null;
   forms: VocabularyForm[];
   pronunciations: VocabularyPronunciation[];
 };
@@ -129,6 +139,14 @@ function exactRiOwner(row: JsonObject, expected: string): string | null {
   return owner === expected ? owner : null;
 }
 
+function parseHanViet(value: unknown): VocabularyHanViet | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const text = stringValue(row.text);
+  const contentLocale = stringValue(row.content_locale);
+  return text && contentLocale ? { text, contentLocale } : null;
+}
+
 function parseTranslationEquivalent(value: unknown): VocabularyTranslationEquivalent | null {
   const row = asObject(value);
   if (!row) return null;
@@ -157,7 +175,14 @@ function parseCollocation(value: unknown, readingItemPublicId: string): Vocabula
   const expression = stringValue(row.expression);
   const collocationType = stringValue(row.collocation_type);
   if (!publicId || !owner || !expression || !collocationType) return null;
-  return { publicId, readingItemPublicId: owner, expression, collocationType };
+  return {
+    publicId,
+    readingItemPublicId: owner,
+    expression,
+    collocationType,
+    learnerMeaning: stringValue(row.learner_meaning),
+    contentLocale: stringValue(row.content_locale),
+  };
 }
 
 function parseClassifier(value: unknown, readingItemPublicId: string): VocabularyClassifier | null {
@@ -302,7 +327,9 @@ function parseVocabularyPayload(value: unknown): VocabularyDetail | null {
   const payload = asObject(value);
   if (!payload) return null;
   const contract = stringValue(payload.projection_contract);
-  const richSupportEnabled = contract === K1D_PROJECTION_CONTRACT;
+  const richSupportEnabled = contract === K1F_PROJECTION_CONTRACT
+    || contract === K1E_PROJECTION_CONTRACT
+    || contract === K1D_PROJECTION_CONTRACT;
   if (!richSupportEnabled && contract !== K1C_PROJECTION_CONTRACT) return null;
 
   const entry = asObject(payload.entry);
@@ -329,17 +356,18 @@ function parseVocabularyPayload(value: unknown): VocabularyDetail | null {
     regionProfileCode: stringValue(entry.region_profile_code),
     requestedLocale,
     fallbackLocale,
+    hanViet: contract === K1F_PROJECTION_CONTRACT ? parseHanViet(entry.han_viet) : null,
     forms,
     pronunciations,
   };
 }
 
-function isMissingV3Rpc(error: unknown): boolean {
+function isMissingRpc(error: unknown, rpcName: string): boolean {
   const row = asObject(error);
   if (!row) return false;
   const code = stringValue(row.code);
   const message = stringValue(row.message) ?? "";
-  return code === "PGRST202" || code === "42883" || message.includes("get_public_vocabulary_entry_v3");
+  return code === "PGRST202" || code === "42883" || message.includes(rpcName);
 }
 
 export async function loadVocabularyDetail(
@@ -360,11 +388,23 @@ export async function loadVocabularyDetail(
       p_fallback_locale_code: learnerLocale.fallbackLocaleCode ?? "en",
     };
 
-    const v3 = await supabase.rpc("get_public_vocabulary_entry_v3", args);
-    let data = v3.data;
-    let error = v3.error;
+    const v5 = await supabase.rpc("get_public_vocabulary_entry_v5", args);
+    let data = v5.data;
+    let error = v5.error;
 
-    if (error && isMissingV3Rpc(error)) {
+    if (error && isMissingRpc(error, "get_public_vocabulary_entry_v5")) {
+      const v4 = await supabase.rpc("get_public_vocabulary_entry_v4", args);
+      data = v4.data;
+      error = v4.error;
+    }
+
+    if (error && isMissingRpc(error, "get_public_vocabulary_entry_v4")) {
+      const v3 = await supabase.rpc("get_public_vocabulary_entry_v3", args);
+      data = v3.data;
+      error = v3.error;
+    }
+
+    if (error && isMissingRpc(error, "get_public_vocabulary_entry_v3")) {
       const v2 = await supabase.rpc("get_public_vocabulary_entry_v2", args);
       data = v2.data;
       error = v2.error;
