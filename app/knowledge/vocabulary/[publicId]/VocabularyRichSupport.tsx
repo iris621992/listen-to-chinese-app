@@ -32,19 +32,6 @@ export default function VocabularyRichSupport({ item, labels }: Props) {
         <section className={styles.supportBlock}>
           <h4>{sentenceBehaviorLabel(labels)}</h4>
           <div className={styles.behaviorGrid}>
-            {item.collocations.length > 0 ? (
-              <div className={styles.behaviorItem}>
-                <strong className={styles.behaviorTitle}>{labels.collocations}</strong>
-                <div className={styles.collocationList}>
-                  {item.collocations.map((collocation) => (
-                    <div key={collocation.publicId} className={styles.collocationItem}>
-                      <b className={styles.collocationExpression}>{collocation.expression}</b>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
             {item.classifiers.length > 0 ? (
               <div className={styles.behaviorItem}>
                 <strong className={styles.behaviorTitle}>{labels.classifiers}</strong>
@@ -53,6 +40,22 @@ export default function VocabularyRichSupport({ item, labels }: Props) {
                     <div key={classifier.publicId} className={styles.classifierItem}>
                       <strong>{classifier.expression}</strong>
                       {classifier.learnerNote ? <p>{classifier.learnerNote}</p> : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {item.collocations.length > 0 ? (
+              <div className={styles.behaviorItem}>
+                <strong className={styles.behaviorTitle}>{labels.collocations}</strong>
+                <div className={styles.collocationList}>
+                  {item.collocations.map((collocation) => (
+                    <div key={collocation.publicId} className={styles.collocationItem}>
+                      <b className={styles.collocationExpression}>{collocation.expression}</b>
+                      {collocation.learnerMeaning ? (
+                        <span className={styles.collocationMeaning}>{collocation.learnerMeaning}</span>
+                      ) : null}
                     </div>
                   ))}
                 </div>
