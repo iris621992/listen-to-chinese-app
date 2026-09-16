@@ -27,6 +27,8 @@ type Props = {
   occurrences: VocabularyCharacterOccurrence[];
   labels: Labels;
   detailAction?: DetailAction | null;
+  variant?: "rail" | "embedded";
+  anchorId?: string;
 };
 
 type QuickPreviewLabels = {
@@ -96,7 +98,13 @@ function learnerStructureValue(occurrence: VocabularyCharacterOccurrence) {
   return occurrence.character.structureFormula;
 }
 
-export default function VocabularyCharacterRail({ occurrences, labels, detailAction = null }: Props) {
+export default function VocabularyCharacterRail({
+  occurrences,
+  labels,
+  detailAction = null,
+  variant = "rail",
+  anchorId = "characters",
+}: Props) {
   const characters = simplifiedMainlandCharacters(occurrences);
   const [selectedKey, setSelectedKey] = useState(() => (
     characters.length > 0 ? occurrenceKey(characters[0]) : ""
@@ -111,12 +119,17 @@ export default function VocabularyCharacterRail({ occurrences, labels, detailAct
   const character = selectedOccurrence.character;
   const previewLabels = quickPreviewLabels(labels);
   const structureValue = learnerStructureValue(selectedOccurrence);
+  const titleId = `${anchorId}-title`;
 
   return (
-    <aside id="characters" className={styles.characterRail} aria-labelledby="characters-title">
+    <aside
+      id={anchorId}
+      className={`${styles.characterRail} ${variant === "embedded" ? styles.embedded : styles.desktopRail}`}
+      aria-labelledby={titleId}
+    >
       <div className={styles.characterRailInner}>
         <header className={styles.header}>
-          <h2 id="characters-title">{previewLabels.title}</h2>
+          <h2 id={titleId}>{previewLabels.title}</h2>
           <p className={styles.railSubtitle}>{previewLabels.subtitle}</p>
         </header>
 
@@ -141,75 +154,79 @@ export default function VocabularyCharacterRail({ occurrences, labels, detailAct
 
         <article className={styles.selectedCharacter} aria-live="polite">
           <div className={styles.writingLabel}>{previewLabels.writing}</div>
-          {character.writing ? (
-            <CharacterWritingPreview
-              key={`${selectedOccurrenceKey}:${character.writing.sourcePath}`}
-              glyph={character.glyph}
-              writing={character.writing}
-              labels={{
-                replay: labels.writingReplay,
-                unavailable: labels.writingUnavailable,
-              }}
-            />
-          ) : (
-            <div className={styles.writingUnavailable}>
-              <span className={styles.fallbackGlyph}>{character.glyph}</span>
-              <p>{labels.writingUnavailable}</p>
+          <div className={styles.embeddedContent}>
+            {character.writing ? (
+              <CharacterWritingPreview
+                key={`${selectedOccurrenceKey}:${character.writing.sourcePath}`}
+                glyph={character.glyph}
+                writing={character.writing}
+                labels={{
+                  replay: labels.writingReplay,
+                  unavailable: labels.writingUnavailable,
+                }}
+              />
+            ) : (
+              <div className={styles.writingUnavailable}>
+                <span className={styles.fallbackGlyph}>{character.glyph}</span>
+                <p>{labels.writingUnavailable}</p>
+              </div>
+            )}
+
+            <div className={styles.embeddedFactsColumn}>
+              <div className={styles.characterFacts}>
+                <div className={styles.characterFactLine}>
+                  <span className={styles.bigChinese}>{character.glyph}</span>
+                </div>
+
+                {selectedOccurrence.lexicalContextPronunciation ? (
+                  <div className={styles.characterFactLine}>
+                    <span>{previewLabels.pinyin}: </span>
+                    <strong>{selectedOccurrence.lexicalContextPronunciation}</strong>
+                  </div>
+                ) : null}
+
+                {character.hanViet ? (
+                  <div className={styles.characterFactLine}>
+                    <span>{labels.hanViet}: </span>
+                    <strong>{character.hanViet}</strong>
+                  </div>
+                ) : null}
+
+                {structureValue ? (
+                  <div className={styles.characterFactLine}>
+                    <span>{previewLabels.structure}: </span>
+                    <strong className={styles.structureValue}>{structureValue}</strong>
+                  </div>
+                ) : null}
+
+                {character.radical ? (
+                  <div className={styles.characterFactLine}>
+                    <span>{labels.radical}: </span>
+                    <strong className={styles.bigChinese}>{character.radical}</strong>
+                  </div>
+                ) : null}
+
+                {character.strokeCount ? (
+                  <div className={styles.characterFactLine}>
+                    <span>{labels.strokes}: </span>
+                    <strong>{character.strokeCount}</strong>
+                  </div>
+                ) : null}
+              </div>
+
+              {character.writing ? (
+                <p className={styles.attribution}>
+                  {labels.writingSource}: Hanzi Writer Data · {character.writing.licenseCode}
+                </p>
+              ) : null}
+
+              {detailAction ? (
+                <Link className={styles.detailAction} href={detailAction.href}>
+                  {detailAction.label}
+                </Link>
+              ) : null}
             </div>
-          )}
-
-          <div className={styles.characterFacts}>
-            <div className={styles.characterFactLine}>
-              <span className={styles.bigChinese}>{character.glyph}</span>
-            </div>
-
-            {selectedOccurrence.lexicalContextPronunciation ? (
-              <div className={styles.characterFactLine}>
-                <span>{previewLabels.pinyin}: </span>
-                <strong>{selectedOccurrence.lexicalContextPronunciation}</strong>
-              </div>
-            ) : null}
-
-            {character.hanViet ? (
-              <div className={styles.characterFactLine}>
-                <span>{labels.hanViet}: </span>
-                <strong>{character.hanViet}</strong>
-              </div>
-            ) : null}
-
-            {structureValue ? (
-              <div className={styles.characterFactLine}>
-                <span>{previewLabels.structure}: </span>
-                <strong className={styles.structureValue}>{structureValue}</strong>
-              </div>
-            ) : null}
-
-            {character.radical ? (
-              <div className={styles.characterFactLine}>
-                <span>{labels.radical}: </span>
-                <strong className={styles.bigChinese}>{character.radical}</strong>
-              </div>
-            ) : null}
-
-            {character.strokeCount ? (
-              <div className={styles.characterFactLine}>
-                <span>{labels.strokes}: </span>
-                <strong>{character.strokeCount}</strong>
-              </div>
-            ) : null}
           </div>
-
-          {character.writing ? (
-            <p className={styles.attribution}>
-              {labels.writingSource}: Hanzi Writer Data · {character.writing.licenseCode}
-            </p>
-          ) : null}
-
-          {detailAction ? (
-            <Link className={styles.detailAction} href={detailAction.href}>
-              {detailAction.label}
-            </Link>
-          ) : null}
         </article>
       </div>
     </aside>
