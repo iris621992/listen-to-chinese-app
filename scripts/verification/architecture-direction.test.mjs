@@ -183,8 +183,8 @@ test("learner shell preserves approved Home / Video / Knowledge / Practice IA an
   assert.match(header, /if \(lang\) next\.set\("lang", lang\)/);
   assert.match(header, /if \(levelSystem\) next\.set\(PROFICIENCY_LEVEL_SYSTEM_PARAM, levelSystem\)/);
   assert.match(header, /if \(level\) next\.set\(PROFICIENCY_LEVEL_PARAM, level\)/);
-  assert.match(header, /next\.set\(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode\)/);
-  assert.match(header, /next\.set\("lang", nextInterfaceLocaleCode\)/);
+  assert.match(header, /nextSearchParams\.set\(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode\)/);
+  assert.match(header, /nextSearchParams\.set\("lang", nextInterfaceLocaleCode\)/);
   assert.match(header, /visibleInterfaceLocales/);
   assert.match(header, /locale\.code !== "ar"/);
   assert.doesNotMatch(header, /getPublicProficiencyOptions|renderLevelOptions/);
