@@ -191,7 +191,8 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.doesNotMatch(page, /audio|speechSynthesis|Polly/i);
   assert.doesNotMatch(page, /saveButton|saved-item|content-toggle/i);
 
-  assert.match(knowledge, /\/knowledge\/vocabulary\/\$\{FIRST_VOCABULARY_PUBLIC_ID\}/);
+  assert.match(knowledge, /href:\s*"\/knowledge\/vocabulary"/);
+  assert.doesNotMatch(knowledge, /vocab_[a-f0-9]{64}/);
   assert.match(knowledge, /preservedLearnerContextQuery/);
 
   assert.match(header, /\/brand\/yunchinese-logo\.png/);
