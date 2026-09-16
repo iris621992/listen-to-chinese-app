@@ -1,0 +1,74 @@
+/* Demo v4.1 literal visual reconciliation pass.
+   Scope is intentionally limited to audit findings VF-01 through VF-09. */
+
+/* VF-01: the compact sticky surface belongs to the lexical workspace, not the whole shell. */
+:global([data-vocabulary-sticky="true"]) {
+  inset-inline: auto !important;
+}
+
+:global([data-vocabulary-sticky="true"] > div) {
+  width: 100% !important;
+  min-height: 48px;
+  margin-inline: 0 !important;
+  padding-inline: 13px;
+}
+
+/* VF-02: preserve the demo's active-section affordance in both in-card and sticky navigation. */
+:global([data-vocabulary-sticky="true"] a[data-current="true"]),
+:global([data-vocabulary-landscape-rail="true"] a[data-current="true"]),
+:global(#vocabulary-entry-card > nav a[data-current="true"]) {
+  border-bottom-color: #79906d !important;
+  color: #30402f !important;
+  font-weight: 760 !important;
+}
+
+:global([data-vocabulary-landscape-rail="true"] a[data-current="true"]) {
+  border-bottom-color: transparent !important;
+  background: #dfe7da !important;
+  color: #344130 !important;
+}
+
+/* VF-07: learner-facing localized collocation meaning follows the final v4.1 typography pass. */
+:global(#vocabulary-entry-card [class*="collocationMeaning"]) {
+  color: #555b52 !important;
+  font-size: 14.5px !important;
+  line-height: 1.55 !important;
+}
+
+/* VF-08 / VF-09: tablet and compact desktop Character rail must not regress to metadata-small type. */
+@media (max-width: 1100px) {
+  :global(#characters-rail [class*="railSubtitle"]),
+  :global(#characters [class*="railSubtitle"]) {
+    font-size: 12.5px !important;
+    line-height: 1.55 !important;
+  }
+
+  :global(#characters-rail [class*="characterFactLine"]),
+  :global(#characters [class*="characterFactLine"]) {
+    font-size: 13px !important;
+    line-height: 1.5 !important;
+  }
+}
+
+/* VF-04 / VF-05 / VF-06: short landscape is still mobile.
+   Keep the full lexical header width, then reserve a compact left reading rail only inside the body. */
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  :global(main:has(#vocabulary-entry-card)) {
+    padding-inline-start: 14px !important;
+    padding-inline-end: 14px !important;
+  }
+
+  :global(#vocabulary-entry-card > div:last-child) {
+    padding-inline-start: 124px !important;
+    padding-inline-end: 16px !important;
+  }
+
+  :global([data-vocabulary-landscape-rail="true"]) {
+    inset-inline-start: 24px !important;
+    width: 96px !important;
+  }
+
+  :global(#characters [class*="writingPad"]) {
+    height: 150px !important;
+  }
+}
