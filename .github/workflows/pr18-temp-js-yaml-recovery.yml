@@ -14,7 +14,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      EXPECTED_START_HEAD: 0b92b7cc327a3e5e9aa17ab972ae046c6717bc2e
+      ORIGINAL_HEAD: 0b92b7cc327a3e5e9aa17ab972ae046c6717bc2e
+      EXPECTED_PARENT_HEAD: 0657546456131e82e972ab9447b76f9741c26619
       TARGET_BRANCH: agent/vocabulary-detail-first-real-learner-surface-v1
       TEMP_WORKFLOW: .github/workflows/pr18-temp-js-yaml-recovery.yml
 
@@ -23,18 +24,18 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # releases/v4
         with:
           ref: ${{ github.sha }}
-          fetch-depth: 2
+          fetch-depth: 3
 
-      - name: Fail closed on starting authority
+      - name: Fail closed on retry authority
         shell: bash
         run: |
           set -euo pipefail
           test "${GITHUB_REF_NAME}" = "${TARGET_BRANCH}"
           test "$(git rev-parse HEAD)" = "${GITHUB_SHA}"
-          test "$(git rev-parse HEAD^)" = "${EXPECTED_START_HEAD}"
-          mapfile -t trigger_files < <(git diff --name-only "${EXPECTED_START_HEAD}" "${GITHUB_SHA}")
-          test "${#trigger_files[@]}" -eq 1
-          test "${trigger_files[0]}" = "${TEMP_WORKFLOW}"
+          test "$(git rev-parse HEAD^)" = "${EXPECTED_PARENT_HEAD}"
+          mapfile -t cumulative_files < <(git diff --name-only "${ORIGINAL_HEAD}" "${GITHUB_SHA}")
+          test "${#cumulative_files[@]}" -eq 1
+          test "${cumulative_files[0]}" = "${TEMP_WORKFLOW}"
 
       - name: Set up Node.js 24
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # releases/v4
@@ -65,13 +66,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm install \
+          npm update js-yaml \
             --package-lock-only \
             --ignore-scripts \
             --no-audit \
-            --no-fund \
-            --no-save \
-            js-yaml@4.3.2
+            --no-fund
 
       - name: Validate package.json unchanged
         shell: bash
