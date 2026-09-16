@@ -11,6 +11,12 @@ type Props = {
   };
 };
 
+function sentenceBehaviorLabel(labels: Props["labels"]) {
+  if (labels.classifiers === "Lượng từ") return "Cách hoạt động trong câu";
+  if (labels.classifiers === "كلمات القياس") return "طريقة عملها في الجملة";
+  return "How it works in a sentence";
+}
+
 export default function VocabularyRichSupport({ item, labels }: Props) {
   const hasSentenceBehavior = item.collocations.length > 0 || item.classifiers.length > 0;
   const hasRichSupport =
@@ -23,34 +29,37 @@ export default function VocabularyRichSupport({ item, labels }: Props) {
   return (
     <div className={styles.supportStack}>
       {hasSentenceBehavior ? (
-        <div className={styles.behaviorGrid}>
-          {item.collocations.length > 0 ? (
-            <section className={styles.behaviorItem}>
-              <h4>{labels.collocations}</h4>
-              <div className={styles.collocationList}>
-                {item.collocations.map((collocation) => (
-                  <span key={collocation.publicId} className={styles.collocationExpression}>
-                    {collocation.expression}
-                  </span>
-                ))}
+        <section className={styles.supportBlock}>
+          <h4>{sentenceBehaviorLabel(labels)}</h4>
+          <div className={styles.behaviorGrid}>
+            {item.collocations.length > 0 ? (
+              <div className={styles.behaviorItem}>
+                <strong className={styles.behaviorTitle}>{labels.collocations}</strong>
+                <div className={styles.collocationList}>
+                  {item.collocations.map((collocation) => (
+                    <div key={collocation.publicId} className={styles.collocationItem}>
+                      <b className={styles.collocationExpression}>{collocation.expression}</b>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </section>
-          ) : null}
+            ) : null}
 
-          {item.classifiers.length > 0 ? (
-            <section className={styles.behaviorItem}>
-              <h4>{labels.classifiers}</h4>
-              <div className={styles.classifierList}>
-                {item.classifiers.map((classifier) => (
-                  <div key={classifier.publicId} className={styles.classifierItem}>
-                    <strong>{classifier.expression}</strong>
-                    {classifier.learnerNote ? <p>{classifier.learnerNote}</p> : null}
-                  </div>
-                ))}
+            {item.classifiers.length > 0 ? (
+              <div className={styles.behaviorItem}>
+                <strong className={styles.behaviorTitle}>{labels.classifiers}</strong>
+                <div className={styles.classifierList}>
+                  {item.classifiers.map((classifier) => (
+                    <div key={classifier.publicId} className={styles.classifierItem}>
+                      <strong>{classifier.expression}</strong>
+                      {classifier.learnerNote ? <p>{classifier.learnerNote}</p> : null}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </section>
-          ) : null}
-        </div>
+            ) : null}
+          </div>
+        </section>
       ) : null}
 
       {item.examples.length > 0 ? (
