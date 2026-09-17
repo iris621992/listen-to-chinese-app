@@ -49,6 +49,7 @@ type Labels = {
   railTitle: string;
   railItems: Array<[string, string]>;
   families: {
+    groupLabel: string;
     all: string;
     vocabulary: string;
     characters: string;
@@ -99,7 +100,7 @@ const LABELS: Record<string, Labels> = {
       ["Go deep after", "Sense detail, examples, classifiers, collocations, and other depth stay on the detail page."],
       ["Omit what is missing", "A family without real published results is not filled with fabricated placeholders."],
     ],
-    families: { all: "All", vocabulary: "Vocabulary", characters: "Characters", grammar: "Grammar", more: "More", comparisons: "Comparisons", idioms: "Idioms" },
+    families: { groupLabel: "Knowledge families", all: "All", vocabulary: "Vocabulary", characters: "Characters", grammar: "Grammar", more: "More", comparisons: "Comparisons", idioms: "Idioms" },
   },
   vi: {
     knowledge: "Kiến thức",
@@ -118,7 +119,7 @@ const LABELS: Record<string, Labels> = {
     searchPlaceholder: "Nhập chữ Hán, pinyin hoặc ý nghĩa…",
     tryLabel: "Thử:",
     initialTitle: "Bắt đầu từ điều bạn đang thắc mắc",
-    initialBody: "Bạn có thể tìm bằng chữ Hán, pinyin hoặc ý nghĩa trong ngôn ngữ đang dùng. Kết quả Từ vựng đã xuất bản đang hoạt động; các family khác giữ fail-closed cho tới khi có backend tìm kiếm thật.",
+    initialBody: "Bạn có thể tìm bằng chữ Hán, pinyin hoặc ý nghĩa trong ngôn ngữ đang dùng. Kết quả Từ vựng đã xuất bản đang hoạt động; các loại kiến thức khác sẽ chỉ hiển thị khi có dữ liệu và chức năng tìm kiếm thực tế.",
     initialExamples: [
       ["椅子", "Từ vựng · một mục từ cụ thể"],
       ["还", "Từ vựng · tìm các mục từ đã xuất bản"],
@@ -132,15 +133,15 @@ const LABELS: Record<string, Labels> = {
     unavailableTitle: "Không thể tải kết quả lúc này",
     unavailableBody: "Nguồn Từ vựng đã xuất bản hiện không khả dụng nên kết quả chưa được hiển thị. Nội dung đang tìm vẫn được giữ nguyên.",
     unsupportedTitle: "Loại kiến thức này chưa thể tìm kiếm",
-    unsupportedBody: "Bộ chọn family đã thuộc flow Knowledge Search được duyệt, nhưng backend hiện mới chứng minh tìm kiếm Từ vựng. Trang không tạo kết quả thay thế giả.",
-    partialNote: "Kết quả Từ vựng đang dùng dữ liệu thật. Các loại kiến thức khác đang chọn chưa có backend tìm kiếm và được cố ý bỏ qua.",
+    unsupportedBody: "Loại kiến thức này đã có trong bộ lọc, nhưng hiện chỉ Từ vựng có chức năng tìm kiếm đang hoạt động. Trang không tạo kết quả thay thế giả.",
+    partialNote: "Kết quả Từ vựng đang dùng dữ liệu thật. Những loại kiến thức khác đang chọn chưa có chức năng tìm kiếm nên tạm thời không hiển thị kết quả.",
     railTitle: "Cách đọc kết quả",
     railItems: [
-      ["Nhận diện trước", "Family, headword, pinyin và ý nghĩa ngắn giúp biết đây có phải nội dung bạn cần."],
-      ["Đi sâu sau", "Chi tiết Sense, ví dụ, lượng từ, collocation và các lớp sâu hơn nằm ở trang chi tiết."],
-      ["Thiếu thì bỏ qua", "Family không có kết quả thật sẽ không được lấp bằng placeholder giả."],
+      ["Nhận diện trước", "Loại nội dung, mục từ, pinyin và ý nghĩa ngắn giúp bạn biết đây có phải nội dung mình cần."],
+      ["Đi sâu sau", "Chi tiết nghĩa, ví dụ, lượng từ, cụm từ thường dùng và các thông tin sâu hơn nằm ở trang chi tiết."],
+      ["Thiếu thì bỏ qua", "Loại kiến thức chưa có kết quả thật sẽ không được lấp bằng nội dung giả."],
     ],
-    families: { all: "Tất cả", vocabulary: "Từ vựng", characters: "Hán tự", grammar: "Ngữ pháp", more: "Thêm", comparisons: "So sánh", idioms: "Thành ngữ" },
+    families: { groupLabel: "Loại kiến thức", all: "Tất cả", vocabulary: "Từ vựng", characters: "Hán tự", grammar: "Ngữ pháp", more: "Thêm", comparisons: "So sánh", idioms: "Thành ngữ" },
   },
   ar: {
     knowledge: "المعرفة",
@@ -181,7 +182,7 @@ const LABELS: Record<string, Labels> = {
       ["تعمّق لاحقًا", "تبقى التفاصيل والأمثلة والمعلومات الموسعة في صفحة التفاصيل."],
       ["احذف المفقود", "لا تُملأ العائلات غير المتاحة بنتائج مصطنعة."],
     ],
-    families: { all: "الكل", vocabulary: "المفردات", characters: "الحروف", grammar: "القواعد", more: "المزيد", comparisons: "المقارنات", idioms: "التعابير" },
+    families: { groupLabel: "عائلات المعرفة", all: "الكل", vocabulary: "المفردات", characters: "الحروف", grammar: "القواعد", more: "المزيد", comparisons: "المقارنات", idioms: "التعابير" },
   },
 };
 
@@ -288,7 +289,7 @@ export default async function KnowledgeSearchPage({ searchParams }: Props) {
   return (
     <main className={styles.page} dir={interfaceLocale.direction}>
       <div className={styles.shell}>
-        <nav className={styles.breadcrumb} aria-label="Breadcrumb">
+        <nav className={styles.breadcrumb} aria-label={`${labels.knowledge} / ${labels.breadcrumbSearch}`}>
           <span>{labels.knowledge}</span>
           <span aria-hidden="true">›</span>
           <strong>{labels.breadcrumbSearch}</strong>
