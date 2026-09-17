@@ -58,7 +58,7 @@ export const HOME_COPY: Record<HomeLocaleCode, HomeCopy> = {
       ],
     },
     video: {
-      eyebrow: "VIDEO · 视频", title: "Gặp tiếng Trung trong ngữ cảnh thật hơn.",
+      eyebrow: "VIDEO · 视频", title: "Gặp tiếng Trung trong ngữ cảnh tự nhiên hơn.",
       body: "Video là nguồn tài liệu giúp người học gặp từ và cấu trúc ngữ pháp trong ngữ cảnh thực tế, sau đó có thể chuyển sang Kiến thức hoặc Luyện tập khi cần.",
       featureTitle: "Xem video, rồi đi sâu vào điều bạn vừa gặp.",
       featureBody: "Video không phải toàn bộ sản phẩm và cũng không phải một khóa học bắt buộc. Đây là nơi để bạn tiếp xúc với tiếng Trung, nhận ra điều chưa hiểu và mở sang phần Kiến thức tương ứng.",
@@ -83,21 +83,21 @@ export const HOME_COPY: Record<HomeLocaleCode, HomeCopy> = {
         { title: "Tra cứu", body: "Tìm từ, Hán tự, ngữ pháp, thành ngữ hoặc điểm cần phân biệt." },
         { title: "Hiểu & phân biệt", body: "Nắm nghĩa, cách dùng, phạm vi và khác biệt quan trọng." },
         { title: "Luyện tập", body: "Làm bài tập nhắm đúng điểm kiến thức thay vì luyện ngẫu nhiên." },
-        { title: "Ghi nhớ", body: "Quay lại những điểm cần ôn và xây trí nhớ dài hạn." },
+        { title: "Ghi nhớ", body: "Quay lại những điểm cần ôn để ghi nhớ lâu dài." },
       ],
     },
     positioning: {
-      eyebrow: "VÌ SAO YUNCHINESE", title: "Không phải khóa học cố định. Không chỉ là từ điển.",
+      eyebrow: "VÌ SAO CHỌN YUNCHINESE", title: "Không phải khóa học cố định. Không chỉ là từ điển.",
       body: "YunChinese kết hợp Kiến thức, Video và Luyện tập để người học tự chọn điểm bắt đầu nhưng vẫn có đủ chiều sâu để hiểu và sử dụng tiếng Trung tốt hơn.",
       points: [
-        { title: "Kiến thức có chiều sâu", body: "Nội dung được tổ chức theo cấu trúc dữ liệu ngữ nghĩa đã chốt, không ép mọi mục từ vào cùng một khuôn." },
+        { title: "Kiến thức có chiều sâu", body: "Mỗi mục kiến thức được trình bày theo đúng bản chất và cách dùng của nó, thay vì bị ép vào một khuôn cố định." },
         { title: "Video có vai trò rõ ràng", body: "Là nguồn ngữ liệu và ngữ cảnh, không phải cấu trúc trung tâm của toàn sản phẩm." },
-        { title: "Luyện tập nối đúng điểm kiến thức", body: "Bài tập được thiết kế để luyện đúng điều người học vừa tra cứu hoặc đang cần cải thiện." },
+        { title: "Luyện tập gắn với đúng điểm kiến thức", body: "Bài tập được thiết kế để luyện đúng điều người học vừa tra cứu hoặc đang cần cải thiện." },
       ],
     },
     account: {
       eyebrow: "TÀI KHOẢN", title: "Khám phá trước. Đăng nhập khi bạn muốn lưu tiến độ.",
-      body: "Phần cốt lõi vẫn hữu ích cho người học chưa đăng nhập; tài khoản bổ sung khả năng lưu, theo dõi và ôn lại khi cần.",
+      body: "Bạn vẫn có thể sử dụng các phần cốt lõi mà không cần đăng nhập; tài khoản bổ sung khả năng lưu, theo dõi và ôn lại khi cần.",
       cards: [
         { title: "Dùng như khách", body: "Tra cứu Kiến thức và khám phá Video mà không cần tạo tài khoản trước." },
         { title: "Lưu và quay lại", body: "Đăng nhập khi bạn muốn lưu mục học, tiến độ Luyện tập và những điểm cần ôn." },
