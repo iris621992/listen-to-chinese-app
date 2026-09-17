@@ -6,8 +6,8 @@ const read = (path) => readFile(path, "utf8");
 
 const HARD_CODED_VOCAB_ID = /vocab_[a-f0-9]{64}/u;
 
-test("Knowledge Search uses the public Vocabulary projection without fabricating unsupported families", async () => {
-  const [adapter, knowledgePage, searchPage, familySelector] = await Promise.all([
+test("Knowledge Search is canonical at /knowledge and uses the public Vocabulary projection without fabricating unsupported families", async () => {
+  const [adapter, knowledgePage, legacySearchPage, familySelector] = await Promise.all([
     read("lib/vocabularySearch.ts"),
     read("app/knowledge/page.tsx"),
     read("app/knowledge/vocabulary/page.tsx"),
@@ -20,22 +20,24 @@ test("Knowledge Search uses the public Vocabulary projection without fabricating
   assert.match(adapter, /p_limit:\s*RESULT_LIMIT/u);
   assert.doesNotMatch(adapter, /\.from\(/u, "Search must use the learner-safe RPC rather than direct table reads.");
 
-  assert.match(knowledgePage, /href:\s*"\/knowledge\/vocabulary"/u);
-  assert.doesNotMatch(knowledgePage, /FIRST_VOCABULARY_PUBLIC_ID/u);
+  assert.match(knowledgePage, /loadVocabularySearch\(rawQuery/u);
+  assert.match(knowledgePage, /pathname:\s*`\/knowledge\/vocabulary\/\$\{item\.publicId\}`/u);
+  assert.match(knowledgePage, /family:\s*selectedFamilies/u);
+  assert.match(knowledgePage, /unsupportedSelected/u);
+  assert.match(knowledgePage, /backend hiện mới chứng minh tìm kiếm Từ vựng/u);
+  assert.doesNotMatch(knowledgePage, /Knowledge Hub/u);
   assert.doesNotMatch(knowledgePage, HARD_CODED_VOCAB_ID);
 
-  assert.match(searchPage, /loadVocabularySearch\(rawQuery/u);
-  assert.match(searchPage, /pathname:\s*`\/knowledge\/vocabulary\/\$\{item\.publicId\}`/u);
-  assert.match(searchPage, /family:\s*selectedFamilies/u);
-  assert.match(searchPage, /unsupportedSelected/u);
-  assert.match(searchPage, /backend hiện mới chứng minh tìm kiếm Từ vựng/u);
+  assert.match(legacySearchPage, /redirect\(serialized \? `\/knowledge\?\$\{serialized\}` : "\/knowledge"\)/u);
+  assert.match(legacySearchPage, /URLSearchParams/u);
+  assert.match(legacySearchPage, /params\.append\(key, item\)/u);
+
   assert.match(familySelector, /PRIMARY_FAMILIES/u);
   assert.match(familySelector, /MORE_FAMILIES/u);
   assert.match(familySelector, /name="family"/u);
-  assert.doesNotMatch(searchPage, HARD_CODED_VOCAB_ID);
 });
 
-test("Search forms preserve learner context, family selection, and the originating query", async () => {
+test("Search forms preserve learner context, family selection, and the originating query on canonical Knowledge Search", async () => {
   const [searchForm, detailSearch, detailLayout] = await Promise.all([
     read("app/knowledge/vocabulary/VocabularySearchForm.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetailSearch.tsx"),
@@ -46,6 +48,7 @@ test("Search forms preserve learner context, family selection, and the originati
     assert.match(detailSearch, new RegExp(`"${key}"`, "u"));
   }
 
+  assert.match(searchForm, /action = "\/knowledge"/u);
   assert.match(searchForm, /method="get"/u);
   assert.match(searchForm, /name="q"/u);
   assert.match(searchForm, /Object\.entries\(context\)/u);
@@ -53,7 +56,7 @@ test("Search forms preserve learner context, family selection, and the originati
   assert.match(detailSearch, /useSearchParams/u);
   assert.match(detailSearch, /params\.get\("q"\)/u);
   assert.match(detailSearch, /params\.getAll\("family"\)/u);
-  assert.match(detailSearch, /pathname:\s*"\/knowledge\/vocabulary"/u);
+  assert.match(detailSearch, /pathname:\s*"\/knowledge"/u);
   assert.match(detailSearch, /q:\s*query/u);
   assert.match(detailSearch, /family:\s*families/u);
   assert.match(detailLayout, /<VocabularyDetailSearch \/>/u);
