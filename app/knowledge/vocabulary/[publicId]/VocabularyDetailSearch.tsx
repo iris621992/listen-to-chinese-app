@@ -10,6 +10,7 @@ type Labels = {
   placeholder: string;
   backToResults: string;
   families: {
+    groupLabel: string;
     all: string;
     vocabulary: string;
     characters: string;
@@ -25,19 +26,19 @@ const LABELS: Record<string, Labels> = {
     search: "Search Knowledge",
     placeholder: "Hanzi, pinyin, or meaning…",
     backToResults: "Back to search results",
-    families: { all: "All", vocabulary: "Vocabulary", characters: "Characters", grammar: "Grammar", more: "More", comparisons: "Comparisons", idioms: "Idioms" },
+    families: { groupLabel: "Knowledge families", all: "All", vocabulary: "Vocabulary", characters: "Characters", grammar: "Grammar", more: "More", comparisons: "Comparisons", idioms: "Idioms" },
   },
   vi: {
     search: "Tìm Kiến thức",
     placeholder: "Chữ Hán, pinyin hoặc ý nghĩa…",
     backToResults: "Quay lại kết quả tìm kiếm",
-    families: { all: "Tất cả", vocabulary: "Từ vựng", characters: "Hán tự", grammar: "Ngữ pháp", more: "Thêm", comparisons: "So sánh", idioms: "Thành ngữ" },
+    families: { groupLabel: "Loại kiến thức", all: "Tất cả", vocabulary: "Từ vựng", characters: "Hán tự", grammar: "Ngữ pháp", more: "Thêm", comparisons: "So sánh", idioms: "Thành ngữ" },
   },
   ar: {
     search: "بحث المعرفة",
     placeholder: "حروف صينية أو Pinyin أو معنى…",
     backToResults: "العودة إلى نتائج البحث",
-    families: { all: "الكل", vocabulary: "المفردات", characters: "الحروف", grammar: "القواعد", more: "المزيد", comparisons: "المقارنات", idioms: "التعابير" },
+    families: { groupLabel: "عائلات المعرفة", all: "الكل", vocabulary: "المفردات", characters: "الحروف", grammar: "القواعد", more: "المزيد", comparisons: "المقارنات", idioms: "التعابير" },
   },
 };
 
