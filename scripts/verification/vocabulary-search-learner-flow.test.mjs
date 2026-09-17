@@ -6,11 +6,12 @@ const read = (path) => readFile(path, "utf8");
 
 const HARD_CODED_VOCAB_ID = /vocab_[a-f0-9]{64}/u;
 
-test("Vocabulary learner flow uses the public search projection rather than hard-coded entries", async () => {
-  const [adapter, knowledgePage, searchPage] = await Promise.all([
+test("Knowledge Search uses the public Vocabulary projection without fabricating unsupported families", async () => {
+  const [adapter, knowledgePage, searchPage, familySelector] = await Promise.all([
     read("lib/vocabularySearch.ts"),
     read("app/knowledge/page.tsx"),
     read("app/knowledge/vocabulary/page.tsx"),
+    read("app/knowledge/vocabulary/KnowledgeFamilySelector.tsx"),
   ]);
 
   assert.match(adapter, /get_public_vocabulary_entries/u);
@@ -23,13 +24,18 @@ test("Vocabulary learner flow uses the public search projection rather than hard
   assert.doesNotMatch(knowledgePage, /FIRST_VOCABULARY_PUBLIC_ID/u);
   assert.doesNotMatch(knowledgePage, HARD_CODED_VOCAB_ID);
 
-  assert.match(searchPage, /loadVocabularySearch\(query\?\.q/u);
+  assert.match(searchPage, /loadVocabularySearch\(rawQuery/u);
   assert.match(searchPage, /pathname:\s*`\/knowledge\/vocabulary\/\$\{item\.publicId\}`/u);
-  assert.match(searchPage, /query:\s*\{ \.\.\.learnerContextQuery, q: searchQuery \}/u);
+  assert.match(searchPage, /family:\s*selectedFamilies/u);
+  assert.match(searchPage, /unsupportedSelected/u);
+  assert.match(searchPage, /backend hiện mới chứng minh tìm kiếm Từ vựng/u);
+  assert.match(familySelector, /PRIMARY_FAMILIES/u);
+  assert.match(familySelector, /MORE_FAMILIES/u);
+  assert.match(familySelector, /name="family"/u);
   assert.doesNotMatch(searchPage, HARD_CODED_VOCAB_ID);
 });
 
-test("Search forms preserve learner context and detail preserves the originating query", async () => {
+test("Search forms preserve learner context, family selection, and the originating query", async () => {
   const [searchForm, detailSearch, detailLayout] = await Promise.all([
     read("app/knowledge/vocabulary/VocabularySearchForm.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetailSearch.tsx"),
@@ -43,10 +49,13 @@ test("Search forms preserve learner context and detail preserves the originating
   assert.match(searchForm, /method="get"/u);
   assert.match(searchForm, /name="q"/u);
   assert.match(searchForm, /Object\.entries\(context\)/u);
+  assert.match(searchForm, /initialFamilies/u);
   assert.match(detailSearch, /useSearchParams/u);
   assert.match(detailSearch, /params\.get\("q"\)/u);
+  assert.match(detailSearch, /params\.getAll\("family"\)/u);
   assert.match(detailSearch, /pathname:\s*"\/knowledge\/vocabulary"/u);
-  assert.match(detailSearch, /query:\s*\{ \.\.\.context, q: query \}/u);
+  assert.match(detailSearch, /q:\s*query/u);
+  assert.match(detailSearch, /family:\s*families/u);
   assert.match(detailLayout, /<VocabularyDetailSearch \/>/u);
 });
 
