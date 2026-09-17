@@ -59,7 +59,7 @@ export default function KnowledgeFamilySelector({ labels, initialFamilies = [] }
           <span>{labels[value]}</span>
         </label>
       ))}
-      <details data-family-more defaultOpen={MORE_FAMILIES.some((value) => selected.includes(value))}>
+      <details data-family-more>
         <summary data-family-chip data-selected={MORE_FAMILIES.some((value) => selected.includes(value)) ? "true" : "false"}>
           {labels.more}
         </summary>
