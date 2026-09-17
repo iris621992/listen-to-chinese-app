@@ -11,6 +11,7 @@ type Props = {
     q?: string;
     uiLang?: string;
     lang?: string;
+    knowledgeLang?: string;
     levelSystem?: string;
     level?: string;
     family?: string | string[];
@@ -268,6 +269,7 @@ export default async function KnowledgeSearchPage({ searchParams }: Props) {
   const learnerContextQuery = preservedLearnerContextQuery({
     uiLang: query?.uiLang,
     lang: query?.lang,
+    knowledgeLang: query?.knowledgeLang,
     levelSystem: query?.levelSystem,
     level: query?.level,
   });
@@ -276,7 +278,7 @@ export default async function KnowledgeSearchPage({ searchParams }: Props) {
   const unsupportedSelected = selectedFamilies.some((family) => family !== "vocabulary");
   const rawQuery = query?.q?.trim() ?? "";
   const result = vocabularySelected
-    ? await loadVocabularySearch(rawQuery, query?.lang ?? query?.uiLang)
+    ? await loadVocabularySearch(rawQuery, interfaceLocale.code)
     : null;
   const searchQuery = result?.query ?? rawQuery;
   const queryExamples = [
