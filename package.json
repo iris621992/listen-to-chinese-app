@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test:architecture-direction": "node --test scripts/verification/architecture-direction.test.mjs",
-    "test:vocabulary-detail": "node --test scripts/verification/vocabulary-detail-learner-surface.test.mjs",
+    "test:vocabulary-detail": "node --test scripts/verification/vocabulary-detail-learner-surface.test.mjs scripts/verification/vocabulary-detail-header-nav-authority.test.mjs",
     "test:vocabulary-search": "node --test scripts/verification/vocabulary-search-learner-flow.test.mjs",
     "test:db001": "node --test scripts/verification/db001-application-cutover.test.mjs",
     "test:supabase-config": "node --test scripts/verification/supabase-public-config.test.mjs",
