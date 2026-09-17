@@ -57,7 +57,6 @@ export default function VocabularySearchForm({
       <div data-search-row>
         <span data-search-icon><SearchIcon /></span>
         <label>
-          <span className="sr-only">{ariaLabel}</span>
           <input
             type="search"
             name="q"
