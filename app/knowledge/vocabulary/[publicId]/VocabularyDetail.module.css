@@ -65,6 +65,10 @@
 }
 
 .entryHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
   padding: 1.7rem 1.85rem 1.3rem;
   border-bottom: 1px solid #d7d0c2;
   background: #fffefb;
@@ -72,6 +76,43 @@
 
 .headwordWrap {
   min-width: 0;
+}
+
+.headerActions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.contentToggle {
+  display: inline-flex;
+  border: 1px solid #d7d0c2;
+  border-radius: 12px;
+  background: #f8f5ee;
+  padding: 3px;
+}
+
+.contentToggleButton {
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  padding: 7px 10px;
+  color: #6b6f66;
+  font: inherit;
+  cursor: pointer;
+}
+
+.contentToggleButton[aria-pressed="true"] {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(45, 48, 42, 0.08);
+  color: var(--text-primary);
+  font-weight: 760;
+}
+
+.contentToggleButton:focus-visible {
+  outline: 3px solid rgba(89, 106, 78, 0.24);
+  outline-offset: 2px;
 }
 
 .writtenLine {
@@ -524,6 +565,11 @@
   text-overflow: ellipsis;
 }
 
+.compactSticky .contentToggleButton {
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
 .compactNav {
   display: flex;
   min-width: 0;
@@ -625,6 +671,17 @@
   }
 }
 
+@media (max-width: 800px), (max-width: 900px) and (max-height: 520px) {
+  .entryHeader {
+    display: block;
+  }
+
+  .headerActions {
+    margin-top: 13px;
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 639px) {
   .page {
     padding: 0.75rem 0.85rem 3rem;
@@ -692,6 +749,11 @@
 
   .compactIdentity span {
     font-size: 0.82rem;
+  }
+
+  .compactSticky .contentToggleButton {
+    padding: 4px 6px;
+    font-size: 11px;
   }
 
   .compactNav {
