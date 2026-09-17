@@ -23,6 +23,13 @@
       "direction": "rtl",
       "enabled": true,
       "fallbackLocaleCode": "en"
+    },
+    {
+      "code": "zh",
+      "label": "中文",
+      "direction": "ltr",
+      "enabled": true,
+      "fallbackLocaleCode": null
     }
   ]
 }
