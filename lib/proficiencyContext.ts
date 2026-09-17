@@ -1,3 +1,8 @@
+import {
+  KNOWLEDGE_LANGUAGE_PARAM,
+  isKnowledgeLanguageValue,
+} from "@/lib/knowledgeLanguage";
+
 export const INTERFACE_LOCALE_PARAM = "uiLang" as const;
 export const PROFICIENCY_LEVEL_SYSTEM_PARAM = "levelSystem" as const;
 export const PROFICIENCY_LEVEL_PARAM = "level" as const;
@@ -14,6 +19,7 @@ export type ProficiencyContext =
 export type LearnerContextQueryInput = {
   uiLang?: string | null;
   lang?: string | null;
+  knowledgeLang?: string | null;
   levelSystem?: string | null;
   level?: string | null;
 };
@@ -72,17 +78,24 @@ const preservedUiLangValue = (value: string | null | undefined) => {
     : INVALID_PRESERVED_QUERY_VALUE;
 };
 
+const preservedKnowledgeLanguageValue = (value: string | null | undefined) => {
+  const normalized = nonEmptyValue(value);
+  return isKnowledgeLanguageValue(normalized) ? normalized : null;
+};
+
 export function preservedLearnerContextQuery(
   input: LearnerContextQueryInput,
 ): Record<string, string> {
   const query: Record<string, string> = {};
   const uiLang = preservedUiLangValue(input.uiLang);
   const lang = preservedQueryValue(input.lang);
+  const knowledgeLang = preservedKnowledgeLanguageValue(input.knowledgeLang);
   const levelSystem = preservedQueryValue(input.levelSystem);
   const level = preservedQueryValue(input.level);
 
   if (uiLang !== null) query[INTERFACE_LOCALE_PARAM] = uiLang;
   if (lang !== null) query.lang = lang;
+  if (knowledgeLang !== null) query[KNOWLEDGE_LANGUAGE_PARAM] = knowledgeLang;
   if (levelSystem !== null) query[PROFICIENCY_LEVEL_SYSTEM_PARAM] = levelSystem;
   if (level !== null) query[PROFICIENCY_LEVEL_PARAM] = level;
   return query;
