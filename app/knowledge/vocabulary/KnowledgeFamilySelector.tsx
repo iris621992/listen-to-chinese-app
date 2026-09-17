@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 type Labels = {
+  groupLabel: string;
   all: string;
   vocabulary: string;
   characters: string;
@@ -38,8 +39,7 @@ export default function KnowledgeFamilySelector({ labels, initialFamilies = [] }
   }
 
   return (
-    <fieldset data-family-selector aria-label="Knowledge families">
-      <legend className="sr-only">Knowledge families</legend>
+    <fieldset data-family-selector aria-label={labels.groupLabel}>
       <button
         type="button"
         data-family-chip
