@@ -91,7 +91,7 @@ export default function VocabularyRichSupport({ item, labels }: Props) {
             {item.quickDistinctions.map((distinction) => (
               <div key={distinction.publicId} className={styles.distinctionItem}>
                 <strong>{distinction.targetExpression}</strong>
-                <p>{distinction.learnerExplanation}</p>
+                {distinction.learnerExplanation ? <p>{distinction.learnerExplanation}</p> : null}
               </div>
             ))}
           </div>
