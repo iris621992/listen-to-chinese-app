@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { resolveInterfaceLocale } from "@/lib/interfaceLocaleRegistry";
+import {
+  resolveKnowledgeContentLocale,
+  resolveKnowledgeLanguage,
+} from "@/lib/knowledgeLanguage";
 import { preservedLearnerContextQuery } from "@/lib/proficiencyContext";
 import { loadVocabularyCharacterDelivery } from "@/lib/vocabularyCharacterDelivery";
 import {
@@ -8,6 +12,7 @@ import {
   type VocabularyReadingItem,
   type VocabularyTranslationEquivalent,
 } from "@/lib/vocabularyDetail";
+import KnowledgeLanguageToggle from "./KnowledgeLanguageToggle";
 import VocabularyCharacterRail from "./VocabularyCharacterRail";
 import VocabularyPronunciationMeta from "./VocabularyPronunciationMeta";
 import VocabularyRichSupport from "./VocabularyRichSupport";
@@ -19,6 +24,7 @@ type Props = {
   searchParams?: Promise<{
     uiLang?: string;
     lang?: string;
+    knowledgeLang?: string;
     levelSystem?: string;
     level?: string;
   }>;
@@ -252,17 +258,20 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
   const { publicId } = await params;
   const query = await searchParams;
   const interfaceLocale = resolveInterfaceLocale(query?.uiLang, query?.lang);
+  const knowledgeLanguage = resolveKnowledgeLanguage(query?.knowledgeLang);
+  const knowledgeContentLocale = resolveKnowledgeContentLocale(interfaceLocale.code, knowledgeLanguage);
   const labels = labelFor(interfaceLocale.code);
   const learnerContextQuery = preservedLearnerContextQuery({
     uiLang: query?.uiLang,
     lang: query?.lang,
+    knowledgeLang: knowledgeLanguage,
     levelSystem: query?.levelSystem,
     level: query?.level,
   });
 
   const [result, characterResult] = await Promise.all([
-    loadVocabularyDetail(publicId, query?.lang ?? query?.uiLang),
-    loadVocabularyCharacterDelivery(publicId, query?.lang ?? query?.uiLang),
+    loadVocabularyDetail(publicId, knowledgeContentLocale),
+    loadVocabularyCharacterDelivery(publicId, interfaceLocale.code),
   ]);
 
   if (result.status === "NOT_FOUND" || result.status === "INVALID_INPUT") notFound();
@@ -347,6 +356,8 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
         headword={detail.displayForm}
         pronunciation={primaryPronunciation?.pronunciation ?? null}
         navItems={navItems}
+        knowledgeLanguage={knowledgeLanguage}
+        userLanguageLabel={interfaceLocale.label}
       />
 
       <div className={styles.workspace}>
@@ -385,6 +396,12 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
                   ))}
                 </div>
               ) : null}
+            </div>
+            <div className={styles.headerActions}>
+              <KnowledgeLanguageToggle
+                value={knowledgeLanguage}
+                userLanguageLabel={interfaceLocale.label}
+              />
             </div>
           </header>
 
@@ -559,6 +576,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
                 <VocabularyCharacterRail
                   occurrences={characters}
                   labels={characterLabels}
+                  showHanViet={knowledgeLanguage !== "zh"}
                   variant="embedded"
                   anchorId="characters"
                 />
@@ -570,6 +588,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
         <VocabularyCharacterRail
           occurrences={characters}
           labels={characterLabels}
+          showHanViet={knowledgeLanguage !== "zh"}
           variant="rail"
           anchorId="characters-rail"
         />
