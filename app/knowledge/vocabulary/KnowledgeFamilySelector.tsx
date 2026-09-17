@@ -19,10 +19,11 @@ type Props = {
 
 const PRIMARY_FAMILIES = ["vocabulary", "characters", "grammar"] as const;
 const MORE_FAMILIES = ["comparisons", "idioms"] as const;
+const VALID_FAMILIES = new Set<string>([...PRIMARY_FAMILIES, ...MORE_FAMILIES]);
 
 export default function KnowledgeFamilySelector({ labels, initialFamilies = [] }: Props) {
   const [selected, setSelected] = useState<string[]>(
-    initialFamilies.filter((value) => [...PRIMARY_FAMILIES, ...MORE_FAMILIES].includes(value as never)),
+    initialFamilies.filter((value) => VALID_FAMILIES.has(value)),
   );
   const allSelected = selected.length === 0;
 
@@ -58,7 +59,7 @@ export default function KnowledgeFamilySelector({ labels, initialFamilies = [] }
           <span>{labels[value]}</span>
         </label>
       ))}
-      <details data-family-more open={MORE_FAMILIES.some((value) => selected.includes(value))}>
+      <details data-family-more defaultOpen={MORE_FAMILIES.some((value) => selected.includes(value))}>
         <summary data-family-chip data-selected={MORE_FAMILIES.some((value) => selected.includes(value)) ? "true" : "false"}>
           {labels.more}
         </summary>
