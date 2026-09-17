@@ -24,7 +24,10 @@ test("Knowledge Search is canonical at /knowledge and uses the public Vocabulary
   assert.match(knowledgePage, /pathname:\s*`\/knowledge\/vocabulary\/\$\{item\.publicId\}`/u);
   assert.match(knowledgePage, /family:\s*selectedFamilies/u);
   assert.match(knowledgePage, /unsupportedSelected/u);
-  assert.match(knowledgePage, /backend hiện mới chứng minh tìm kiếm Từ vựng/u);
+  assert.match(knowledgePage, /hiện chỉ Từ vựng có chức năng tìm kiếm đang hoạt động/u);
+  assert.match(knowledgePage, /các loại kiến thức khác sẽ chỉ hiển thị khi có dữ liệu và chức năng tìm kiếm thực tế/u);
+  assert.doesNotMatch(knowledgePage, /backend hiện mới chứng minh tìm kiếm Từ vựng/u);
+  assert.doesNotMatch(knowledgePage, /các family khác giữ fail-closed/u);
   assert.doesNotMatch(knowledgePage, /Knowledge Hub/u);
   assert.doesNotMatch(knowledgePage, HARD_CODED_VOCAB_ID);
 
@@ -35,6 +38,8 @@ test("Knowledge Search is canonical at /knowledge and uses the public Vocabulary
   assert.match(familySelector, /PRIMARY_FAMILIES/u);
   assert.match(familySelector, /MORE_FAMILIES/u);
   assert.match(familySelector, /name="family"/u);
+  assert.doesNotMatch(familySelector, /<legend/u);
+  assert.match(familySelector, /aria-label=\{labels\.groupLabel\}/u);
 });
 
 test("Search forms preserve learner context, family selection, and the originating query on canonical Knowledge Search", async () => {
