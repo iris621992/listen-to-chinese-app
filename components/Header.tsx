@@ -10,6 +10,10 @@ import {
   type InterfaceTextDirection,
 } from "@/lib/interfaceLocaleRegistry";
 import {
+  KNOWLEDGE_LANGUAGE_PARAM,
+  isKnowledgeLanguageValue,
+} from "@/lib/knowledgeLanguage";
+import {
   INTERFACE_LOCALE_PARAM,
   PROFICIENCY_LEVEL_PARAM,
   PROFICIENCY_LEVEL_SYSTEM_PARAM,
@@ -87,10 +91,14 @@ function contextHref(path: string, params: string) {
   const hasUiLang = current.has(INTERFACE_LOCALE_PARAM);
   const uiLang = current.get(INTERFACE_LOCALE_PARAM);
   const lang = current.get("lang");
+  const knowledgeLanguage = current.get(KNOWLEDGE_LANGUAGE_PARAM);
   const levelSystem = current.get(PROFICIENCY_LEVEL_SYSTEM_PARAM);
   const level = current.get(PROFICIENCY_LEVEL_PARAM);
   if (hasUiLang) next.set(INTERFACE_LOCALE_PARAM, uiLang ?? "");
   if (lang) next.set("lang", lang);
+  if (path.startsWith("/knowledge") && isKnowledgeLanguageValue(knowledgeLanguage)) {
+    next.set(KNOWLEDGE_LANGUAGE_PARAM, knowledgeLanguage);
+  }
   if (levelSystem) next.set(PROFICIENCY_LEVEL_SYSTEM_PARAM, levelSystem);
   if (level) next.set(PROFICIENCY_LEVEL_PARAM, level);
   const query = next.toString();
@@ -332,6 +340,12 @@ function LocalizedHeader() {
     const nextSearchParams = new URLSearchParams(searchParams.toString());
     nextSearchParams.set(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode);
     nextSearchParams.set("lang", nextInterfaceLocaleCode);
+    if (
+      !pathname.startsWith("/knowledge")
+      || !isKnowledgeLanguageValue(nextSearchParams.get(KNOWLEDGE_LANGUAGE_PARAM))
+    ) {
+      nextSearchParams.delete(KNOWLEDGE_LANGUAGE_PARAM);
+    }
     nextSearchParams.delete("cursor");
     const query = nextSearchParams.toString();
     router.push(query ? `${pathname}?${query}` : pathname);
