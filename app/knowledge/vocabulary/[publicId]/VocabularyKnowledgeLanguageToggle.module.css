@@ -1,0 +1,86 @@
+:global(#vocabulary-entry-header) {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+:global(#vocabulary-entry-header > :first-child) {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.mainHost,
+.stickyHost {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.mainHost {
+  margin-inline-start: auto;
+}
+
+.toggle {
+  display: inline-flex;
+  border: 1px solid var(--border-subtle, #d7d0c2);
+  background: #f8f5ee;
+  border-radius: 12px;
+  padding: 3px;
+  white-space: nowrap;
+}
+
+.toggle button {
+  min-height: 34px;
+  border: 0;
+  background: transparent;
+  border-radius: 9px;
+  padding: 7px 10px;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.toggle button:hover,
+.toggle button:focus-visible {
+  color: var(--text-primary);
+}
+
+.toggle button:focus-visible {
+  outline: 2px solid var(--interactive-secondary);
+  outline-offset: 1px;
+}
+
+.toggle button.active {
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(45, 48, 42, 0.08);
+  color: var(--text-primary);
+  font-weight: 760;
+}
+
+.compact button {
+  min-height: 30px;
+  padding: 5px 8px;
+  font-size: 12px;
+}
+
+@media (max-width: 639px) {
+  :global(#vocabulary-entry-header) {
+    flex-wrap: wrap;
+  }
+
+  .mainHost {
+    margin-top: 2px;
+  }
+
+  .toggle button {
+    padding-inline: 8px;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) {
+  .stickyHost {
+    display: none;
+  }
+}
