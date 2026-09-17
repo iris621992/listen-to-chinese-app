@@ -16,7 +16,8 @@ test("Home Web Port v1 preserves approved v3.2 direction", async () => {
   assert.match(home, /data-home-section="knowledge"/);
   assert.match(home, /data-home-section="video"/);
   assert.match(home, /data-home-section="practice"/);
-  assert.match(home, /href="\/knowledge\/vocabulary"/);
+  assert.match(home, /href="\/knowledge"/);
+  assert.doesNotMatch(home, /href="\/knowledge\/vocabulary"/);
   assert.doesNotMatch(home, /getLessonDiscoveryPage|LessonCard/);
 
   assert.match(copy, /Hiểu tiếng Trung rõ hơn\. Dùng tự nhiên hơn\./);
