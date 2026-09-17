@@ -62,7 +62,7 @@ export default function VocabularyDetailSearch() {
       {query ? (
         <Link
           href={{
-            pathname: "/knowledge/vocabulary",
+            pathname: "/knowledge",
             query: {
               ...context,
               q: query,
