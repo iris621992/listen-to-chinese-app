@@ -29,6 +29,15 @@ type Props = {
   initialFamilies?: string[];
 };
 
+function SearchIcon() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 20 20">
+      <circle cx="8.5" cy="8.5" r="5.25" fill="none" stroke="currentColor" strokeWidth="1.6" />
+      <path d="m12.4 12.4 4 4" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
 export default function VocabularySearchForm({
   query = "",
   action = "/knowledge",
@@ -45,10 +54,8 @@ export default function VocabularySearchForm({
       {Object.entries(context).map(([name, value]) =>
         value ? <input key={name} type="hidden" name={name} value={value} /> : null,
       )}
-      {familyLabels ? (
-        <KnowledgeFamilySelector labels={familyLabels} initialFamilies={initialFamilies} />
-      ) : null}
       <div data-search-row>
+        <span data-search-icon><SearchIcon /></span>
         <label>
           <span className="sr-only">{ariaLabel}</span>
           <input
@@ -64,6 +71,9 @@ export default function VocabularySearchForm({
         </label>
         <button type="submit">{submitLabel}</button>
       </div>
+      {familyLabels ? (
+        <KnowledgeFamilySelector labels={familyLabels} initialFamilies={initialFamilies} />
+      ) : null}
     </form>
   );
 }
