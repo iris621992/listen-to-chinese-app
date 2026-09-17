@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState, useSyncExternalStore } from "react";
 import type { VocabularyCharacterOccurrence } from "@/lib/vocabularyCharacterDelivery";
 import CharacterWritingPreview from "./CharacterWritingPreview";
 import styles from "./VocabularyCharacterRail.module.css";
@@ -55,11 +55,15 @@ function uniqueOccurrences(occurrences: VocabularyCharacterOccurrence[]) {
   return result;
 }
 
-function activeReadingPronunciation() {
-  if (typeof window === "undefined" || !window.location.hash.startsWith("#reading-")) return null;
+function subscribeToHashChange(onStoreChange: () => void) {
+  window.addEventListener("hashchange", onStoreChange);
+  return () => window.removeEventListener("hashchange", onStoreChange);
+}
+
+function activeReadingPronunciationSnapshot() {
+  if (!window.location.hash.startsWith("#reading-")) return "";
   const target = document.getElementById(window.location.hash.slice(1));
-  const heading = target?.querySelector<HTMLElement>("strong");
-  return heading?.textContent?.trim() || null;
+  return target?.querySelector<HTMLElement>("strong")?.textContent?.trim() ?? "";
 }
 
 function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
@@ -103,14 +107,11 @@ export default function VocabularyCharacterRail({
   variant = "responsive",
   anchorId,
 }: Props) {
-  const [activePronunciation, setActivePronunciation] = useState<string | null>(null);
-
-  useEffect(() => {
-    const sync = () => setActivePronunciation(activeReadingPronunciation());
-    sync();
-    window.addEventListener("hashchange", sync);
-    return () => window.removeEventListener("hashchange", sync);
-  }, []);
+  const activePronunciation = useSyncExternalStore(
+    subscribeToHashChange,
+    activeReadingPronunciationSnapshot,
+    () => "",
+  );
 
   const characters = useMemo(() => {
     const exactOccurrences = uniqueOccurrences(occurrences);
@@ -173,13 +174,6 @@ function CharacterSurface({
 }) {
   const firstKey = occurrenceKey(characters[0]);
   const [selectedKey, setSelectedKey] = useState(firstKey);
-
-  useEffect(() => {
-    if (!characters.some((occurrence) => occurrenceKey(occurrence) === selectedKey)) {
-      setSelectedKey(firstKey);
-    }
-  }, [characters, firstKey, selectedKey]);
-
   const selectedOccurrence =
     characters.find((occurrence) => occurrenceKey(occurrence) === selectedKey)
     ?? characters[0];
