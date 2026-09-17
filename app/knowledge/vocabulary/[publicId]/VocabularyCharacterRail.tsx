@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { VocabularyCharacterOccurrence } from "@/lib/vocabularyCharacterDelivery";
 import CharacterWritingPreview from "./CharacterWritingPreview";
 import styles from "./VocabularyCharacterRail.module.css";
@@ -40,10 +40,10 @@ type QuickPreviewLabels = {
 };
 
 function occurrenceKey(occurrence: VocabularyCharacterOccurrence) {
-  return `${occurrence.character.publicId}:${occurrence.lexicalContextPronunciation ?? ""}`;
+  return `${occurrence.writtenFormPublicId}:${occurrence.position}:${occurrence.character.publicId}:${occurrence.lexicalContextPronunciation ?? ""}`;
 }
 
-function uniqueCharacters(occurrences: VocabularyCharacterOccurrence[]) {
+function uniqueOccurrences(occurrences: VocabularyCharacterOccurrence[]) {
   const result: VocabularyCharacterOccurrence[] = [];
   const seen = new Set<string>();
   for (const occurrence of occurrences) {
@@ -55,20 +55,18 @@ function uniqueCharacters(occurrences: VocabularyCharacterOccurrence[]) {
   return result;
 }
 
-function simplifiedMainlandCharacters(occurrences: VocabularyCharacterOccurrence[]) {
-  return uniqueCharacters(
-    occurrences.filter((occurrence) => (
-      occurrence.scriptVariantCode === "simplified"
-      || occurrence.scriptProfileCode === "simplified_mainland"
-    )),
-  );
+function activeReadingPronunciation() {
+  if (typeof window === "undefined" || !window.location.hash.startsWith("#reading-")) return null;
+  const target = document.getElementById(window.location.hash.slice(1));
+  const heading = target?.querySelector<HTMLElement>("strong");
+  return heading?.textContent?.trim() || null;
 }
 
 function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
   if (labels.characters === "Hán tự") {
     return {
       title: "Hán tự trong từ này",
-      subtitle: "Xem nhanh hình chữ và cách viết mà không rời khỏi phần Từ vựng.",
+      subtitle: "Xem nhanh đúng hình chữ và cách đọc trong ngữ cảnh của mục từ hiện tại.",
       writing: "Cách viết",
       pinyin: "Pinyin",
       structure: labels.structure ?? "Kết cấu",
@@ -78,7 +76,7 @@ function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
   if (labels.characters === "الحروف الصينية") {
     return {
       title: "الحروف الصينية في هذه الكلمة",
-      subtitle: "معاينة سريعة لشكل الحرف وطريقة كتابته من دون مغادرة المفردات.",
+      subtitle: "معاينة الشكل الدقيق والقراءة في سياق المدخل الحالي.",
       writing: "طريقة الكتابة",
       pinyin: "Pinyin",
       structure: labels.structure ?? "البنية",
@@ -87,7 +85,7 @@ function quickPreviewLabels(labels: Labels): QuickPreviewLabels {
 
   return {
     title: "Characters in this word",
-    subtitle: "Quickly inspect character form and writing without leaving Vocabulary.",
+    subtitle: "Inspect the exact written form and its reading in the current lexical context.",
     writing: "Writing",
     pinyin: "Pinyin",
     structure: labels.structure ?? "Structure",
@@ -105,7 +103,26 @@ export default function VocabularyCharacterRail({
   variant = "responsive",
   anchorId,
 }: Props) {
-  const characters = simplifiedMainlandCharacters(occurrences);
+  const [activePronunciation, setActivePronunciation] = useState<string | null>(null);
+
+  useEffect(() => {
+    const sync = () => setActivePronunciation(activeReadingPronunciation());
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+
+  const characters = useMemo(() => {
+    const exactOccurrences = uniqueOccurrences(occurrences);
+    if (activePronunciation) {
+      const pronunciationMatches = exactOccurrences.filter(
+        (occurrence) => occurrence.lexicalContextPronunciation === activePronunciation,
+      );
+      if (pronunciationMatches.length > 0) return pronunciationMatches;
+    }
+    const primaryFormOccurrences = exactOccurrences.filter((occurrence) => occurrence.isPrimaryForm);
+    return primaryFormOccurrences.length > 0 ? primaryFormOccurrences : exactOccurrences;
+  }, [occurrences, activePronunciation]);
 
   if (characters.length === 0) return null;
 
@@ -154,7 +171,15 @@ function CharacterSurface({
   variant: "rail" | "embedded";
   anchorId: string;
 }) {
-  const [selectedKey, setSelectedKey] = useState(() => occurrenceKey(characters[0]));
+  const firstKey = occurrenceKey(characters[0]);
+  const [selectedKey, setSelectedKey] = useState(firstKey);
+
+  useEffect(() => {
+    if (!characters.some((occurrence) => occurrenceKey(occurrence) === selectedKey)) {
+      setSelectedKey(firstKey);
+    }
+  }, [characters, firstKey, selectedKey]);
+
   const selectedOccurrence =
     characters.find((occurrence) => occurrenceKey(occurrence) === selectedKey)
     ?? characters[0];
@@ -186,7 +211,8 @@ function CharacterSurface({
                 type="button"
                 className={styles.characterSelectorButton}
                 aria-pressed={selected}
-                aria-label={`${labels.characters}: ${occurrence.character.glyph}`}
+                aria-label={`${labels.characters}: ${occurrence.writtenForm} · ${occurrence.character.glyph}`}
+                title={occurrence.writtenForm}
                 onClick={() => setSelectedKey(key)}
               >
                 <span className={styles.selectorGlyph}>{occurrence.character.glyph}</span>
