@@ -191,7 +191,7 @@ test("header consumes interface registry and keeps temporary single-control comp
   }
 });
 
-test("routes preserve uiLang while data discovery remains bound to lang", () => {
+test("routes preserve uiLang while discovery remains bound to support lang only where discovery exists", () => {
   for (const [name, source] of [
     ["home", homeSource],
     ["resources", resourcesSource],
@@ -201,9 +201,12 @@ test("routes preserve uiLang while data discovery remains bound to lang", () => 
     assert.match(source, /uiLang\?: string/, `${name} must accept uiLang`);
   }
 
-  assert.match(homeSource, /requestedLocale:\s*query\.lang/);
+  assert.match(homeSource, /resolveInterfaceLocale\(query\.uiLang, query\.lang\)/);
+  assert.match(homeSource, /preservedLearnerContextQuery\(query\)/);
+  assert.doesNotMatch(homeSource, /getLessonDiscoveryPage/);
+  assert.doesNotMatch(homeSource, /requestedLocale:/);
+
   assert.match(resourcesSource, /requestedLocale:\s*query\.lang/);
-  assert.doesNotMatch(homeSource, /requestedLocale:\s*query\.uiLang/);
   assert.doesNotMatch(resourcesSource, /requestedLocale:\s*query\.uiLang/);
 
   assert.match(lessonPageSource, /resolveInterfaceLocale\(query\?\.uiLang, query\?\.lang\)/);

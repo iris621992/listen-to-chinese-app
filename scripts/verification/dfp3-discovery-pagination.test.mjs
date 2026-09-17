@@ -255,12 +255,16 @@ test("production query is summary-only, publication-aware, and exact-pair source
   assert.equal(discoverySource.match(/\.from\("lessons"\)/g)?.length, 2); assert.match(discoverySource, /verifyCachedVisibility/); assert.match(discoverySource, /\.eq\("level\.code", proficiency\.levelCode\)/); assert.match(discoverySource, /\.eq\("level\.system\.code", proficiency\.systemCode\)/);
 });
 
-test("Level context is consumed on discovery surfaces and preserved by the global learner shell", () => {
+test("Level context is consumed only on Video discovery and otherwise preserved", () => {
   for (const source of [homeSource, resourcesSource, cardSource]) {
     assert.doesNotMatch(source, /@\/lib\/lessons/);
     assert.doesNotMatch(source, /\.script|\.exercises|\.vocabulary|transcript/i);
   }
-  assert.match(homeSource, /getLessonDiscoveryPage/);
+
+  assert.doesNotMatch(homeSource, /getLessonDiscoveryPage/);
+  assert.doesNotMatch(homeSource, /parseProficiencyContext/);
+  assert.match(homeSource, /preservedLearnerContextQuery\(query\)/);
+
   assert.match(resourcesSource, /getLessonDiscoveryPage/);
   assert.match(resourcesSource, /parseProficiencyContext\(query\.levelSystem,\s*query\.level\)/);
   assert.match(resourcesSource, /levelSystemCode:\s*query\.levelSystem/);

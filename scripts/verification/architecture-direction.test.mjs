@@ -235,65 +235,43 @@ test("architecture direction gate is part of every production build", async () =
   );
 });
 
-
-test("Phase F PR-B Home keeps approved product, localization, discovery, and typography boundaries", async () => {
+test("Home v3.2 port keeps approved section order, canonical destinations, and VI/EN copy direction", async () => {
   const home = await readFile("app/page.tsx", "utf8");
   const homeCopy = await readFile("lib/homeCopy.ts", "utf8");
-  const styles = await readFile("app/globals.css", "utf8");
+  const styles = await readFile("app/home-fidelity.css", "utf8");
 
   assert.match(home, /resolveInterfaceLocale\(query\.uiLang, query\.lang\)/);
   assert.match(home, /getHomeCopy\(interfaceLocale\.code\)/);
-  assert.match(home, /getLessonDiscoveryPage\(\{/);
   assert.match(home, /preservedLearnerContextQuery\(query\)/);
-  assert.match(home, /<LessonCard\b/);
-  assert.match(home, /pageSize:\s*6/);
-  assert.match(home, /requestedLocale:\s*query\.lang/);
-  assert.match(home, /lang=\{interfaceLocale\.code\}/);
-  assert.match(home, /dir=\{interfaceLocale\.direction\}/);
+  assert.doesNotMatch(home, /getLessonDiscoveryPage|LessonCard|parseProficiencyContext/);
 
-  const orderedSections = [
-    "hero", "library", "knowledge", "practice", "discovery", "guest",
-    "how", "positioning", "growing", "final", "footer",
-  ];
+  const orderedSections = ["hero", "knowledge", "video", "practice", "how", "positioning", "account", "final", "footer"];
   let previousIndex = -1;
   for (const section of orderedSections) {
     const marker = `data-home-section="${section}"`;
     const index = home.indexOf(marker);
-    assert.ok(index > previousIndex, `${section} must follow the approved Home order`);
+    assert.ok(index > previousIndex, `${section} must follow the approved Home v3.2 order`);
     previousIndex = index;
   }
 
-  assert.match(home, /href="\/resources"\s+query=\{learnerContextQuery\}/);
-  assert.match(home, /href="\/knowledge"\s+query=\{learnerContextQuery\}/);
-  assert.match(home, /href="\/practice"\s+query=\{learnerContextQuery\}/);
-  assert.match(home, /href="\/"\s+query=\{learnerContextQuery\}/);
+  assert.match(home, /href="\/resources"/);
+  assert.match(home, /href="\/knowledge"/);
+  assert.match(home, /href="\/practice"/);
+  assert.doesNotMatch(home, /href="\/knowledge\/vocabulary"/);
   assert.doesNotMatch(home, /href=["']#["']/);
-  assert.doesNotMatch(home, /<input\b|<select\b|<form\b|Apply filters/);
-  assert.doesNotMatch(home, /Sign in|Account|Save collections/);
-  assert.doesNotMatch(home, /href=.*\/(?:vocabulary|idioms|grammar|dictation|translation)/);
+  assert.doesNotMatch(home, /<input\b|<form\b/);
+  assert.match(home, /home-search-entry/);
   assert.doesNotMatch(home, /\bHSK\b/);
   assert.doesNotMatch(homeCopy, /\bHSK\b/);
 
-  assert.match(homeCopy, /export type HomeLocaleCode = "en" \| "vi" \| "ar"/);
-  assert.match(homeCopy, /(?:"en"|en):\s*\{/);
-  assert.match(homeCopy, /(?:"vi"|vi):\s*\{/);
-  assert.match(homeCopy, /(?:"ar"|ar):\s*\{/);
-  assert.doesNotMatch(homeCopy, /(?:"de"|de):\s*\{/);
-  assert.match(homeCopy, /Library → Resource → Practice/);
-  assert.match(homeCopy, /Thư viện → Tài nguyên → Luyện tập/);
-  assert.match(homeCopy, /المكتبة ← المورد ← التدريب/);
-  assert.match(homeCopy, /There is no fixed sequence/);
-  assert.match(homeCopy, /Không có thứ tự bắt buộc/);
-  assert.match(homeCopy, /لا يوجد ترتيب ثابت/);
-
-  assert.match(home, /src="\/brand\/yunchinese-home-large\.webp"/);
-  assert.match(styles, /\.home-brand-logo\s*\{[^}]*transform:\s*none !important/s);
-  assert.match(styles, /\[dir="rtl"\] \.home-brand-logo\s*\{[^}]*transform:\s*none !important/s);
-  assert.doesNotMatch(styles, /\.home-brand-logo[^}]*scaleX\(-1\)/s);
-  assert.match(styles, /--home-text-secondary:\s*#575c53/);
-  assert.match(styles, /--home-text-tertiary:\s*#64685f/);
-  assert.match(styles, /--home-terracotta-text:\s*#8f5430/);
-  assert.match(styles, /--home-text-on-sage-secondary:\s*#edf1ea/);
-  assert.match(styles, /--home-terracotta-on-sage:\s*#f7ebe4/);
-  assert.doesNotMatch(styles, /body\s*\{[^}]*font-weight:\s*500/s);
+  assert.match(homeCopy, /export type HomeLocaleCode = "en" \| "vi"/);
+  assert.match(homeCopy, /Hiểu tiếng Trung rõ hơn\. Dùng tự nhiên hơn\./);
+  assert.match(homeCopy, /Không có một lộ trình bắt buộc\./);
+  assert.match(homeCopy, /Understand Chinese more clearly\. Use it more naturally\./);
+  assert.doesNotMatch(homeCopy, /Thư viện → Tài nguyên|Library → Resource/);
+  assert.doesNotMatch(homeCopy, /miniLibrary|ctaLibrary|listeningTitle|readingTitle/);
+  assert.match(homeCopy, /video:\s*"Video"/);
+  assert.match(styles, /\.home-knowledge-card\{[^}]*display:flex;flex-direction:column/s);
+  assert.match(styles, /\.home-text-link\{[^}]*margin-top:auto/s);
+  assert.doesNotMatch(styles, /\.home-text-link\{[^}]*position:absolute/s);
 });

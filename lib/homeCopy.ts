@@ -1,461 +1,188 @@
 export type HomeCopy = {
-  nav: { home: string; library: string; knowledge: string; practice: string };
+  nav: { home: string; video: string; knowledge: string; practice: string };
   hero: {
     eyebrow: string; title: string; body: string;
-    ctaLibrary: string; ctaKnowledge: string; ctaPractice: string; northStar: string;
+    ctaKnowledge: string; ctaVideo: string; ctaPractice: string; note: string;
     exploreLabel: string; exploreTitle: string; exploreBody: string;
-    miniLibraryTitle: string; miniLibraryBody: string;
     miniKnowledgeTitle: string; miniKnowledgeBody: string;
+    miniVideoTitle: string; miniVideoBody: string;
     miniPracticeTitle: string; miniPracticeBody: string;
-  };
-  library: {
-    eyebrow: string; title: string; body: string;
-    videoTitle: string; videoBody: string;
-    listeningTitle: string; listeningBody: string;
-    readingTitle: string; readingBody: string;
-    practiceOnlyTitle: string; practiceOnlyBody: string;
-    reviewTitle: string; reviewBody: string;
-    cta: string; latestEyebrow: string; latestTitle: string;
-    invalidLevel: string; empty: string; browseAll: string;
+    searchPlaceholder: string;
   };
   knowledge: {
     eyebrow: string; title: string; body: string;
-    vocabTitle: string; vocabBody: string;
-    idiomTitle: string; idiomBody: string;
-    compareTitle: string; compareBody: string;
-    grammarTitle: string; grammarBody: string; cta: string;
+    cards: readonly { icon: string; title: string; body: string; cta: string }[];
+  };
+  video: {
+    eyebrow: string; title: string; body: string; featureTitle: string; featureBody: string;
+    points: readonly { title: string; body: string }[]; cta: string;
   };
   practice: {
     eyebrow: string; title: string; body: string; tags: readonly string[];
-    featureEyebrow: string; featureTitle: string; featureBody: string; cta: string;
+    featureTitle: string; featureBody: string; cta: string;
   };
-  discovery: {
-    eyebrow: string; title: string; body: string;
-    levelTitle: string; levelBody: string;
-    languageTitle: string; languageBody: string;
-    libraryTitle: string; libraryBody: string;
-  };
-  guest: {
-    eyebrow: string; title: string; body: string;
-    guestTitle: string; guestBody: string; practiceTitle: string; practiceBody: string;
-  };
-  how: {
-    eyebrow: string; title: string; body: string;
-    discover: string; discoverBody: string; understand: string; understandBody: string;
-    practice: string; practiceBody: string; review: string; reviewBody: string;
-  };
-  positioning: {
-    eyebrow: string; title: string; body: string;
-    startTitle: string; startBody: string; moveTitle: string; moveBody: string;
-    courseTitle: string; courseBody: string;
-  };
-  growing: { eyebrow: string; title: string; body: string; note: string };
-  final: {
-    title: string; body: string; ctaLibrary: string; ctaKnowledge: string; ctaPractice: string;
-  };
+  how: { eyebrow: string; title: string; body: string; steps: readonly { title: string; body: string }[] };
+  positioning: { eyebrow: string; title: string; body: string; points: readonly { title: string; body: string }[] };
+  account: { eyebrow: string; title: string; body: string; cards: readonly { title: string; body: string }[] };
+  final: { title: string; body: string; ctaKnowledge: string; ctaVideo: string };
   footer: { tagline: string };
 };
 
-export type HomeLocaleCode = "en" | "vi" | "ar";
+export type HomeLocaleCode = "en" | "vi";
 
 export const HOME_COPY: Record<HomeLocaleCode, HomeCopy> = {
-  en: {
-    nav: {
-      home: "Home",
-      library: "Library",
-      knowledge: "Knowledge",
-      practice: "Practice",
-    },
+  vi: {
+    nav: { home: "Trang chủ", video: "Video", knowledge: "Kiến thức", practice: "Luyện tập" },
     hero: {
-      eyebrow: "CHINESE RESOURCES · KNOWLEDGE · PRACTICE",
-      title: "A growing library for Chinese learners.",
-      body: "Explore listening, reading, vocabulary, grammar, idioms, and structured practice — all in one place.",
-      ctaLibrary: "Explore Library",
-      ctaKnowledge: "Browse Knowledge",
-      ctaPractice: "Start Practice",
-      northStar: "Library → Resource → Practice",
-      exploreLabel: "EXPLORE YUNCHINESE",
-      exploreTitle: "Choose where you want to begin.",
-      exploreBody: "Start with a resource, a language question, or focused practice.",
-      miniLibraryTitle: "Library",
-      miniLibraryBody: "Video · Listening · Reading · Review Sets",
-      miniKnowledgeTitle: "Knowledge",
-      miniKnowledgeBody: "Vocabulary · Idioms · Word Comparison · Grammar",
-      miniPracticeTitle: "Practice",
-      miniPracticeBody: "Mixed · Vocabulary · Grammar · Dictation · Translation",
-    },
-    library: {
-      eyebrow: "LIBRARY",
-      title: "Find resources that fit your learning needs.",
-      body: "Browse Chinese resources by type, level, and language.",
-      videoTitle: "Video",
-      videoBody: "Learn with Chinese video resources.",
-      listeningTitle: "Listening",
-      listeningBody: "Practice understanding spoken Chinese.",
-      readingTitle: "Reading",
-      readingBody: "Read Chinese in meaningful contexts.",
-      practiceOnlyTitle: "Practice-only",
-      practiceOnlyBody: "Go directly to focused exercises.",
-      reviewTitle: "Review Sets",
-      reviewBody: "Return to selected resources and language points.",
-      cta: "Explore Library",
-      latestEyebrow: "RECENTLY PUBLISHED",
-      latestTitle: "Latest resources",
-      invalidLevel: "The selected Level context is unavailable. Choose a valid Level in the header.",
-      empty: "Published learning resources will appear here when discovery is available.",
-      browseAll: "Browse all resources",
+      eyebrow: "KIẾN THỨC · VIDEO · LUYỆN TẬP",
+      title: "Hiểu tiếng Trung rõ hơn. Dùng tự nhiên hơn.",
+      body: "Tra cứu điều bạn chưa chắc, xem tiếng Trung trong ngữ cảnh và luyện đúng điểm mình cần — không bị buộc vào một lộ trình khóa học cố định.",
+      ctaKnowledge: "Tra cứu Kiến thức", ctaVideo: "Xem Video", ctaPractice: "Luyện tập",
+      note: "Bắt đầu từ câu hỏi, nội dung hoặc kỹ năng bạn đang cần.",
+      exploreLabel: "KHÁM PHÁ YUNCHINESE", exploreTitle: "Bạn muốn bắt đầu từ đâu?",
+      exploreBody: "Chọn đúng điểm vào thay vì phải đi theo một khóa học tuyến tính.",
+      miniKnowledgeTitle: "KIẾN THỨC", miniKnowledgeBody: "Từ vựng · Hán tự · So sánh · Thành ngữ · Ngữ pháp",
+      miniVideoTitle: "VIDEO", miniVideoBody: "Xem tiếng Trung trong ngữ cảnh và mở rộng sang điểm kiến thức liên quan.",
+      miniPracticeTitle: "LUYỆN TẬP", miniPracticeBody: "Luyện theo mục tiêu: từ vựng, ngữ pháp, nghe chép, dịch và ôn tập.",
+      searchPlaceholder: "Bạn muốn tra điều gì?",
     },
     knowledge: {
-      eyebrow: "KNOWLEDGE",
-      title: "Understand the Chinese you read and hear.",
-      body: "Explore vocabulary, idioms, grammar, and differences between similar words.",
-      vocabTitle: "Vocabulary",
-      vocabBody: "Explore meaning, usage, and related language.",
-      idiomTitle: "Idioms",
-      idiomBody: "Understand expressions and how they are used.",
-      compareTitle: "Word Comparison",
-      compareBody: "See how similar words differ in meaning and use.",
-      grammarTitle: "Grammar",
-      grammarBody: "Review patterns with clear examples.",
-      cta: "Browse Knowledge",
+      eyebrow: "KIẾN THỨC · 知识", title: "Tra cứu để hiểu đúng trước khi ghi nhớ.",
+      body: "Phần Kiến thức giải thích nghĩa, cách dùng, khác biệt và những điểm người học dễ nhầm — không chỉ là một danh sách định nghĩa.",
+      cards: [
+        { icon: "词", title: "Từ vựng · 词汇", body: "Nghĩa, cách đọc, Hán Việt khi có, lượng từ, kết hợp tự nhiên, ví dụ, sắc thái và phân biệt nhanh.", cta: "Tra cứu Từ vựng →" },
+        { icon: "字", title: "Hán tự · 汉字", body: "Hiểu chữ, cấu trúc, bộ thủ, cách đọc và cách viết khi dữ liệu phù hợp được cung cấp.", cta: "Xem Hán tự →" },
+        { icon: "辨", title: "So sánh · 辨析", body: "Phân biệt những từ hoặc cách diễn đạt gần nhau bằng khác biệt thực tế trong cách dùng.", cta: "Xem So sánh →" },
+        { icon: "成", title: "Thành ngữ · 成语", body: "Hiểu nghĩa, sắc thái và ngữ cảnh sử dụng thay vì chỉ ghi nhớ một bản dịch ngắn.", cta: "Xem Thành ngữ →" },
+        { icon: "法", title: "Ngữ pháp · 语法", body: "Tra cấu trúc, chức năng, cách dùng và ví dụ theo nhu cầu thay vì phải học tuần tự.", cta: "Xem Ngữ pháp →" },
+      ],
+    },
+    video: {
+      eyebrow: "VIDEO · 视频", title: "Gặp tiếng Trung trong ngữ cảnh thật hơn.",
+      body: "Video là nguồn tài liệu giúp người học gặp từ và cấu trúc ngữ pháp trong ngữ cảnh thực tế, sau đó có thể chuyển sang Kiến thức hoặc Luyện tập khi cần.",
+      featureTitle: "Xem video, rồi đi sâu vào điều bạn vừa gặp.",
+      featureBody: "Video không phải toàn bộ sản phẩm và cũng không phải một khóa học bắt buộc. Đây là nơi để bạn tiếp xúc với tiếng Trung, nhận ra điều chưa hiểu và mở sang phần Kiến thức tương ứng.",
+      points: [
+        { title: "Theo cấp độ", body: "Dùng cấp độ như bộ lọc và ngữ cảnh." },
+        { title: "Nối sang Kiến thức", body: "Từ hoặc cấu trúc đáng chú ý có thể dẫn sang mục Kiến thức tương ứng." },
+      ],
+      cta: "Khám phá Video",
     },
     practice: {
-      eyebrow: "PRACTICE",
-      title: "Practice what you discover.",
-      body: "Use focused exercises to check understanding and reinforce useful language.",
-      tags: ["Mixed", "Vocabulary", "Grammar", "Dictation", "Translation"],
-      featureEyebrow: "RESOURCE CONTEXT",
-      featureTitle: "Practice from a Resource",
-      featureBody: "Start practice directly from a resource you are exploring.",
+      eyebrow: "LUYỆN TẬP · 练习", title: "Luyện đúng điểm bạn cần, không phụ thuộc vào video.",
+      body: "Luyện tập là một trụ cột độc lập. Bài tập có thể bắt đầu từ Kiến thức, từ Video hoặc trực tiếp từ nhu cầu của người học.",
+      tags: ["Tổng hợp", "Từ vựng", "Ngữ pháp", "Phân biệt", "Nghe chép", "Dịch"],
+      featureTitle: "Từ hiểu → dùng → ghi nhớ.",
+      featureBody: "Mỗi bài tập nên nhắm vào một điểm kiến thức cụ thể để người học biết mình đang luyện điều gì và vì sao câu trả lời đúng hoặc sai.",
+      cta: "Bắt đầu Luyện tập",
+    },
+    how: {
+      eyebrow: "CÁCH YUNCHINESE HOẠT ĐỘNG", title: "Bắt đầu ở nơi hữu ích nhất với bạn.",
+      body: "Không có một lộ trình bắt buộc. YunChinese kết nối các hệ thống để bạn đi từ thắc mắc đến hiểu, luyện và ghi nhớ mà không mất ngữ cảnh.",
+      steps: [
+        { title: "Tra cứu", body: "Tìm từ, Hán tự, ngữ pháp, thành ngữ hoặc điểm cần phân biệt." },
+        { title: "Hiểu & phân biệt", body: "Nắm nghĩa, cách dùng, phạm vi và khác biệt quan trọng." },
+        { title: "Luyện tập", body: "Làm bài tập nhắm đúng điểm kiến thức thay vì luyện ngẫu nhiên." },
+        { title: "Ghi nhớ", body: "Quay lại những điểm cần ôn và xây trí nhớ dài hạn." },
+      ],
+    },
+    positioning: {
+      eyebrow: "VÌ SAO YUNCHINESE", title: "Không phải khóa học cố định. Không chỉ là từ điển.",
+      body: "YunChinese kết hợp Kiến thức, Video và Luyện tập để người học tự chọn điểm bắt đầu nhưng vẫn có đủ chiều sâu để hiểu và sử dụng tiếng Trung tốt hơn.",
+      points: [
+        { title: "Kiến thức có chiều sâu", body: "Nội dung được tổ chức theo cấu trúc dữ liệu ngữ nghĩa đã chốt, không ép mọi mục từ vào cùng một khuôn." },
+        { title: "Video có vai trò rõ ràng", body: "Là nguồn ngữ liệu và ngữ cảnh, không phải cấu trúc trung tâm của toàn sản phẩm." },
+        { title: "Luyện tập nối đúng điểm kiến thức", body: "Bài tập được thiết kế để luyện đúng điều người học vừa tra cứu hoặc đang cần cải thiện." },
+      ],
+    },
+    account: {
+      eyebrow: "TÀI KHOẢN", title: "Khám phá trước. Đăng nhập khi bạn muốn lưu tiến độ.",
+      body: "Phần cốt lõi vẫn hữu ích cho người học chưa đăng nhập; tài khoản bổ sung khả năng lưu, theo dõi và ôn lại khi cần.",
+      cards: [
+        { title: "Dùng như khách", body: "Tra cứu Kiến thức và khám phá Video mà không cần tạo tài khoản trước." },
+        { title: "Lưu và quay lại", body: "Đăng nhập khi bạn muốn lưu mục học, tiến độ Luyện tập và những điểm cần ôn." },
+      ],
+    },
+    final: { title: "Bắt đầu từ điều bạn đang muốn hiểu.", body: "Tra cứu một điểm tiếng Trung, xem Video để có ngữ cảnh, hoặc luyện đúng kỹ năng bạn cần.", ctaKnowledge: "Khám phá Kiến thức", ctaVideo: "Xem Video" },
+    footer: { tagline: "Kiến thức, Video và Luyện tập được kết nối để người học tiếng Trung hiểu sâu hơn và dùng tự nhiên hơn." },
+  },
+  en: {
+    nav: { home: "Home", video: "Video", knowledge: "Knowledge", practice: "Practice" },
+    hero: {
+      eyebrow: "KNOWLEDGE · VIDEO · PRACTICE",
+      title: "Understand Chinese more clearly. Use it more naturally.",
+      body: "Look up what you are unsure about, meet Chinese in context, and practice exactly what you need — without being locked into a fixed course path.",
+      ctaKnowledge: "Browse Knowledge", ctaVideo: "Explore Video", ctaPractice: "Practice",
+      note: "Start from the question, content, or skill that matters to you now.",
+      exploreLabel: "EXPLORE YUNCHINESE", exploreTitle: "Where do you want to begin?",
+      exploreBody: "Choose the entry point that helps you now instead of following a linear course.",
+      miniKnowledgeTitle: "KNOWLEDGE", miniKnowledgeBody: "Vocabulary · Characters · Comparisons · Idioms · Grammar",
+      miniVideoTitle: "VIDEO", miniVideoBody: "Meet Chinese in context and open the related knowledge when you need more depth.",
+      miniPracticeTitle: "PRACTICE", miniPracticeBody: "Practice by goal: vocabulary, grammar, dictation, translation, and review.",
+      searchPlaceholder: "What do you want to look up?",
+    },
+    knowledge: {
+      eyebrow: "KNOWLEDGE · 知识", title: "Look things up to understand them correctly before you memorize them.",
+      body: "Knowledge explains meaning, usage, distinctions, and common learner confusion — not just short definitions.",
+      cards: [
+        { icon: "词", title: "Vocabulary · 词汇", body: "Meaning, pronunciation, learner support, measure words, natural combinations, examples, nuance, and quick distinctions.", cta: "Browse Vocabulary →" },
+        { icon: "字", title: "Characters · 汉字", body: "Understand character structure, radicals, readings, and writing information when reliable data is available.", cta: "Explore Characters →" },
+        { icon: "辨", title: "Comparisons · 辨析", body: "See how similar words and expressions differ in real usage.", cta: "View Comparisons →" },
+        { icon: "成", title: "Idioms · 成语", body: "Understand meaning, nuance, and context instead of memorizing only a short translation.", cta: "Explore Idioms →" },
+        { icon: "法", title: "Grammar · 语法", body: "Look up structures, functions, usage, and examples when you need them rather than following a fixed sequence.", cta: "Explore Grammar →" },
+      ],
+    },
+    video: {
+      eyebrow: "VIDEO · 视频", title: "Meet Chinese in richer context.",
+      body: "Video is a learning resource that helps learners encounter words and grammar structures in real-world contexts, then move to Knowledge or Practice when needed.",
+      featureTitle: "Watch a video, then go deeper into what you just encountered.",
+      featureBody: "Video is not the whole product and not a mandatory course path. It gives you Chinese input, exposes what you do not yet understand, and connects you to the relevant Knowledge.",
+      points: [
+        { title: "Filter by level", body: "Use level as context and filtering." },
+        { title: "Connect to Knowledge", body: "Notable words and structures can lead into the corresponding knowledge entries." },
+      ],
+      cta: "Explore Video",
+    },
+    practice: {
+      eyebrow: "PRACTICE · 练习", title: "Practice what you need, independently of video.",
+      body: "Practice is its own pillar. Exercises can begin from Knowledge, from Video, or directly from a learner need.",
+      tags: ["Mixed", "Vocabulary", "Grammar", "Distinctions", "Dictation", "Translation"],
+      featureTitle: "From understanding → use → retention.",
+      featureBody: "Each exercise should target a specific concept so learners know what they are practicing and why an answer is right or wrong.",
       cta: "Start Practice",
     },
-    discovery: {
-      eyebrow: "DISCOVERY",
-      title: "Find what fits your needs.",
-      body: "Use Level and Language context, then browse the Library for published resources.",
-      levelTitle: "Level",
-      levelBody: "Use the global Level control when you want proficiency context.",
-      languageTitle: "Language",
-      languageBody: "Choose the interface and support language from the header.",
-      libraryTitle: "Library",
-      libraryBody: "Browse published resources through the current Library.",
-    },
-    guest: {
-      eyebrow: "GUEST-FIRST",
-      title: "Explore first. No account required.",
-      body: "Core browsing and available practice remain useful without signing in.",
-      guestTitle: "Browse as a guest",
-      guestBody: "Explore resources and use core practice without creating an account.",
-      practiceTitle: "Practice from resources",
-      practiceBody: "Use exercises attached to published resources when they are available.",
-    },
     how: {
-      eyebrow: "HOW YUNCHINESE WORKS",
-      title: "Use YunChinese in the way that works for you.",
-      body: "There is no fixed sequence. Start where it is useful for you.",
-      discover: "Discover",
-      discoverBody: "Find a resource or topic.",
-      understand: "Understand",
-      understandBody: "Read, listen, and look up what you need.",
-      practice: "Practice",
-      practiceBody: "Use focused exercises.",
-      review: "Review",
-      reviewBody: "Return to useful resources and knowledge.",
+      eyebrow: "HOW YUNCHINESE WORKS", title: "Start where it is most useful to you.",
+      body: "There is no mandatory sequence. YunChinese connects its systems so you can move from a question to understanding, practice, and retention without losing context.",
+      steps: [
+        { title: "Look up", body: "Find a word, character, grammar point, idiom, or distinction you need." },
+        { title: "Understand & distinguish", body: "Learn the meaning, usage, scope, and important differences." },
+        { title: "Practice", body: "Work on exercises that target the exact concept instead of random repetition." },
+        { title: "Retain", body: "Return to what needs review and build longer-term memory." },
+      ],
     },
     positioning: {
-      eyebrow: "WHY YUNCHINESE",
-      title: "Resources, knowledge, and practice in one place.",
-      body: "Move between learning resources, language references, and focused practice without following a fixed course sequence.",
-      startTitle: "Start anywhere",
-      startBody: "Open the library, look something up, or begin with practice.",
-      moveTitle: "Move between systems",
-      moveBody: "Go from a resource to knowledge and practice without losing context.",
-      courseTitle: "No fixed course path",
-      courseBody: "Use the parts of YunChinese that are useful to you.",
+      eyebrow: "WHY YUNCHINESE", title: "Not a fixed course. Not just a dictionary.",
+      body: "YunChinese connects Knowledge, Video, and Practice so learners can choose where to begin while still getting enough depth to understand and use Chinese better.",
+      points: [
+        { title: "Knowledge with depth", body: "Content follows its semantic contract instead of forcing every entry into the same shallow template." },
+        { title: "Video with a clear role", body: "It is input and context, not the organizing center of the whole product." },
+        { title: "Practice tied to concepts", body: "Exercises target the specific knowledge a learner just looked up or needs to improve." },
+      ],
     },
-    growing: {
-      eyebrow: "GROWING LIBRARY",
-      title: "A library designed to grow with its resources.",
-      body: "YunChinese brings together useful Chinese resources and learning tools in a library that can continue to expand over time.",
-      note: "The botanical idea behind 芸 can inspire the visual language of growth, while the product remains centered on useful resources, knowledge, and practice.",
+    account: {
+      eyebrow: "ACCOUNT", title: "Explore first. Sign in when you want to save progress.",
+      body: "Core learning remains useful before sign-in; an account adds saving, progress, and review when you need them.",
+      cards: [
+        { title: "Use as a guest", body: "Browse Knowledge and explore Video without creating an account first." },
+        { title: "Save and return", body: "Sign in when you want to save learning items, Practice progress, and review targets." },
+      ],
     },
-    final: {
-      title: "Explore YunChinese.",
-      body: "Find a resource, look up something you want to understand, or start practicing.",
-      ctaLibrary: "Explore Library",
-      ctaKnowledge: "Browse Knowledge",
-      ctaPractice: "Start Practice",
-    },
-    footer: {
-      tagline: "Chinese resources, knowledge, and practice — together in one library.",
-    },
-  },
-
-  vi: {
-    nav: {
-      home: "Trang chủ",
-      library: "Thư viện",
-      knowledge: "Kiến thức",
-      practice: "Luyện tập",
-    },
-    hero: {
-      eyebrow: "TÀI NGUYÊN · KIẾN THỨC · LUYỆN TẬP TIẾNG TRUNG",
-      title: "Một thư viện ngày càng phong phú dành cho người học tiếng Trung.",
-      body: "Khám phá tài nguyên nghe, đọc, từ vựng, ngữ pháp, thành ngữ và luyện tập có cấu trúc — tất cả trong cùng một nơi.",
-      ctaLibrary: "Khám phá Thư viện",
-      ctaKnowledge: "Xem Kiến thức",
-      ctaPractice: "Bắt đầu luyện tập",
-      northStar: "Thư viện → Tài nguyên → Luyện tập",
-      exploreLabel: "KHÁM PHÁ YUNCHINESE",
-      exploreTitle: "Chọn nơi bạn muốn bắt đầu.",
-      exploreBody: "Bắt đầu từ một tài nguyên, một điều bạn muốn hiểu về ngôn ngữ hoặc một bài luyện tập tập trung.",
-      miniLibraryTitle: "Thư viện",
-      miniLibraryBody: "Video · Nghe · Đọc · Bộ ôn tập",
-      miniKnowledgeTitle: "Kiến thức",
-      miniKnowledgeBody: "Từ vựng · Thành ngữ · So sánh từ · Ngữ pháp",
-      miniPracticeTitle: "Luyện tập",
-      miniPracticeBody: "Tổng hợp · Từ vựng · Ngữ pháp · Chính tả · Dịch",
-    },
-    library: {
-      eyebrow: "THƯ VIỆN",
-      title: "Tìm tài nguyên phù hợp với nhu cầu học của bạn.",
-      body: "Khám phá tài nguyên tiếng Trung theo loại nội dung, trình độ và ngôn ngữ.",
-      videoTitle: "Video",
-      videoBody: "Học với các tài nguyên video tiếng Trung.",
-      listeningTitle: "Nghe",
-      listeningBody: "Luyện khả năng hiểu tiếng Trung nói.",
-      readingTitle: "Đọc",
-      readingBody: "Đọc tiếng Trung trong những ngữ cảnh có ý nghĩa.",
-      practiceOnlyTitle: "Chỉ luyện tập",
-      practiceOnlyBody: "Đi thẳng vào các bài tập tập trung.",
-      reviewTitle: "Bộ ôn tập",
-      reviewBody: "Quay lại các tài nguyên và điểm ngôn ngữ đã chọn.",
-      cta: "Khám phá Thư viện",
-      latestEyebrow: "MỚI XUẤT BẢN",
-      latestTitle: "Tài nguyên mới nhất",
-      invalidLevel: "Ngữ cảnh Cấp độ đã chọn không khả dụng. Hãy chọn một Cấp độ hợp lệ ở phần đầu trang.",
-      empty: "Tài nguyên học tập đã xuất bản sẽ xuất hiện ở đây khi có dữ liệu phù hợp.",
-      browseAll: "Xem tất cả tài nguyên",
-    },
-    knowledge: {
-      eyebrow: "KIẾN THỨC",
-      title: "Hiểu tiếng Trung bạn đọc và nghe.",
-      body: "Khám phá từ vựng, thành ngữ, ngữ pháp và sự khác nhau giữa các từ gần nghĩa.",
-      vocabTitle: "Từ vựng",
-      vocabBody: "Khám phá nghĩa, cách dùng và các nội dung liên quan.",
-      idiomTitle: "Thành ngữ",
-      idiomBody: "Hiểu các cách diễn đạt và cách chúng được sử dụng.",
-      compareTitle: "So sánh từ",
-      compareBody: "Xem các từ tương tự khác nhau thế nào về nghĩa và cách dùng.",
-      grammarTitle: "Ngữ pháp",
-      grammarBody: "Ôn lại cấu trúc với ví dụ rõ ràng.",
-      cta: "Xem Kiến thức",
-    },
-    practice: {
-      eyebrow: "LUYỆN TẬP",
-      title: "Luyện tập những gì bạn khám phá.",
-      body: "Dùng các bài tập tập trung để kiểm tra mức độ hiểu và củng cố nội dung hữu ích.",
-      tags: ["Tổng hợp", "Từ vựng", "Ngữ pháp", "Chính tả", "Dịch"],
-      featureEyebrow: "NGỮ CẢNH TÀI NGUYÊN",
-      featureTitle: "Luyện tập từ một tài nguyên",
-      featureBody: "Bắt đầu luyện tập trực tiếp từ tài nguyên bạn đang khám phá.",
-      cta: "Bắt đầu luyện tập",
-    },
-    discovery: {
-      eyebrow: "KHÁM PHÁ",
-      title: "Tìm những gì phù hợp với nhu cầu của bạn.",
-      body: "Dùng ngữ cảnh Cấp độ và Ngôn ngữ, sau đó duyệt Thư viện để tìm tài nguyên đã xuất bản.",
-      levelTitle: "Cấp độ",
-      levelBody: "Dùng điều khiển Cấp độ chung khi bạn muốn có ngữ cảnh trình độ.",
-      languageTitle: "Ngôn ngữ",
-      languageBody: "Chọn ngôn ngữ giao diện và ngôn ngữ hỗ trợ từ phần đầu trang.",
-      libraryTitle: "Thư viện",
-      libraryBody: "Duyệt các tài nguyên đã xuất bản trong Thư viện hiện tại.",
-    },
-    guest: {
-      eyebrow: "ƯU TIÊN KHÁCH",
-      title: "Khám phá trước. Không cần tài khoản.",
-      body: "Việc duyệt nội dung và các bài tập hiện có vẫn hữu ích mà không cần đăng nhập.",
-      guestTitle: "Khám phá với tư cách khách",
-      guestBody: "Xem tài nguyên và dùng các chức năng luyện tập cốt lõi mà không cần tạo tài khoản.",
-      practiceTitle: "Luyện tập từ tài nguyên",
-      practiceBody: "Dùng các bài tập gắn với tài nguyên đã xuất bản khi có sẵn.",
-    },
-    how: {
-      eyebrow: "YUNCHINESE HOẠT ĐỘNG NHƯ THẾ NÀO",
-      title: "Sử dụng YunChinese theo cách phù hợp với bạn.",
-      body: "Không có thứ tự bắt buộc. Hãy bắt đầu từ nơi hữu ích với bạn.",
-      discover: "Khám phá",
-      discoverBody: "Tìm một tài nguyên hoặc chủ đề.",
-      understand: "Hiểu",
-      understandBody: "Đọc, nghe và tra cứu những gì bạn cần.",
-      practice: "Luyện tập",
-      practiceBody: "Sử dụng các bài tập tập trung.",
-      review: "Ôn lại",
-      reviewBody: "Quay lại các tài nguyên và kiến thức hữu ích.",
-    },
-    positioning: {
-      eyebrow: "VÌ SAO LÀ YUNCHINESE",
-      title: "Tài nguyên, kiến thức và luyện tập trong cùng một nơi.",
-      body: "Di chuyển linh hoạt giữa tài nguyên học tập, nội dung tra cứu ngôn ngữ và luyện tập tập trung mà không cần theo một lộ trình khóa học cố định.",
-      startTitle: "Bắt đầu ở bất cứ đâu",
-      startBody: "Mở thư viện, tra cứu một điều gì đó hoặc bắt đầu bằng luyện tập.",
-      moveTitle: "Di chuyển giữa các hệ thống",
-      moveBody: "Đi từ tài nguyên sang kiến thức và luyện tập mà không mất ngữ cảnh.",
-      courseTitle: "Không có lộ trình khóa học cố định",
-      courseBody: "Sử dụng những phần của YunChinese hữu ích với bạn.",
-    },
-    growing: {
-      eyebrow: "THƯ VIỆN ĐANG PHÁT TRIỂN",
-      title: "Một thư viện được thiết kế để phát triển cùng với tài nguyên.",
-      body: "YunChinese tập hợp các tài nguyên tiếng Trung và công cụ học tập hữu ích trong một thư viện có thể tiếp tục mở rộng theo thời gian.",
-      note: "Ý tưởng thực vật phía sau chữ 芸 có thể truyền cảm hứng cho ngôn ngữ hình ảnh về sự phát triển, trong khi sản phẩm vẫn tập trung vào tài nguyên, kiến thức và luyện tập hữu ích.",
-    },
-    final: {
-      title: "Khám phá YunChinese.",
-      body: "Tìm một tài nguyên, tra cứu điều bạn muốn hiểu hoặc bắt đầu luyện tập.",
-      ctaLibrary: "Khám phá Thư viện",
-      ctaKnowledge: "Xem Kiến thức",
-      ctaPractice: "Bắt đầu luyện tập",
-    },
-    footer: {
-      tagline: "Tài nguyên, kiến thức và luyện tập tiếng Trung — cùng trong một thư viện.",
-    },
-  },
-
-  ar: {
-    nav: {
-      home: "الرئيسية",
-      library: "المكتبة",
-      knowledge: "المعرفة",
-      practice: "التدريب",
-    },
-    hero: {
-      eyebrow: "موارد صينية · معرفة · تدريب",
-      title: "مكتبة متنامية لمتعلمي اللغة الصينية.",
-      body: "استكشف الاستماع والقراءة والمفردات والقواعد والتعبيرات والتمارين المنظمة — كل ذلك في مكان واحد.",
-      ctaLibrary: "استكشف المكتبة",
-      ctaKnowledge: "تصفح المعرفة",
-      ctaPractice: "ابدأ التدريب",
-      northStar: "المكتبة ← المورد ← التدريب",
-      exploreLabel: "استكشف YUNCHINESE",
-      exploreTitle: "اختر من أين تريد أن تبدأ.",
-      exploreBody: "ابدأ بمورد، أو سؤال لغوي، أو تدريب مركز.",
-      miniLibraryTitle: "المكتبة",
-      miniLibraryBody: "فيديو · استماع · قراءة · مجموعات مراجعة",
-      miniKnowledgeTitle: "المعرفة",
-      miniKnowledgeBody: "مفردات · تعبيرات · مقارنة الكلمات · قواعد",
-      miniPracticeTitle: "التدريب",
-      miniPracticeBody: "متنوع · مفردات · قواعد · إملاء · ترجمة",
-    },
-    library: {
-      eyebrow: "المكتبة",
-      title: "اعثر على موارد تناسب احتياجاتك في التعلّم.",
-      body: "تصفح موارد اللغة الصينية حسب النوع والمستوى واللغة.",
-      videoTitle: "فيديو",
-      videoBody: "تعلّم باستخدام موارد الفيديو الصينية.",
-      listeningTitle: "الاستماع",
-      listeningBody: "تدرّب على فهم اللغة الصينية المنطوقة.",
-      readingTitle: "القراءة",
-      readingBody: "اقرأ الصينية في سياقات ذات معنى.",
-      practiceOnlyTitle: "تدريب فقط",
-      practiceOnlyBody: "انتقل مباشرة إلى تمارين مركزة.",
-      reviewTitle: "مجموعات المراجعة",
-      reviewBody: "عُد إلى الموارد والنقاط اللغوية المختارة.",
-      cta: "استكشف المكتبة",
-      latestEyebrow: "نُشر حديثًا",
-      latestTitle: "أحدث الموارد",
-      invalidLevel: "سياق المستوى المحدد غير متاح. اختر مستوى صالحًا من رأس الصفحة.",
-      empty: "ستظهر موارد التعلّم المنشورة هنا عندما تتوفر بيانات مناسبة.",
-      browseAll: "تصفح كل الموارد",
-    },
-    knowledge: {
-      eyebrow: "المعرفة",
-      title: "افهم اللغة الصينية التي تقرأها وتسمعها.",
-      body: "استكشف المفردات والتعبيرات والقواعد والفروق بين الكلمات المتشابهة.",
-      vocabTitle: "المفردات",
-      vocabBody: "استكشف المعنى والاستخدام واللغة المرتبطة.",
-      idiomTitle: "التعبيرات",
-      idiomBody: "افهم التعبيرات وكيف تُستخدم.",
-      compareTitle: "مقارنة الكلمات",
-      compareBody: "تعرّف على الفروق بين الكلمات المتشابهة في المعنى والاستخدام.",
-      grammarTitle: "القواعد",
-      grammarBody: "راجع الأنماط مع أمثلة واضحة.",
-      cta: "تصفح المعرفة",
-    },
-    practice: {
-      eyebrow: "التدريب",
-      title: "تدرّب على ما تكتشفه.",
-      body: "استخدم تمارين مركزة للتحقق من الفهم وتعزيز اللغة المفيدة.",
-      tags: ["متنوع", "مفردات", "قواعد", "إملاء", "ترجمة"],
-      featureEyebrow: "سياق المورد",
-      featureTitle: "تدرّب من خلال مورد",
-      featureBody: "ابدأ التدريب مباشرة من مورد تستكشفه.",
-      cta: "ابدأ التدريب",
-    },
-    discovery: {
-      eyebrow: "الاكتشاف",
-      title: "اعثر على ما يناسب احتياجاتك.",
-      body: "استخدم سياق المستوى واللغة، ثم تصفح المكتبة للعثور على الموارد المنشورة.",
-      levelTitle: "المستوى",
-      levelBody: "استخدم أداة المستوى العامة عندما تحتاج إلى سياق لمستوى الكفاءة.",
-      languageTitle: "اللغة",
-      languageBody: "اختر لغة الواجهة ولغة الدعم من رأس الصفحة.",
-      libraryTitle: "المكتبة",
-      libraryBody: "تصفح الموارد المنشورة في المكتبة الحالية.",
-    },
-    guest: {
-      eyebrow: "ابدأ كضيف",
-      title: "استكشف أولًا. لا تحتاج إلى حساب.",
-      body: "يبقى التصفح والتدريب المتاحان مفيدين دون تسجيل الدخول.",
-      guestTitle: "تصفح كضيف",
-      guestBody: "استكشف الموارد واستخدم التدريب الأساسي من دون إنشاء حساب.",
-      practiceTitle: "تدرّب من الموارد",
-      practiceBody: "استخدم التمارين المرتبطة بالموارد المنشورة عندما تكون متاحة.",
-    },
-    how: {
-      eyebrow: "كيف يعمل YUNCHINESE",
-      title: "استخدم YunChinese بالطريقة التي تناسبك.",
-      body: "لا يوجد ترتيب ثابت. ابدأ من المكان المفيد لك.",
-      discover: "اكتشف",
-      discoverBody: "اعثر على مورد أو موضوع.",
-      understand: "افهم",
-      understandBody: "اقرأ واستمع وابحث عما تحتاج إليه.",
-      practice: "تدرّب",
-      practiceBody: "استخدم تمارين مركزة.",
-      review: "راجع",
-      reviewBody: "عُد إلى الموارد والمعرفة المفيدة.",
-    },
-    positioning: {
-      eyebrow: "لماذا YUNCHINESE",
-      title: "الموارد والمعرفة والتدريب في مكان واحد.",
-      body: "تنقّل بين موارد التعلّم والمراجع اللغوية والتدريب المركز من دون اتباع تسلسل دورة ثابت.",
-      startTitle: "ابدأ من أي مكان",
-      startBody: "افتح المكتبة، ابحث عن شيء، أو ابدأ بالتدريب.",
-      moveTitle: "تنقّل بين الأنظمة",
-      moveBody: "انتقل من مورد إلى المعرفة والتدريب من دون فقدان السياق.",
-      courseTitle: "لا يوجد مسار دورة ثابت",
-      courseBody: "استخدم أجزاء YunChinese المفيدة لك.",
-    },
-    growing: {
-      eyebrow: "مكتبة متنامية",
-      title: "مكتبة مصممة لتنمو مع مواردها.",
-      body: "يجمع YunChinese موارد صينية وأدوات تعلم مفيدة في مكتبة يمكنها الاستمرار في التوسع بمرور الوقت.",
-      note: "يمكن للفكرة النباتية المرتبطة بحرف 芸 أن تلهم اللغة البصرية للنمو، بينما يظل المنتج مركزاً على الموارد والمعرفة والتدريب المفيد.",
-    },
-    final: {
-      title: "استكشف YunChinese.",
-      body: "اعثر على مورد، أو ابحث عن شيء تريد فهمه، أو ابدأ التدريب.",
-      ctaLibrary: "استكشف المكتبة",
-      ctaKnowledge: "تصفح المعرفة",
-      ctaPractice: "ابدأ التدريب",
-    },
-    footer: {
-      tagline: "موارد صينية ومعرفة وتدريب — معاً في مكتبة واحدة.",
-    },
+    final: { title: "Start from what you want to understand.", body: "Look up a Chinese point, use Video for context, or practice the exact skill you need.", ctaKnowledge: "Browse Knowledge", ctaVideo: "Explore Video" },
+    footer: { tagline: "Knowledge, Video, and Practice are connected so Chinese learners can understand more deeply and use the language more naturally." },
   },
 };
 
 export function getHomeCopy(localeCode: string): HomeCopy {
-  return HOME_COPY[localeCode as HomeLocaleCode] ?? HOME_COPY.en;
+  return HOME_COPY[localeCode === "vi" ? "vi" : "en"];
 }
