@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { KnowledgeLanguage } from "@/lib/knowledgeLanguage";
+import KnowledgeLanguageToggle from "./KnowledgeLanguageToggle";
 import "./VocabularyDemoFidelity.module.css";
 import "./VocabularyTypographyRuntime.module.css";
 import "./VocabularyVisualReconciliation.module.css";
@@ -17,6 +19,8 @@ type Props = {
   headword: string;
   pronunciation: string | null;
   navItems: NavItem[];
+  knowledgeLanguage: KnowledgeLanguage;
+  userLanguageLabel: string;
 };
 
 type StickyGeometry = {
@@ -75,7 +79,13 @@ function resolveEffectiveNavItems(navItems: NavItem[]) {
   ];
 }
 
-export default function VocabularyStickyNav({ headword, pronunciation, navItems }: Props) {
+export default function VocabularyStickyNav({
+  headword,
+  pronunciation,
+  navItems,
+  knowledgeLanguage,
+  userLanguageLabel,
+}: Props) {
   const [active, setActive] = useState(false);
   const [activePronunciation, setActivePronunciation] = useState(pronunciation);
   const [effectiveNavItems, setEffectiveNavItems] = useState(navItems);
@@ -187,7 +197,13 @@ export default function VocabularyStickyNav({ headword, pronunciation, navItems 
               <strong>{headword}</strong>
               {activePronunciation ? <span>{activePronunciation}</span> : null}
             </div>
-            <div data-sticky-action-slot aria-hidden="true" />
+            <div data-sticky-action-slot>
+              <KnowledgeLanguageToggle
+                value={knowledgeLanguage}
+                userLanguageLabel={userLanguageLabel}
+                compact
+              />
+            </div>
           </div>
           {effectiveNavItems.length > 0 ? (
             <nav className={styles.compactNav} data-sticky-nav aria-label="Vocabulary sections">
