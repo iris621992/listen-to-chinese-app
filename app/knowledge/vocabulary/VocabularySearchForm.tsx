@@ -8,6 +8,7 @@ type LearnerContext = {
 };
 
 type FamilyLabels = {
+  groupLabel: string;
   all: string;
   vocabulary: string;
   characters: string;
