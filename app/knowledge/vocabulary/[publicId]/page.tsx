@@ -63,7 +63,6 @@ type PosGroup = {
   key: string;
   posCode: string;
   items: VocabularyReadingItem[];
-  startIndex: number;
 };
 
 const LABELS: Record<string, Labels> = {
@@ -214,20 +213,25 @@ const learnerMeaningParts = (
 
 const groupByPartOfSpeech = (items: VocabularyReadingItem[]): PosGroup[] => {
   const groups: PosGroup[] = [];
-  items.forEach((item, index) => {
+  const groupsByCode = new Map<string, PosGroup>();
+
+  for (const item of items) {
     const posCode = item.partOfSpeechCode ?? "unspecified";
-    const current = groups[groups.length - 1];
-    if (current?.posCode === posCode) {
-      current.items.push(item);
-      return;
+    const existing = groupsByCode.get(posCode);
+    if (existing) {
+      existing.items.push(item);
+      continue;
     }
-    groups.push({
-      key: `${posCode}-${index}`,
+
+    const group = {
+      key: posCode,
       posCode,
       items: [item],
-      startIndex: index,
-    });
-  });
+    };
+    groupsByCode.set(posCode, group);
+    groups.push(group);
+  }
+
   return groups;
 };
 
@@ -236,20 +240,10 @@ const distinctPosCodes = (items: VocabularyReadingItem[]) => [
 ];
 
 const posAnchorMap = (pronunciationPublicId: string, groups: PosGroup[]) => {
-  const occurrences = new Map<string, PosGroup[]>();
+  const anchors = new Map<string, string>();
   for (const group of groups) {
     if (group.posCode === "unspecified") continue;
-    const current = occurrences.get(group.posCode) ?? [];
-    current.push(group);
-    occurrences.set(group.posCode, current);
-  }
-
-  const anchors = new Map<string, string>();
-  for (const [code, matchingGroups] of occurrences) {
-    if (matchingGroups.length === 1) {
-      const group = matchingGroups[0];
-      anchors.set(code, `#pos-${pronunciationPublicId}-${group.key}`);
-    }
+    anchors.set(group.posCode, `#pos-${pronunciationPublicId}-${group.key}`);
   }
   return anchors;
 };
@@ -498,7 +492,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
                                       className={`${styles.sense} ${(item.isSubsense || item.parentPublicId) ? styles.subsense : ""}`}
                                     >
                                       <div className={styles.senseHead}>
-                                        <span className={styles.senseNum}>{group.startIndex + itemIndex + 1}</span>
+                                        <span className={styles.senseNum}>{itemIndex + 1}</span>
                                         <div className={styles.senseMain}>
                                           {item.itemType === "usage" ? (
                                             <span className={styles.usageType}>{labels.usage}</span>
