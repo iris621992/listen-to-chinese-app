@@ -109,7 +109,7 @@ test("legacy level URLs are isolated temporary compatibility redirects", async (
   }
 });
 
-test("Header consumes canonical client-side locale and proficiency authorities", async () => {
+test("Header consumes canonical locale authority and preserves proficiency context without owning global level UI", async () => {
   const header = await readFile("components/Header.tsx", "utf8");
   const layout = await readFile("app/layout.tsx", "utf8");
   const catalog = await readFile("lib/proficiencyCatalog.ts", "utf8");
@@ -119,9 +119,12 @@ test("Header consumes canonical client-side locale and proficiency authorities",
   assert.doesNotMatch(header, /enabledLearnerLocales/);
   assert.doesNotMatch(header, /const\s+languageOptions\b/);
   assert.doesNotMatch(header, /Array\.from\(\{\s*length:\s*9/);
-  assert.doesNotMatch(header, /["'`]HSK(?:[1-9])?["'`]/);
+  assert.doesNotMatch(header, /getPublicProficiencyOptions|renderLevelOptions|onLevelChange|levelValue|levelLabel/);
+  assert.match(header, /PROFICIENCY_LEVEL_SYSTEM_PARAM/);
+  assert.match(header, /PROFICIENCY_LEVEL_PARAM/);
+  assert.match(header, /if \(levelSystem\) next\.set\(PROFICIENCY_LEVEL_SYSTEM_PARAM, levelSystem\)/);
+  assert.match(header, /if \(level\) next\.set\(PROFICIENCY_LEVEL_PARAM, level\)/);
   assert.match(header, /useEffect/);
-  assert.match(header, /getPublicProficiencyOptions/);
   assert.doesNotMatch(layout, /getPublicProficiencyOptions|proficiencyCatalog|await\s+/);
   assert.match(layout, /<Header\s*\/>/);
   assert.match(catalog, /\.from\("level_systems"\)/);
@@ -160,18 +163,19 @@ test("active learner UI labels phonetic data with generic semantic APIs", async 
   assert.match(labels, /النطق/);
 });
 
-test("Phase F P2A learner shell preserves the approved learner-first IA", async () => {
+test("learner shell preserves approved Home / Video / Knowledge / Practice IA and canonical Knowledge Search", async () => {
   const header = await readFile("components/Header.tsx", "utf8");
   const knowledge = await readFile("app/knowledge/page.tsx", "utf8");
 
   assert.match(header, /const PRIMARY_DESTINATIONS = \[/);
   assert.match(header, /\{ key: "home", path: "\/" \}/);
-  assert.match(header, /\{ key: "library", path: "\/resources" \}/);
+  assert.match(header, /\{ key: "video", path: "\/resources" \}/);
   assert.match(header, /\{ key: "knowledge", path: "\/knowledge" \}/);
   assert.match(header, /\{ key: "practice", path: "\/practice" \}/);
+  assert.doesNotMatch(header, /key: "library"|library:\s*"Library"|library:\s*"Thư viện"/);
   assert.match(header, /aria-label="Primary"/);
   assert.match(header, /aria-current=\{active \? "page" : undefined\}/);
-  assert.match(header, /aria-label="Learning context"/);
+  assert.match(header, /aria-label="Interface controls"/);
   assert.doesNotMatch(header, /Owner|Admin/);
 
   assert.match(header, /const hasUiLang = current\.has\(INTERFACE_LOCALE_PARAM\)/);
@@ -181,21 +185,22 @@ test("Phase F P2A learner shell preserves the approved learner-first IA", async 
   assert.match(header, /if \(level\) next\.set\(PROFICIENCY_LEVEL_PARAM, level\)/);
   assert.match(header, /nextSearchParams\.set\(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode\)/);
   assert.match(header, /nextSearchParams\.set\("lang", nextInterfaceLocaleCode\)/);
-  assert.match(header, /enabledInterfaceLocales/);
-  assert.match(header, /getPublicProficiencyOptions/);
+  assert.match(header, /visibleInterfaceLocales/);
+  assert.match(header, /locale\.code !== "ar"/);
+  assert.doesNotMatch(header, /getPublicProficiencyOptions|renderLevelOptions/);
 
-  assert.match(knowledge, /Knowledge Hub/);
-  assert.match(knowledge, /Vocabulary/);
-  assert.match(knowledge, /Idioms/);
-  assert.match(knowledge, /Word Comparison/);
-  assert.match(knowledge, /Grammar/);
+  assert.match(knowledge, /KNOWLEDGE SEARCH/);
+  assert.match(knowledge, /loadVocabularySearch/);
+  assert.match(knowledge, /VocabularySearchForm/);
+  assert.match(knowledge, /families/);
   assert.match(knowledge, /preservedLearnerContextQuery/);
+  assert.doesNotMatch(knowledge, /Knowledge Hub/);
   assert.doesNotMatch(knowledge, /supabase/i);
 });
 
-test("Phase F PR-A learner shell keeps responsive, accessibility, and brand invariants", async () => {
+test("learner shell keeps responsive, accessibility, brand, and truthful sign-in invariants", async () => {
   const header = await readFile("components/Header.tsx", "utf8");
-  const styles = await readFile("app/globals.css", "utf8");
+  const styles = await readFile("components/Header.module.css", "utf8");
 
   await access("public/brand/yunchinese-logo.png");
   assert.match(header, /src="\/brand\/yunchinese-logo\.png"/);
@@ -206,15 +211,15 @@ test("Phase F PR-A learner shell keeps responsive, accessibility, and brand inva
   assert.match(header, /aria-controls=\{drawerId\}/);
   assert.match(header, /event\.key === "Escape"/);
   assert.match(header, /menuTriggerRef\.current\?\.focus\(\)/);
-  assert.doesNotMatch(header, /Sign in|Account/);
+  assert.match(header, /disabled title=\{labels\.signInUnavailable\}/);
+  assert.doesNotMatch(header, /href=[^\n]+(?:sign-in|signin|login|account)/i);
   assert.doesNotMatch(header, /\/vocabulary|\/idioms|\/grammar|\/dictation|\/translation/);
 
-  assert.match(styles, /\.learner-header\[data-compact-nav="true"\]/);
-  assert.match(styles, /@media \(max-width: 899px\) and \(orientation: landscape\) and \(max-height: 520px\)/);
-  assert.match(styles, /@media \(max-width: 599px\)/);
-  assert.match(styles, /min-height: 44px/);
-  assert.match(styles, /\[dir="rtl"\] \.learner-brand-logo/);
-  assert.match(styles, /transform: none !important/);
+  assert.match(styles, /\.brandLogo\{[^}]*transform:none!important/s);
+  assert.match(styles, /@media\(max-width:899px\)/);
+  assert.match(styles, /@media\(max-width:620px\)/);
+  assert.match(styles, /min-height:44px/);
+  assert.match(styles, /\.header:dir\(rtl\)/);
   assert.doesNotMatch(styles, /scaleX\(-1\)/);
 });
 

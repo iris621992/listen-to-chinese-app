@@ -1,0 +1,42 @@
+.pronLine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.pinyin {
+  color: var(--brand-brown);
+  font-size: 21px;
+  font-weight: 650;
+}
+
+.hanViet {
+  color: var(--text-muted);
+  font-size: 17px;
+}
+
+.dot {
+  color: #aaa497;
+}
+
+@media (max-width: 800px) and (min-width: 621px) and (min-height: 521px) {
+  .pinyin {
+    font-size: 17px;
+  }
+
+  .hanViet {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 620px), (max-width: 900px) and (max-height: 520px) {
+  .pinyin {
+    font-size: 18px;
+  }
+
+  .hanViet {
+    font-size: 15px;
+  }
+}

@@ -4,10 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:architecture-direction && next build",
+    "build": "npm run test:vocabulary-search && npm run test:architecture-direction && next build && npm run test:vocabulary-detail",
     "start": "next start",
     "lint": "eslint .",
     "test:architecture-direction": "node --test scripts/verification/architecture-direction.test.mjs",
+    "test:vocabulary-detail": "node --test scripts/verification/vocabulary-detail-learner-surface.test.mjs scripts/verification/vocabulary-detail-header-nav-authority.test.mjs",
+    "test:vocabulary-search": "node --test scripts/verification/vocabulary-search-learner-flow.test.mjs",
     "test:db001": "node --test scripts/verification/db001-application-cutover.test.mjs",
     "test:supabase-config": "node --test scripts/verification/supabase-public-config.test.mjs",
     "test:hc1": "node --test scripts/verification/hc1-locale-context-boundary.test.mjs",
@@ -25,7 +27,8 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
-    "next": "16.3.0",
+    "hanzi-writer": "3.7.3",
+    "next": "16.3.5",
     "react": "19.2.7",
     "react-dom": "19.2.7"
   },
@@ -34,7 +37,7 @@
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
     "eslint": "9.39.4",
-    "eslint-config-next": "16.3.0",
+    "eslint-config-next": "16.3.5",
     "postcss": "8.5.23",
     "tailwindcss": "4.3.1",
     "typescript": "6.0.3"

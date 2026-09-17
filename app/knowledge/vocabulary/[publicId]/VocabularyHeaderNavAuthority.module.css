@@ -1,0 +1,79 @@
+/* Current Final Review authority: lexical identity owns the top row; POS / reading navigation owns a dedicated row below it.
+   Future learner-language content toggle + Save belong to the header action slot and must not be replaced by navigation. */
+
+/* The old POS count-pill summary duplicated the real navigation row and visually separated navigation from the headword.
+   Keep POS counts inside each POS section; the learner-facing header uses one navigation row only. */
+:global(#vocabulary-entry-card > div[aria-label]) {
+  display: none !important;
+}
+
+/* Keep the in-card POS / reading navigation directly below the Written Form + Pronunciation header. */
+:global(#vocabulary-entry-card > nav) {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+  display: flex !important;
+  align-items: center;
+  gap: 22px !important;
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+  background: #fffdfa !important;
+}
+
+/* Compact sticky state mirrors the Final Review hierarchy:
+   row 1 = lexical identity + reserved future action area;
+   row 2 = POS / pronunciation navigation. */
+:global([data-vocabulary-sticky="true"] > div) {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  align-items: stretch !important;
+  gap: 0 !important;
+  padding-inline: 0 !important;
+}
+
+:global([data-vocabulary-sticky="true"] [data-sticky-top-row]) {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 13px;
+  border-bottom: 1px solid #d7d0c2;
+}
+
+:global([data-vocabulary-sticky="true"] [data-sticky-action-slot]) {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+:global([data-vocabulary-sticky="true"] [data-sticky-nav]) {
+  width: 100%;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 18px;
+  overflow-x: auto;
+  padding: 7px 13px 6px;
+  border: 0;
+  scrollbar-width: thin;
+}
+
+:global([data-vocabulary-sticky="true"] [data-sticky-nav] a) {
+  min-height: auto;
+  padding: 3px 0;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+}
+
+@media (max-width: 639px) {
+  :global([data-vocabulary-sticky="true"] [data-sticky-top-row]) {
+    min-height: 44px;
+    padding: 5px 8px;
+  }
+
+  :global([data-vocabulary-sticky="true"] [data-sticky-nav]) {
+    gap: 14px;
+    padding: 5px 8px;
+  }
+}

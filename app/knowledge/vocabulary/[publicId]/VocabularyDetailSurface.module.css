@@ -1,0 +1,4 @@
+.surface {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fffdf8 0%, #fffefa 52%, #fffdf8 100%);
+}
