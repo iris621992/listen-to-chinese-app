@@ -26,6 +26,7 @@ type DetailAction = {
 type Props = {
   occurrences: VocabularyCharacterOccurrence[];
   labels: Labels;
+  showHanViet?: boolean;
   detailAction?: DetailAction | null;
   variant?: "responsive" | "rail" | "embedded";
   anchorId?: string;
@@ -103,6 +104,7 @@ function learnerStructureValue(occurrence: VocabularyCharacterOccurrence) {
 export default function VocabularyCharacterRail({
   occurrences,
   labels,
+  showHanViet = true,
   detailAction = null,
   variant = "responsive",
   anchorId,
@@ -133,6 +135,7 @@ export default function VocabularyCharacterRail({
         <VocabularyCharacterRail
           occurrences={occurrences}
           labels={labels}
+          showHanViet={showHanViet}
           detailAction={detailAction}
           variant="rail"
           anchorId="characters-rail"
@@ -140,6 +143,7 @@ export default function VocabularyCharacterRail({
         <VocabularyCharacterRail
           occurrences={occurrences}
           labels={labels}
+          showHanViet={showHanViet}
           detailAction={detailAction}
           variant="embedded"
           anchorId="characters"
@@ -152,6 +156,7 @@ export default function VocabularyCharacterRail({
     <CharacterSurface
       characters={characters}
       labels={labels}
+      showHanViet={showHanViet}
       detailAction={detailAction}
       variant={variant}
       anchorId={anchorId ?? (variant === "embedded" ? "characters" : "characters-rail")}
@@ -162,12 +167,14 @@ export default function VocabularyCharacterRail({
 function CharacterSurface({
   characters,
   labels,
+  showHanViet,
   detailAction,
   variant,
   anchorId,
 }: {
   characters: VocabularyCharacterOccurrence[];
   labels: Labels;
+  showHanViet: boolean;
   detailAction: DetailAction | null;
   variant: "rail" | "embedded";
   anchorId: string;
@@ -248,7 +255,7 @@ function CharacterSurface({
                   </div>
                 ) : null}
 
-                {character.hanViet ? (
+                {showHanViet && character.hanViet ? (
                   <div className={styles.characterFactLine}>
                     <span>{labels.hanViet}: </span>
                     <strong>{character.hanViet}</strong>
