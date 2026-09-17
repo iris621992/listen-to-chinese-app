@@ -163,7 +163,7 @@ test("active learner UI labels phonetic data with generic semantic APIs", async 
   assert.match(labels, /النطق/);
 });
 
-test("learner shell preserves approved Home / Video / Knowledge / Practice IA and context", async () => {
+test("learner shell preserves approved Home / Video / Knowledge / Practice IA and canonical Knowledge Search", async () => {
   const header = await readFile("components/Header.tsx", "utf8");
   const knowledge = await readFile("app/knowledge/page.tsx", "utf8");
 
@@ -189,12 +189,12 @@ test("learner shell preserves approved Home / Video / Knowledge / Practice IA an
   assert.match(header, /locale\.code !== "ar"/);
   assert.doesNotMatch(header, /getPublicProficiencyOptions|renderLevelOptions/);
 
-  assert.match(knowledge, /Knowledge Hub/);
-  assert.match(knowledge, /Vocabulary/);
-  assert.match(knowledge, /Idioms/);
-  assert.match(knowledge, /Word Comparison/);
-  assert.match(knowledge, /Grammar/);
+  assert.match(knowledge, /KNOWLEDGE SEARCH/);
+  assert.match(knowledge, /loadVocabularySearch/);
+  assert.match(knowledge, /VocabularySearchForm/);
+  assert.match(knowledge, /families/);
   assert.match(knowledge, /preservedLearnerContextQuery/);
+  assert.doesNotMatch(knowledge, /Knowledge Hub/);
   assert.doesNotMatch(knowledge, /supabase/i);
 });
 
