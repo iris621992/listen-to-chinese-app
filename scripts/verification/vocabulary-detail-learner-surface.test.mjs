@@ -191,7 +191,7 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.doesNotMatch(page, /audio|speechSynthesis|Polly/i);
   assert.doesNotMatch(page, /saveButton|saved-item|content-toggle/i);
 
-  assert.match(knowledge, /href:\s*"\/knowledge\/vocabulary"/);
+  assert.match(knowledge, /pathname:\s*`\/knowledge\/vocabulary\/\$\{item\.publicId\}`/);
   assert.doesNotMatch(knowledge, /vocab_[a-f0-9]{64}/);
   assert.match(knowledge, /preservedLearnerContextQuery/);
 
