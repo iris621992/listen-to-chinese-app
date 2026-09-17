@@ -31,7 +31,7 @@ type Props = {
 
 export default function VocabularySearchForm({
   query = "",
-  action = "/knowledge/vocabulary",
+  action = "/knowledge",
   context,
   placeholder,
   submitLabel,
