@@ -43,7 +43,7 @@ const LABELS: Record<string, Labels> = {
   },
 };
 
-const CONTEXT_KEYS = ["uiLang", "lang", "levelSystem", "level"] as const;
+const CONTEXT_KEYS = ["uiLang", "lang", "knowledgeLang", "levelSystem", "level"] as const;
 
 export default function VocabularyDetailSearch() {
   const params = useSearchParams();
