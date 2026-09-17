@@ -69,6 +69,13 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(page, /detail\.forms/);
   assert.match(page, /detail\.pronunciations/);
   assert.match(page, /groupByPartOfSpeech/);
+  assert.match(page, /groupsByCode = new Map<string, PosGroup>\(\)/);
+  assert.match(page, /const existing = groupsByCode\.get\(posCode\)/);
+  assert.match(page, /existing\.items\.push\(item\)/);
+  assert.doesNotMatch(page, /groups\[groups\.length - 1\]/);
+  assert.match(page, /anchors\.set\(group\.posCode, `#pos-\$\{pronunciationPublicId\}-\$\{group\.key\}`\)/);
+  assert.match(page, /<span className=\{styles\.senseNum\}>\{itemIndex \+ 1\}<\/span>/);
+  assert.doesNotMatch(page, /group\.startIndex/);
   assert.match(page, /learnerMeaningParts/);
   assert.match(page, /form\.publicId !== primaryForm\.publicId/);
   assert.doesNotMatch(page, /form\.text !== primaryForm\.text/);
@@ -88,6 +95,7 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.doesNotMatch(page, /translations:\s*"Từ tương đương"/);
   assert.doesNotMatch(page, /formLabel\(/);
   assert.doesNotMatch(page, /languageVarietyLabel/);
+  assert.doesNotMatch(page, /Nghĩa đặc thù|Special meaning|specialMeaning/);
   assert.doesNotMatch(page, /Ỷ TỬ|搬椅子|一把椅子/);
 
   assert.match(pronunciationMeta, /hanViet:\s*string \| null/);
