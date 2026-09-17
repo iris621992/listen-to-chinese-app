@@ -57,16 +57,18 @@ export default function VocabularyDetailSearch() {
     }),
   );
 
-  const backQuery = new URLSearchParams();
-  Object.entries(context).forEach(([key, value]) => backQuery.set(key, value));
-  if (query) backQuery.set("q", query);
-  families.forEach((family) => backQuery.append("family", family));
-
   return (
     <div className={styles.wrap}>
       {query ? (
         <Link
-          href={`/knowledge/vocabulary?${backQuery.toString()}`}
+          href={{
+            pathname: "/knowledge/vocabulary",
+            query: {
+              ...context,
+              q: query,
+              ...(families.length > 0 ? { family: families } : {}),
+            },
+          }}
           className={styles.backLink}
         >
           ← {labels.backToResults}
