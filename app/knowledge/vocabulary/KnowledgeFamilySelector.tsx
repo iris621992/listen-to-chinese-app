@@ -25,7 +25,9 @@ export default function KnowledgeFamilySelector({ labels, initialFamilies = [] }
   const [selected, setSelected] = useState<string[]>(
     initialFamilies.filter((value) => VALID_FAMILIES.has(value)),
   );
+  const [moreOpen, setMoreOpen] = useState(false);
   const allSelected = selected.length === 0;
+  const moreSelected = MORE_FAMILIES.some((value) => selected.includes(value));
 
   function toggleFamily(value: string) {
     setSelected((current) => (
@@ -59,25 +61,33 @@ export default function KnowledgeFamilySelector({ labels, initialFamilies = [] }
           <span>{labels[value]}</span>
         </label>
       ))}
-      <details data-family-more>
-        <summary data-family-chip data-selected={MORE_FAMILIES.some((value) => selected.includes(value)) ? "true" : "false"}>
+      <div data-family-more>
+        <button
+          type="button"
+          data-family-chip
+          data-selected={moreSelected ? "true" : "false"}
+          aria-expanded={moreOpen}
+          onClick={() => setMoreOpen((open) => !open)}
+        >
           {labels.more}
-        </summary>
-        <div data-family-more-menu>
-          {MORE_FAMILIES.map((value) => (
-            <label key={value} data-family-option>
-              <input
-                type="checkbox"
-                name="family"
-                value={value}
-                checked={selected.includes(value)}
-                onChange={() => toggleFamily(value)}
-              />
-              <span>{labels[value]}</span>
-            </label>
-          ))}
-        </div>
-      </details>
+        </button>
+        {moreOpen ? (
+          <div data-family-more-menu>
+            {MORE_FAMILIES.map((value) => (
+              <label key={value} data-family-option>
+                <input
+                  type="checkbox"
+                  name="family"
+                  value={value}
+                  checked={selected.includes(value)}
+                  onChange={() => toggleFamily(value)}
+                />
+                <span>{labels[value]}</span>
+              </label>
+            ))}
+          </div>
+        ) : null}
+      </div>
     </fieldset>
   );
 }
