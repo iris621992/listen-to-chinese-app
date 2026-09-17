@@ -5,6 +5,9 @@ import { loadVocabularySearch } from "@/lib/vocabularySearch";
 import VocabularySearchForm from "./vocabulary/VocabularySearchForm";
 import styles from "./vocabulary/VocabularySearch.module.css";
 
+// Legacy Knowledge Hub route content was removed: /knowledge is now the canonical Knowledge Search.
+// Knowledge families remain Vocabulary, Characters, Grammar, Comparisons / Word Comparison, and Idioms.
+
 type Props = {
   searchParams?: Promise<{
     q?: string;
