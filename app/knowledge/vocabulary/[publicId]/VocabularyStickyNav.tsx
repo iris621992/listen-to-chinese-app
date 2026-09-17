@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import "./VocabularyDemoFidelity.module.css";
 import "./VocabularyTypographyRuntime.module.css";
 import "./VocabularyVisualReconciliation.module.css";
+import "./VocabularyHeaderNavAuthority.module.css";
 import styles from "./VocabularyDetail.module.css";
 
 type NavItem = {
@@ -127,7 +128,7 @@ export default function VocabularyStickyNav({ headword, pronunciation, navItems 
       });
 
       if (visibleItems.length > 0) {
-        const threshold = offset + 84;
+        const threshold = offset + 116;
         let current = visibleItems[0].item.href;
         for (const entry of visibleItems) {
           if (entry.target.getBoundingClientRect().top <= threshold) current = entry.item.href;
@@ -181,12 +182,15 @@ export default function VocabularyStickyNav({ headword, pronunciation, navItems 
         style={compactStyle}
       >
         <div className={styles.compactStickyInner}>
-          <div className={styles.compactIdentity}>
-            <strong>{headword}</strong>
-            {activePronunciation ? <span>{activePronunciation}</span> : null}
+          <div data-sticky-top-row>
+            <div className={styles.compactIdentity}>
+              <strong>{headword}</strong>
+              {activePronunciation ? <span>{activePronunciation}</span> : null}
+            </div>
+            <div data-sticky-action-slot aria-hidden="true" />
           </div>
           {effectiveNavItems.length > 0 ? (
-            <nav className={styles.compactNav} aria-label="Vocabulary sections">
+            <nav className={styles.compactNav} data-sticky-nav aria-label="Vocabulary sections">
               {effectiveNavItems.map((item) => {
                 const current = item.href === activeHref;
                 return (
