@@ -12,14 +12,18 @@ type Props = {
     lang?: string;
     levelSystem?: string;
     level?: string;
+    family?: string | string[];
   }>;
 };
 
 type Labels = {
   knowledge: string;
   vocabulary: string;
+  eyebrow: string;
   title: string;
   intro: string;
+  sideTitle: string;
+  sideBody: string;
   search: string;
   searchPlaceholder: string;
   hint: string;
@@ -31,63 +35,96 @@ type Labels = {
   noResultsBody: string;
   unavailableTitle: string;
   unavailableBody: string;
+  unsupportedTitle: string;
+  unsupportedBody: string;
+  partialNote: string;
   open: string;
+  families: {
+    all: string;
+    vocabulary: string;
+    characters: string;
+    grammar: string;
+    more: string;
+    comparisons: string;
+    idioms: string;
+  };
 };
 
 const LABELS: Record<string, Labels> = {
   en: {
     knowledge: "Knowledge",
     vocabulary: "Vocabulary",
-    title: "Find a word",
-    intro: "Search by Chinese characters, Pinyin, or meaning. Results show only what you need to identify the right entry; detailed explanations live on the Vocabulary detail page.",
+    eyebrow: "KNOWLEDGE SEARCH",
+    title: "Find what you need to understand.",
+    intro: "Search a word, character, grammar point, comparison, or idiom from one place. Results lead you to the right kind of knowledge without requiring you to know the category first.",
+    sideTitle: "One search, multiple knowledge families",
+    sideBody: "Results are identified by content type. Result cards help you recognize and navigate; deep explanation stays on the relevant detail page.",
     search: "Search",
-    searchPlaceholder: "Chinese, Pinyin, or meaning…",
-    hint: "Examples: 椅子 · yizi · chair · activity",
+    searchPlaceholder: "Enter Hanzi, pinyin, or meaning…",
+    hint: "Try: 椅子 · yǐzi · chair · 还",
     resultsFor: (query) => `Results for “${query}”`,
-    resultNote: "Choose an entry to see meaning, usage, and related learning content.",
-    emptyTitle: "What do you want to look up?",
-    emptyBody: "Start with Chinese characters, Pinyin, or a meaning. YunChinese searches published Vocabulary entries only.",
-    noResultsTitle: "No matching entry found",
-    noResultsBody: "Try Chinese characters, Pinyin, or another meaning. YunChinese does not fabricate results when no published entry matches.",
-    unavailableTitle: "Vocabulary search is temporarily unavailable",
-    unavailableBody: "The search service could not return published Vocabulary data right now. Please try again later.",
+    resultNote: "Choose an entry to continue to its detailed Knowledge page.",
+    emptyTitle: "Start with what you are wondering about",
+    emptyBody: "Search by Hanzi, pinyin, or learner-language meaning. YunChinese does not fabricate knowledge that is not published yet.",
+    noResultsTitle: "No matching knowledge yet",
+    noResultsBody: "Check the Hanzi, pinyin, or meaning and try again. Missing content is not replaced with fabricated results.",
+    unavailableTitle: "Results are unavailable right now",
+    unavailableBody: "The published Vocabulary source could not be reached, so results are not being shown. Your query is preserved.",
+    unsupportedTitle: "This knowledge family is not searchable yet",
+    unsupportedBody: "The selector is part of the approved Knowledge Search flow, but the live backend currently proves Vocabulary search only. No substitute results are shown.",
+    partialNote: "Vocabulary results are live. Other selected knowledge families are not searchable yet and are intentionally omitted.",
     open: "View entry",
+    families: { all: "All", vocabulary: "Vocabulary", characters: "Characters", grammar: "Grammar", more: "More", comparisons: "Comparisons", idioms: "Idioms" },
   },
   vi: {
     knowledge: "Kiến thức",
     vocabulary: "Từ vựng",
-    title: "Tra từ",
-    intro: "Tìm bằng chữ Hán, Pinyin hoặc nghĩa. Kết quả chỉ hiển thị thông tin cần thiết để bạn nhận ra đúng mục từ; phần giải thích chi tiết nằm trong trang Từ vựng.",
-    search: "Tìm kiếm",
-    searchPlaceholder: "Chữ Hán, Pinyin hoặc nghĩa…",
-    hint: "Ví dụ: 椅子 · yizi · ghế · activity",
+    eyebrow: "TÌM KIẾM KIẾN THỨC",
+    title: "Tìm đúng điều bạn cần hiểu.",
+    intro: "Tra từ, Hán tự, điểm ngữ pháp, phần so sánh hoặc thành ngữ từ một nơi. Kết quả giúp bạn đi đúng tới loại kiến thức phù hợp, thay vì phải đoán trước mình nên tìm ở mục nào.",
+    sideTitle: "Một ô tìm kiếm, nhiều loại kiến thức",
+    sideBody: "Kết quả được nhận diện theo đúng loại nội dung. Thẻ kết quả chỉ giúp nhận biết và đi tiếp; phần giải thích sâu nằm ở trang chi tiết.",
+    search: "Tìm",
+    searchPlaceholder: "Nhập chữ Hán, pinyin hoặc ý nghĩa…",
+    hint: "Thử: 椅子 · yǐzi · ghế · 还",
     resultsFor: (query) => `Kết quả cho “${query}”`,
-    resultNote: "Chọn một mục từ để xem nghĩa, cách dùng và các nội dung liên quan.",
-    emptyTitle: "Bạn muốn tra từ gì?",
-    emptyBody: "Bắt đầu bằng chữ Hán, Pinyin hoặc một nghĩa. YunChinese chỉ tìm trong các mục Từ vựng đã xuất bản.",
-    noResultsTitle: "Không tìm thấy mục phù hợp",
-    noResultsBody: "Thử chữ Hán, Pinyin hoặc một nghĩa khác. YunChinese không tạo kết quả giả khi chưa có mục từ đã xuất bản phù hợp.",
-    unavailableTitle: "Tìm kiếm Từ vựng hiện tạm thời không khả dụng",
-    unavailableBody: "Hệ thống hiện chưa lấy được dữ liệu Từ vựng đã xuất bản. Vui lòng thử lại sau.",
+    resultNote: "Chọn một mục để đi tiếp tới trang Kiến thức chi tiết.",
+    emptyTitle: "Bắt đầu từ điều bạn đang thắc mắc",
+    emptyBody: "Bạn có thể tìm bằng chữ Hán, pinyin hoặc ý nghĩa trong ngôn ngữ đang dùng. Nội dung chưa xuất bản sẽ không được tạo giả để lấp kết quả.",
+    noResultsTitle: "Chưa tìm thấy nội dung phù hợp",
+    noResultsBody: "Thử kiểm tra lại chữ Hán, pinyin hoặc ý nghĩa. Nếu nội dung chưa có trong YunChinese, trang không tạo kết quả thay thế chỉ để lấp chỗ trống.",
+    unavailableTitle: "Không thể tải kết quả lúc này",
+    unavailableBody: "Nguồn Từ vựng đã xuất bản hiện không khả dụng nên kết quả chưa được hiển thị. Nội dung đang tìm vẫn được giữ nguyên.",
+    unsupportedTitle: "Loại kiến thức này chưa thể tìm kiếm",
+    unsupportedBody: "Bộ chọn family đã thuộc flow Knowledge Search được duyệt, nhưng backend hiện mới chứng minh tìm kiếm Từ vựng. Trang không tạo kết quả thay thế giả.",
+    partialNote: "Kết quả Từ vựng đang dùng dữ liệu thật. Các loại kiến thức khác đang chọn chưa có backend tìm kiếm và được cố ý bỏ qua.",
     open: "Xem mục từ",
+    families: { all: "Tất cả", vocabulary: "Từ vựng", characters: "Hán tự", grammar: "Ngữ pháp", more: "Thêm", comparisons: "So sánh", idioms: "Thành ngữ" },
   },
   ar: {
     knowledge: "المعرفة",
     vocabulary: "المفردات",
-    title: "ابحث عن كلمة",
-    intro: "ابحث بالحروف الصينية أو الـ Pinyin أو المعنى. تعرض النتائج فقط ما تحتاجه للتعرّف على المدخل الصحيح، بينما تبقى الشروح التفصيلية في صفحة المفردة.",
+    eyebrow: "بحث المعرفة",
+    title: "ابحث عمّا تحتاج إلى فهمه.",
+    intro: "ابحث عن كلمة أو حرف صيني أو نقطة نحوية أو مقارنة أو تعبير اصطلاحي من مكان واحد.",
+    sideTitle: "بحث واحد، عائلات معرفية متعددة",
+    sideBody: "تساعدك بطاقات النتائج على تحديد الوجهة الصحيحة، بينما تبقى التفاصيل في صفحة المعرفة المناسبة.",
     search: "بحث",
-    searchPlaceholder: "حروف صينية أو Pinyin أو معنى…",
-    hint: "أمثلة: 椅子 · yizi · chair · activity",
+    searchPlaceholder: "أدخل حروفًا صينية أو Pinyin أو معنى…",
+    hint: "جرّب: 椅子 · yǐzi · chair · 还",
     resultsFor: (query) => `نتائج “${query}”`,
-    resultNote: "اختر مدخلاً لعرض المعنى والاستعمال والمحتوى التعليمي المرتبط.",
-    emptyTitle: "ما الذي تريد البحث عنه؟",
-    emptyBody: "ابدأ بحروف صينية أو Pinyin أو معنى. يبحث YunChinese فقط في مدخلات المفردات المنشورة.",
-    noResultsTitle: "لم يتم العثور على مدخل مطابق",
-    noResultsBody: "جرّب الحروف الصينية أو Pinyin أو معنى آخر. لا ينشئ YunChinese نتائج غير موجودة.",
-    unavailableTitle: "بحث المفردات غير متاح مؤقتًا",
-    unavailableBody: "تعذر حاليًا تحميل بيانات المفردات المنشورة. يرجى المحاولة لاحقًا.",
+    resultNote: "اختر مدخلاً للانتقال إلى صفحة المعرفة التفصيلية.",
+    emptyTitle: "ابدأ بما تريد فهمه",
+    emptyBody: "يمكنك البحث بالحروف الصينية أو Pinyin أو المعنى. لا ينشئ YunChinese محتوى غير منشور لملء النتائج.",
+    noResultsTitle: "لا توجد معرفة مطابقة بعد",
+    noResultsBody: "تحقق من الحروف أو Pinyin أو المعنى وحاول مرة أخرى.",
+    unavailableTitle: "النتائج غير متاحة الآن",
+    unavailableBody: "تعذر الوصول إلى مصدر المفردات المنشورة، لذلك لا يتم عرض نتائج الآن.",
+    unsupportedTitle: "هذه العائلة المعرفية غير قابلة للبحث بعد",
+    unsupportedBody: "واجهة الاختيار موجودة ضمن تدفق البحث المعتمد، لكن الخلفية الحالية تثبت بحث المفردات فقط.",
+    partialNote: "نتائج المفردات حقيقية. العائلات الأخرى المحددة غير قابلة للبحث بعد وتم حذفها عمدًا.",
     open: "عرض المدخل",
+    families: { all: "الكل", vocabulary: "المفردات", characters: "الحروف", grammar: "القواعد", more: "المزيد", comparisons: "المقارنات", idioms: "التعابير" },
   },
 };
 
@@ -103,6 +140,11 @@ const POS_LABELS: Record<string, Record<string, string>> = {
   conjunction: { en: "Conjunction", vi: "Liên từ", ar: "أداة ربط" },
   particle: { en: "Particle", vi: "Trợ từ", ar: "أداة" },
   measure_word: { en: "Measure word", vi: "Lượng từ", ar: "كلمة قياس" },
+};
+
+const normalizeFamilies = (value: string | string[] | undefined) => {
+  const values = Array.isArray(value) ? value : value ? [value] : [];
+  return [...new Set(values.filter((item) => ["vocabulary", "characters", "grammar", "comparisons", "idioms"].includes(item)))];
 };
 
 function SearchState({ title, body }: { title: string; body: string }) {
@@ -127,49 +169,64 @@ export default async function VocabularySearchPage({ searchParams }: Props) {
     levelSystem: query?.levelSystem,
     level: query?.level,
   });
-  const result = await loadVocabularySearch(query?.q, query?.lang ?? query?.uiLang);
-  const searchQuery = result.query;
+  const selectedFamilies = normalizeFamilies(query?.family);
+  const vocabularySelected = selectedFamilies.length === 0 || selectedFamilies.includes("vocabulary");
+  const unsupportedSelected = selectedFamilies.some((family) => family !== "vocabulary");
+  const rawQuery = query?.q?.trim() ?? "";
+  const result = vocabularySelected
+    ? await loadVocabularySearch(rawQuery, query?.lang ?? query?.uiLang)
+    : null;
+  const searchQuery = result?.query ?? rawQuery;
 
   return (
     <main className={styles.page} dir={interfaceLocale.direction}>
       <nav className={styles.breadcrumb} aria-label="Breadcrumb">
         <Link href={{ pathname: "/knowledge", query: learnerContextQuery }}>{labels.knowledge}</Link>
         <span aria-hidden="true">/</span>
-        <span>{labels.vocabulary}</span>
+        <span>{labels.eyebrow}</span>
       </nav>
 
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>{labels.vocabulary}</p>
+          <p className={styles.eyebrow}>{labels.eyebrow}</p>
           <h1>{labels.title}</h1>
           <p className={styles.intro}>{labels.intro}</p>
         </div>
-        <div className={styles.searchPanel}>
-          <VocabularySearchForm
-            query={searchQuery}
-            context={learnerContextQuery}
-            placeholder={labels.searchPlaceholder}
-            submitLabel={labels.search}
-            ariaLabel={labels.search}
-            className={styles.searchForm}
-          />
-          <p className={styles.hint}>{labels.hint}</p>
-        </div>
+        <aside className={styles.heroAside}>
+          <strong>{labels.sideTitle}</strong>
+          <p>{labels.sideBody}</p>
+        </aside>
+      </section>
+
+      <section className={styles.searchPanel}>
+        <VocabularySearchForm
+          query={searchQuery}
+          context={learnerContextQuery}
+          placeholder={labels.searchPlaceholder}
+          submitLabel={labels.search}
+          ariaLabel={labels.search}
+          className={styles.searchForm}
+          familyLabels={labels.families}
+          initialFamilies={selectedFamilies}
+        />
+        <p className={styles.hint}>{labels.hint}</p>
       </section>
 
       <section className={styles.results} aria-live="polite">
-        {result.status === "EMPTY" ? (
+        {!rawQuery ? (
           <SearchState title={labels.emptyTitle} body={labels.emptyBody} />
-        ) : result.status === "DATABASE_ERROR" || result.status === "INVALID_INPUT" ? (
+        ) : !vocabularySelected ? (
+          <SearchState title={labels.unsupportedTitle} body={labels.unsupportedBody} />
+        ) : result?.status === "DATABASE_ERROR" || result?.status === "INVALID_INPUT" ? (
           <SearchState title={labels.unavailableTitle} body={labels.unavailableBody} />
-        ) : result.items.length === 0 ? (
+        ) : result?.items.length === 0 ? (
           <SearchState title={labels.noResultsTitle} body={labels.noResultsBody} />
-        ) : (
+        ) : result ? (
           <>
             <div className={styles.resultsHead}>
               <div>
                 <h2>{labels.resultsFor(searchQuery)}</h2>
-                <p>{labels.resultNote}</p>
+                <p>{unsupportedSelected ? labels.partialNote : labels.resultNote}</p>
               </div>
               <span className={styles.resultCount}>{result.items.length}</span>
             </div>
@@ -179,10 +236,15 @@ export default async function VocabularySearchPage({ searchParams }: Props) {
                   key={item.publicId}
                   href={{
                     pathname: `/knowledge/vocabulary/${item.publicId}`,
-                    query: { ...learnerContextQuery, q: searchQuery },
+                    query: {
+                      ...learnerContextQuery,
+                      q: searchQuery,
+                      ...(selectedFamilies.length > 0 ? { family: selectedFamilies } : {}),
+                    },
                   }}
                   className={styles.resultCard}
                 >
+                  <span className={styles.familyBadge}>{labels.vocabulary}</span>
                   <div className={styles.resultIdentity}>
                     <strong className={styles.hanzi}>{item.displayForm}</strong>
                     <span className={styles.pinyin}>{item.pronunciation}</span>
@@ -200,7 +262,7 @@ export default async function VocabularySearchPage({ searchParams }: Props) {
               ))}
             </div>
           </>
-        )}
+        ) : null}
       </section>
     </main>
   );
