@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import VocabularySearchForm from "../VocabularySearchForm";
+import searchStyles from "../VocabularySearch.module.css";
 import styles from "./VocabularyDetailSearch.module.css";
 
 type Labels = {
@@ -23,20 +24,20 @@ type Labels = {
 
 const LABELS: Record<string, Labels> = {
   en: {
-    search: "Search Knowledge",
-    placeholder: "Hanzi, pinyin, or meaning…",
+    search: "Search",
+    placeholder: "Enter Hanzi, pinyin, or meaning…",
     backToResults: "Back to search results",
     families: { groupLabel: "Knowledge families", all: "All", vocabulary: "Vocabulary", characters: "Characters", grammar: "Grammar", more: "More", comparisons: "Comparisons", idioms: "Idioms" },
   },
   vi: {
-    search: "Tìm Kiến thức",
-    placeholder: "Chữ Hán, pinyin hoặc ý nghĩa…",
+    search: "Tìm",
+    placeholder: "Nhập chữ Hán, pinyin hoặc ý nghĩa…",
     backToResults: "Quay lại kết quả tìm kiếm",
     families: { groupLabel: "Loại kiến thức", all: "Tất cả", vocabulary: "Từ vựng", characters: "Hán tự", grammar: "Ngữ pháp", more: "Thêm", comparisons: "So sánh", idioms: "Thành ngữ" },
   },
   ar: {
-    search: "بحث المعرفة",
-    placeholder: "حروف صينية أو Pinyin أو معنى…",
+    search: "بحث",
+    placeholder: "أدخل حروفًا صينية أو Pinyin أو معنى…",
     backToResults: "العودة إلى نتائج البحث",
     families: { groupLabel: "عائلات المعرفة", all: "الكل", vocabulary: "المفردات", characters: "الحروف", grammar: "القواعد", more: "المزيد", comparisons: "المقارنات", idioms: "التعابير" },
   },
@@ -81,7 +82,7 @@ export default function VocabularyDetailSearch() {
         placeholder={labels.placeholder}
         submitLabel={labels.search}
         ariaLabel={labels.search}
-        className={styles.form}
+        className={`${searchStyles.searchPanel} ${searchStyles.searchForm} ${styles.compactForm}`}
         familyLabels={labels.families}
         initialFamilies={families}
       />
