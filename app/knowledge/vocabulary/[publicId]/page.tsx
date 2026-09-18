@@ -267,6 +267,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
   const knowledgeLanguage = resolveKnowledgeLanguage(query?.knowledgeLang);
   const knowledgeContentLocale = resolveKnowledgeContentLocale(interfaceLocale.code, knowledgeLanguage);
   const labels = labelFor(interfaceLocale.code);
+  const showHanViet = interfaceLocale.code === "vi" && knowledgeLanguage === "user";
   const learnerContextQuery = preservedLearnerContextQuery({
     uiLang: query?.uiLang,
     lang: query?.lang,
@@ -583,7 +584,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
                 <VocabularyCharacterRail
                   occurrences={characters}
                   labels={characterLabels}
-                  showHanViet={knowledgeLanguage !== "zh"}
+                  showHanViet={showHanViet}
                   variant="embedded"
                   anchorId="characters"
                 />
@@ -595,7 +596,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
         <VocabularyCharacterRail
           occurrences={characters}
           labels={characterLabels}
-          showHanViet={knowledgeLanguage !== "zh"}
+          showHanViet={showHanViet}
           variant="rail"
           anchorId="characters-rail"
         />
