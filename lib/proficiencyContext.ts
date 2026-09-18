@@ -1,9 +1,5 @@
-import {
-  KNOWLEDGE_LANGUAGE_PARAM,
-  isKnowledgeLanguageValue,
-} from "@/lib/knowledgeLanguage";
-
 export const INTERFACE_LOCALE_PARAM = "uiLang" as const;
+const KNOWLEDGE_LANGUAGE_PARAM = "knowledgeLang" as const;
 export const PROFICIENCY_LEVEL_SYSTEM_PARAM = "levelSystem" as const;
 export const PROFICIENCY_LEVEL_PARAM = "level" as const;
 
@@ -80,7 +76,7 @@ const preservedUiLangValue = (value: string | null | undefined) => {
 
 const preservedKnowledgeLanguageValue = (value: string | null | undefined) => {
   const normalized = nonEmptyValue(value);
-  return isKnowledgeLanguageValue(normalized) ? normalized : null;
+  return normalized === "user" || normalized === "zh" ? normalized : null;
 };
 
 export function preservedLearnerContextQuery(
