@@ -50,7 +50,9 @@ test("Vocabulary Detail exact Chinese mode consumes truthful K1F locale data", a
   assert.match(page, /loadVocabularyDetail\(publicId, knowledgeContentLocale\)/u);
   assert.match(page, /loadVocabularyCharacterDelivery\(publicId, interfaceLocale\.code\)/u);
   assert.match(page, /KnowledgeLanguageToggle/u);
-  assert.match(page, /userLanguageLabel=\{interfaceLocale\.label\}/u);
+  assert.match(page, /knowledgeLanguageUserLabel\(interfaceLocale\.code\)/u);
+  assert.match(page, /if \(localeCode === "vi"\) return "Tiếng Việt"/u);
+  assert.match(page, /if \(localeCode === "en"\) return "English"/u);
   assert.match(page, /showHanViet=\{knowledgeLanguage !== "zh"\}/u);
 
   assert.match(loader, /KnowledgeContentLocaleRequest/u);
@@ -62,7 +64,10 @@ test("Vocabulary Detail exact Chinese mode consumes truthful K1F locale data", a
   assert.match(loader, /learnerMeaning: null, contentLocale: null/u);
   assert.match(loader, /learnerNote: null, contentLocale: null/u);
   assert.match(loader, /translationText: null, contentLocale: null/u);
-  assert.match(loader, /learnerExplanation: null, contentLocale: null/u);
+  assert.match(loader, /learnerExplanation: null/u);
+  assert.match(loader, /sourceUseWhen: null/u);
+  assert.match(loader, /targetUseWhen: null/u);
+  assert.match(loader, /contentLocale: null/u);
 
   assert.match(toggle, /next\.set\(KNOWLEDGE_LANGUAGE_PARAM, nextValue\)/u);
   assert.match(toggle, /router\.replace/u);
@@ -91,4 +96,51 @@ test("Vocabulary Detail ports approved segmented toggle without fake Save", asyn
   assert.match(toggle, /data-knowledge-language-toggle="true"/u);
   assert.doesNotMatch(page, /saveButton|sticky-save|main-save|☆ Lưu|Đã lưu/u);
   assert.doesNotMatch(sticky, /sticky-save|☆ Lưu|Đã lưu/u);
+});
+
+
+test("Structured Quick Distinction renders authored source/target cards without prose parsing", async () => {
+  const [page, loader, rich, styles] = await Promise.all([
+    read("app/knowledge/vocabulary/[publicId]/page.tsx"),
+    read("lib/vocabularyDetail.ts"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css"),
+  ]);
+
+  assert.match(loader, /sourceUseWhen: string \| null/u);
+  assert.match(loader, /targetUseWhen: string \| null/u);
+  assert.match(loader, /contrastExamples: VocabularyQuickDistinctionContrastExample\[\]/u);
+  assert.match(loader, /stringValue\(row\.source_use_when\)/u);
+  assert.match(loader, /stringValue\(row\.target_use_when\)/u);
+  assert.match(loader, /asArray\(row\.contrast_examples\)/u);
+  assert.match(loader, /source_expression/u);
+  assert.match(loader, /target_expression/u);
+
+  assert.match(page, /sourceExpression=\{detail\.displayForm\}/u);
+  assert.match(rich, /distinction\.sourceUseWhen/u);
+  assert.match(rich, /distinction\.targetUseWhen/u);
+  assert.match(rich, /example\.sourceExpression/u);
+  assert.match(rich, /example\.targetExpression/u);
+  assert.match(rich, /if \(!structured\)/u);
+  assert.match(rich, /distinction\.learnerExplanation \? <p>/u);
+
+  assert.doesNotMatch(rich, /split\(/u);
+  assert.doesNotMatch(rich, /substring\(/u);
+  assert.doesNotMatch(rich, /learnerExplanation\.(?:match|replace)\(/u);
+
+  assert.match(styles, /\.distinctionCompareGrid\s*\{[\s\S]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)/u);
+  assert.match(styles, /@container \(max-width: 620px\)[\s\S]*\.distinctionCompareGrid\s*\{[\s\S]*grid-template-columns:\s*1fr/u);
+});
+
+test("Vocabulary final visual corrections keep exact toggle labels and sticky rail offset", async () => {
+  const [page, characterStyles] = await Promise.all([
+    read("app/knowledge/vocabulary/[publicId]/page.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.module.css"),
+  ]);
+
+  assert.match(page, /return "Tiếng Việt"/u);
+  assert.match(page, /return "English"/u);
+  assert.doesNotMatch(page, /userLanguageLabel=\{interfaceLocale\.label\}/u);
+  assert.match(characterStyles, /\.characterRailInner\s*\{[\s\S]*top:\s*100px/u);
+  assert.match(characterStyles, /@media \(max-width: 800px\)[\s\S]*\.characterRailInner\s*\{[\s\S]*top:\s*74px/u);
 });
