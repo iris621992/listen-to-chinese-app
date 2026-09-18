@@ -3,6 +3,7 @@ import styles from "./VocabularyRichSupport.module.css";
 
 type Props = {
   item: VocabularyReadingItem;
+  sourceExpression: string;
   labels: {
     collocations: string;
     classifiers: string;
@@ -17,7 +18,7 @@ function sentenceBehaviorLabel(labels: Props["labels"]) {
   return "How it works in a sentence";
 }
 
-export default function VocabularyRichSupport({ item, labels }: Props) {
+export default function VocabularyRichSupport({ item, sourceExpression, labels }: Props) {
   const hasSentenceBehavior = item.collocations.length > 0 || item.classifiers.length > 0;
   const hasRichSupport =
     hasSentenceBehavior
@@ -88,12 +89,57 @@ export default function VocabularyRichSupport({ item, labels }: Props) {
         <section className={`${styles.supportBlock} ${styles.distinctionBlock}`}>
           <h4>{labels.quickDistinction}</h4>
           <div className={styles.distinctionList}>
-            {item.quickDistinctions.map((distinction) => (
-              <div key={distinction.publicId} className={styles.distinctionItem}>
-                <strong>{distinction.targetExpression}</strong>
-                <p>{distinction.learnerExplanation}</p>
-              </div>
-            ))}
+            {item.quickDistinctions.map((distinction) => {
+              const structured = Boolean(
+                distinction.sourceUseWhen
+                && distinction.targetUseWhen,
+              );
+              if (!structured) {
+                return (
+                  <div key={distinction.publicId} className={styles.distinctionItem}>
+                    <strong>{distinction.targetExpression}</strong>
+                    {distinction.learnerExplanation ? <p>{distinction.learnerExplanation}</p> : null}
+                  </div>
+                );
+              }
+
+              return (
+                <article key={distinction.publicId} className={styles.structuredDistinction}>
+                  {distinction.learnerExplanation ? (
+                    <p className={styles.distinctionIntro}>{distinction.learnerExplanation}</p>
+                  ) : null}
+                  <div className={styles.distinctionCompareGrid}>
+                    <section className={styles.distinctionCard}>
+                      <strong className={styles.distinctionTerm}>{sourceExpression}</strong>
+                      <p className={styles.distinctionUse}>{distinction.sourceUseWhen}</p>
+                      {distinction.contrastExamples.length > 0 ? (
+                        <div className={styles.distinctionExamples}>
+                          {distinction.contrastExamples.map((example, index) => (
+                            <span key={`${distinction.publicId}-source-${index}`}>
+                              {example.sourceExpression}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </section>
+
+                    <section className={styles.distinctionCard}>
+                      <strong className={styles.distinctionTerm}>{distinction.targetExpression}</strong>
+                      <p className={styles.distinctionUse}>{distinction.targetUseWhen}</p>
+                      {distinction.contrastExamples.length > 0 ? (
+                        <div className={styles.distinctionExamples}>
+                          {distinction.contrastExamples.map((example, index) => (
+                            <span key={`${distinction.publicId}-target-${index}`}>
+                              {example.targetExpression}
+                            </span>
+                          ))}
+                        </div>
+                      ) : null}
+                    </section>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         </section>
       ) : null}

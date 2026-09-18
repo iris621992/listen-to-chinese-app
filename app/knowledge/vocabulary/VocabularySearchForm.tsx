@@ -3,6 +3,7 @@ import KnowledgeFamilySelector from "./KnowledgeFamilySelector";
 type LearnerContext = {
   uiLang?: string;
   lang?: string;
+  knowledgeLang?: string;
   levelSystem?: string;
   level?: string;
 };

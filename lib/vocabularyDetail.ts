@@ -1,3 +1,4 @@
+import type { KnowledgeContentLocaleRequest } from "@/lib/knowledgeLanguage";
 import { getLearnerLocale } from "@/lib/learnerLocaleRegistry";
 
 const VOCABULARY_PUBLIC_ID_PATTERN = /^vocab_[a-f0-9]{64}$/u;
@@ -60,12 +61,20 @@ export type VocabularyExample = {
   contentLocale: string | null;
 };
 
+export type VocabularyQuickDistinctionContrastExample = {
+  sourceExpression: string;
+  targetExpression: string;
+};
+
 export type VocabularyQuickDistinction = {
   publicId: string;
   readingItemPublicId: string;
   targetExpression: string;
-  learnerExplanation: string;
-  contentLocale: string;
+  learnerExplanation: string | null;
+  sourceUseWhen: string | null;
+  targetUseWhen: string | null;
+  contrastExamples: VocabularyQuickDistinctionContrastExample[];
+  contentLocale: string | null;
 };
 
 export type VocabularyReadingItem = {
@@ -218,6 +227,18 @@ function parseExample(value: unknown, readingItemPublicId: string): VocabularyEx
   };
 }
 
+function parseQuickDistinctionContrastExample(
+  value: unknown,
+): VocabularyQuickDistinctionContrastExample | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const sourceExpression = stringValue(row.source_expression);
+  const targetExpression = stringValue(row.target_expression);
+  return sourceExpression && targetExpression
+    ? { sourceExpression, targetExpression }
+    : null;
+}
+
 function parseQuickDistinction(value: unknown, readingItemPublicId: string): VocabularyQuickDistinction | null {
   const row = asObject(value);
   if (!row) return null;
@@ -226,12 +247,17 @@ function parseQuickDistinction(value: unknown, readingItemPublicId: string): Voc
   const targetExpression = stringValue(row.target_expression);
   const learnerExplanation = stringValue(row.learner_explanation);
   const contentLocale = stringValue(row.content_locale);
-  if (!publicId || !owner || !targetExpression || !learnerExplanation || !contentLocale) return null;
+  if (!publicId || !owner || !targetExpression) return null;
   return {
     publicId,
     readingItemPublicId: owner,
     targetExpression,
     learnerExplanation,
+    sourceUseWhen: stringValue(row.source_use_when),
+    targetUseWhen: stringValue(row.target_use_when),
+    contrastExamples: asArray(row.contrast_examples)
+      .map(parseQuickDistinctionContrastExample)
+      .filter((item): item is VocabularyQuickDistinctionContrastExample => item !== null),
     contentLocale,
   };
 }
@@ -348,6 +374,18 @@ function parseVocabularyPayload(value: unknown): VocabularyDetail | null {
     .filter((item): item is VocabularyPronunciation => item !== null);
   if (forms.length === 0 || pronunciations.length === 0) return null;
 
+  const readingItemIds = new Set(
+    pronunciations.flatMap((pronunciation) => (
+      pronunciation.readingItems.map((item) => item.publicId)
+    )),
+  );
+  const hasOrphanReadingItem = pronunciations.some((pronunciation) => (
+    pronunciation.readingItems.some((item) => (
+      item.parentPublicId !== null && !readingItemIds.has(item.parentPublicId)
+    ))
+  ));
+  if (hasOrphanReadingItem) return null;
+
   return {
     publicId,
     displayForm,
@@ -362,6 +400,89 @@ function parseVocabularyPayload(value: unknown): VocabularyDetail | null {
   };
 }
 
+function sanitizeExactLocaleDetail(
+  detail: VocabularyDetail,
+  exactContentLocaleCode: string,
+): VocabularyDetail | null {
+  if (
+    detail.requestedLocale !== exactContentLocaleCode
+    || detail.fallbackLocale !== exactContentLocaleCode
+  ) {
+    return null;
+  }
+
+  const pronunciations: VocabularyPronunciation[] = [];
+  for (const pronunciation of detail.pronunciations) {
+    const readingItems: VocabularyReadingItem[] = [];
+    for (const item of pronunciation.readingItems) {
+      if (item.contentLocale !== exactContentLocaleCode) return null;
+
+      readingItems.push({
+        ...item,
+        translationEquivalents: exactContentLocaleCode === "zh"
+          ? []
+          : item.translationEquivalents.filter((translation) => (
+              translation.localeCode === exactContentLocaleCode
+              || translation.localeCode.split("-")[0] === exactContentLocaleCode
+            )),
+        collocations: item.collocations.map((collocation) => (
+          collocation.contentLocale === exactContentLocaleCode
+            ? collocation
+            : { ...collocation, learnerMeaning: null, contentLocale: null }
+        )),
+        classifiers: item.classifiers.map((classifier) => (
+          classifier.contentLocale === exactContentLocaleCode
+            ? classifier
+            : { ...classifier, learnerNote: null, contentLocale: null }
+        )),
+        examples: item.examples.map((example) => (
+          example.contentLocale === exactContentLocaleCode
+            ? example
+            : { ...example, translationText: null, contentLocale: null }
+        )),
+        quickDistinctions: item.quickDistinctions.map((distinction) => (
+          distinction.contentLocale === exactContentLocaleCode
+            ? distinction
+            : {
+                ...distinction,
+                learnerExplanation: null,
+                sourceUseWhen: null,
+                targetUseWhen: null,
+                contentLocale: null,
+              }
+        )),
+      });
+    }
+    pronunciations.push({ ...pronunciation, readingItems });
+  }
+
+  return {
+    ...detail,
+    hanViet: detail.hanViet?.contentLocale === exactContentLocaleCode ? detail.hanViet : null,
+    pronunciations,
+  };
+}
+
+function resolveDetailLocaleRequest(
+  input: string | null | undefined | KnowledgeContentLocaleRequest,
+): KnowledgeContentLocaleRequest | null {
+  if (input && typeof input === "object") {
+    const requestedLocaleCode = input.requestedLocaleCode.trim().toLowerCase();
+    const fallbackLocaleCode = input.fallbackLocaleCode.trim().toLowerCase();
+    const exactContentLocaleCode = input.exactContentLocaleCode?.trim().toLowerCase() ?? null;
+    if (!requestedLocaleCode || !fallbackLocaleCode) return null;
+    return { requestedLocaleCode, fallbackLocaleCode, exactContentLocaleCode };
+  }
+
+  const learnerLocale = getLearnerLocale(input) ?? getLearnerLocale("en");
+  if (!learnerLocale) return null;
+  return {
+    requestedLocaleCode: learnerLocale.code,
+    fallbackLocaleCode: learnerLocale.fallbackLocaleCode ?? "en",
+    exactContentLocaleCode: null,
+  };
+}
+
 function isMissingRpc(error: unknown, rpcName: string): boolean {
   const row = asObject(error);
   if (!row) return false;
@@ -372,20 +493,20 @@ function isMissingRpc(error: unknown, rpcName: string): boolean {
 
 export async function loadVocabularyDetail(
   publicId: string,
-  learnerLocaleCode?: string | null,
+  localeInput?: string | null | KnowledgeContentLocaleRequest,
 ): Promise<VocabularyDetailLoadResult> {
   if (!VOCABULARY_PUBLIC_ID_PATTERN.test(publicId)) return { status: "INVALID_INPUT" };
 
-  const learnerLocale = getLearnerLocale(learnerLocaleCode) ?? getLearnerLocale("en");
-  if (!learnerLocale) return { status: "DATABASE_ERROR" };
+  const localeRequest = resolveDetailLocaleRequest(localeInput);
+  if (!localeRequest) return { status: "DATABASE_ERROR" };
 
   try {
     const { createServerSupabaseClient } = await import("@/lib/supabase/server");
     const supabase = createServerSupabaseClient();
     const args = {
       p_public_entry_id: publicId,
-      p_locale_code: learnerLocale.code,
-      p_fallback_locale_code: learnerLocale.fallbackLocaleCode ?? "en",
+      p_locale_code: localeRequest.requestedLocaleCode,
+      p_fallback_locale_code: localeRequest.fallbackLocaleCode,
     };
 
     const v5 = await supabase.rpc("get_public_vocabulary_entry_v5", args);
@@ -413,7 +534,18 @@ export async function loadVocabularyDetail(
     if (error) return { status: "DATABASE_ERROR" };
     const payload = asObject(data);
     if (!payload?.entry) return { status: "NOT_FOUND" };
-    const detail = parseVocabularyPayload(data);
+    if (
+      localeRequest.exactContentLocaleCode
+      && stringValue(payload.projection_contract) !== K1F_PROJECTION_CONTRACT
+    ) {
+      return { status: "DATABASE_ERROR" };
+    }
+
+    const parsedDetail = parseVocabularyPayload(data);
+    if (!parsedDetail) return { status: "DATABASE_ERROR" };
+    const detail = localeRequest.exactContentLocaleCode
+      ? sanitizeExactLocaleDetail(parsedDetail, localeRequest.exactContentLocaleCode)
+      : parsedDetail;
     return detail ? { status: "FOUND", detail } : { status: "DATABASE_ERROR" };
   } catch {
     return { status: "DATABASE_ERROR" };

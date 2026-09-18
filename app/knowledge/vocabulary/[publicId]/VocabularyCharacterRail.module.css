@@ -5,6 +5,7 @@
 
 .desktopRail {
   display: block;
+  align-self: stretch;
 }
 
 .embedded {
@@ -13,7 +14,7 @@
 
 .characterRailInner {
   position: sticky;
-  top: 84px;
+  top: 100px;
   border: 1px solid #d9d2c5;
   border-radius: 16px;
   background: rgba(255, 254, 251, 0.76);

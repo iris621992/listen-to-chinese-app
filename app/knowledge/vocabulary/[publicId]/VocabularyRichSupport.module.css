@@ -187,3 +187,73 @@
     line-height: 1.64;
   }
 }
+
+
+.structuredDistinction {
+  display: grid;
+  gap: 10px;
+}
+
+.distinctionIntro {
+  margin: 0;
+  color: #454a43;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.distinctionCompareGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.distinctionCard {
+  min-width: 0;
+  border: 1px solid #dfd7ca;
+  border-radius: 12px;
+  background: #fffdf8;
+  padding: 12px 13px;
+}
+
+.distinctionTerm {
+  display: block;
+  color: #2d302a;
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.distinctionUse {
+  margin: 6px 0 0;
+  color: #41463f;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.distinctionExamples {
+  display: grid;
+  gap: 4px;
+  margin-top: 9px;
+  padding-top: 8px;
+  border-top: 1px dashed #ddd4c7;
+}
+
+.distinctionExamples span {
+  color: #2d302a;
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@container (max-width: 620px) {
+  .distinctionCompareGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 620px), (max-width: 900px) and (max-height: 520px) {
+  .distinctionCompareGrid {
+    grid-template-columns: 1fr;
+  }
+}
