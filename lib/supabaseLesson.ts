@@ -58,10 +58,18 @@ export type SupabaseLessonVocabularyItem = {
   writingGuidance: string | null;
 };
 
+export type SupabaseLessonContentType =
+  | "video"
+  | "reading"
+  | "listening"
+  | "practice_only"
+  | "review_set";
+
 export type SupabaseLessonDetail = {
   title: string;
   slug: string;
   publicationRevisionId?: string;
+  contentType?: SupabaseLessonContentType;
   youtubeVideoId: string | null;
   youtubeUrl: string | null;
   languages: SupabaseLanguage[];
@@ -76,7 +84,7 @@ export type SupabaseLessonDetail = {
 
 type SupabaseLessonCachedCore = Omit<
   SupabaseLessonDetail,
-  "languages" | "selectedDirection"
+  "languages" | "selectedDirection" | "contentType"
 >;
 
 export type SupabaseLessonLoadResult =
@@ -98,13 +106,20 @@ export type SupabaseLessonPracticeLoadResult = {
 
 const LANGUAGE_PROJECTION = "code,native_name,direction";
 const LESSON_PROJECTION =
-  "id,slug,title_original,title_support_default,youtube_id,status,quality_status,access_level,published_at,updated_at";
+  "id,slug,title_original,title_support_default,content_type,youtube_id,status,quality_status,access_level,published_at,updated_at";
 const LESSON_SEGMENT_PROJECTION = "id,sort_order,original_text,phonetic_text";
 const SEGMENT_TRANSLATION_PROJECTION = "segment_id,language_code,translated_text";
 const VOCABULARY_RELATIONAL_PROJECTION =
   "exercise_id,practice_target:practice_targets(id,target_type,name_original,phonetic_text,meaning_default,description,practice_target_translations(language_code,display_name,meaning))";
 const MAX_DETAIL_SEGMENTS = 300;
 const MAX_VOCABULARY_RELATION_ROWS = 300;
+const LESSON_CONTENT_TYPES = new Set<SupabaseLessonContentType>([
+  "video",
+  "reading",
+  "listening",
+  "practice_only",
+  "review_set",
+]);
 
 type QueryError = { message: string };
 type QueryResult<T> = { data: T; error: QueryError | null };
@@ -307,6 +322,12 @@ const recordValue = (value: unknown): Row | null =>
     ? (value as Row)
     : null;
 
+const contentTypeValue = (value: unknown): SupabaseLessonContentType | null =>
+  typeof value === "string"
+    && LESSON_CONTENT_TYPES.has(value as SupabaseLessonContentType)
+    ? value as SupabaseLessonContentType
+    : null;
+
 const youtubeIdFromUrl = (url: string | null) => {
   if (!url) return null;
 
@@ -396,6 +417,7 @@ export async function getSupabaseLessonCore(
 
   const lesson = authorityLookup.value;
   const lessonId = idValue(lesson);
+  const contentType = contentTypeValue(lesson.content_type);
   const publishedAt =
     typeof lesson.published_at === "string"
       ? normalizedTimestamp(lesson.published_at)
@@ -406,6 +428,7 @@ export async function getSupabaseLessonCore(
       : null;
   if (
     lessonId === null
+    || contentType === null
     || publicationVersion === null
     || lesson.status !== "published"
     || lesson.quality_status !== "published"
@@ -542,6 +565,7 @@ export async function getSupabaseLessonCore(
     status: "FOUND",
     lesson: {
       ...cachedDetail.value,
+      contentType,
       languages: languages.map((language) => ({
         code: languageCode(language),
         label: languageLabel(language),
