@@ -374,6 +374,18 @@ function parseVocabularyPayload(value: unknown): VocabularyDetail | null {
     .filter((item): item is VocabularyPronunciation => item !== null);
   if (forms.length === 0 || pronunciations.length === 0) return null;
 
+  const readingItemIds = new Set(
+    pronunciations.flatMap((pronunciation) => (
+      pronunciation.readingItems.map((item) => item.publicId)
+    )),
+  );
+  const hasOrphanReadingItem = pronunciations.some((pronunciation) => (
+    pronunciation.readingItems.some((item) => (
+      item.parentPublicId !== null && !readingItemIds.has(item.parentPublicId)
+    ))
+  ));
+  if (hasOrphanReadingItem) return null;
+
   return {
     publicId,
     displayForm,
