@@ -5,6 +5,7 @@
 
 .desktopRail {
   display: block;
+  align-self: stretch;
 }
 
 .embedded {
