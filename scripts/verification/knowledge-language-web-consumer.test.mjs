@@ -132,7 +132,7 @@ test("Structured Quick Distinction renders authored source/target cards without 
   assert.match(styles, /@container \(max-width: 620px\)[\s\S]*\.distinctionCompareGrid\s*\{[\s\S]*grid-template-columns:\s*1fr/u);
 });
 
-test("Vocabulary final visual corrections keep exact toggle labels and sticky rail offset", async () => {
+test("Vocabulary final visual corrections keep exact toggle labels and sticky rail persistence", async () => {
   const [page, characterStyles] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.module.css"),
@@ -141,6 +141,15 @@ test("Vocabulary final visual corrections keep exact toggle labels and sticky ra
   assert.match(page, /return "Tiếng Việt"/u);
   assert.match(page, /return "English"/u);
   assert.doesNotMatch(page, /userLanguageLabel=\{interfaceLocale\.label\}/u);
-  assert.match(characterStyles, /\.characterRailInner\s*\{[\s\S]*top:\s*100px/u);
+
+  assert.match(
+    characterStyles,
+    /\.desktopRail\s*\{[\s\S]*display:\s*block;[\s\S]*align-self:\s*stretch;/u,
+  );
+  assert.match(characterStyles, /\.characterRailInner\s*\{[\s\S]*position:\s*sticky;[\s\S]*top:\s*100px/u);
   assert.match(characterStyles, /@media \(max-width: 800px\)[\s\S]*\.characterRailInner\s*\{[\s\S]*top:\s*74px/u);
+  assert.match(
+    characterStyles,
+    /@media \(max-width: 620px\), \(max-width: 900px\) and \(max-height: 520px\)[\s\S]*\.desktopRail\s*\{[\s\S]*display:\s*none;[\s\S]*\.embedded \.characterRailInner\s*\{[\s\S]*position:\s*static;/u,
+  );
 });
