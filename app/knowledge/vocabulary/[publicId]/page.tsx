@@ -160,6 +160,12 @@ const LABELS: Record<string, Labels> = {
 
 const labelFor = (localeCode: string) => LABELS[localeCode] ?? LABELS.en;
 
+const knowledgeLanguageUserLabel = (localeCode: string) => {
+  if (localeCode === "vi") return "Tiếng Việt";
+  if (localeCode === "en") return "English";
+  return LABELS[localeCode] ? localeCode.toUpperCase() : "English";
+};
+
 const POS_LABELS: Record<string, Record<string, string>> = {
   noun: { en: "Noun", vi: "Danh từ", ar: "اسم" },
   verb: { en: "Verb", vi: "Động từ", ar: "فعل" },
@@ -357,7 +363,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
         pronunciation={primaryPronunciation?.pronunciation ?? null}
         navItems={navItems}
         knowledgeLanguage={knowledgeLanguage}
-        userLanguageLabel={interfaceLocale.label}
+        userLanguageLabel={knowledgeLanguageUserLabel(interfaceLocale.code)}
       />
 
       <div className={styles.workspace}>
@@ -400,7 +406,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
             <div className={styles.headerActions}>
               <KnowledgeLanguageToggle
                 value={knowledgeLanguage}
-                userLanguageLabel={interfaceLocale.label}
+                userLanguageLabel={knowledgeLanguageUserLabel(interfaceLocale.code)}
               />
             </div>
           </header>
@@ -550,6 +556,7 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
 
                                       <VocabularyRichSupport
                                         item={item}
+                                        sourceExpression={detail.displayForm}
                                         labels={{
                                           collocations: labels.collocations,
                                           classifiers: labels.classifiers,
