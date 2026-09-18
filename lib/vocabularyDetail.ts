@@ -61,11 +61,19 @@ export type VocabularyExample = {
   contentLocale: string | null;
 };
 
+export type VocabularyQuickDistinctionContrastExample = {
+  sourceExpression: string;
+  targetExpression: string;
+};
+
 export type VocabularyQuickDistinction = {
   publicId: string;
   readingItemPublicId: string;
   targetExpression: string;
   learnerExplanation: string | null;
+  sourceUseWhen: string | null;
+  targetUseWhen: string | null;
+  contrastExamples: VocabularyQuickDistinctionContrastExample[];
   contentLocale: string | null;
 };
 
@@ -219,6 +227,18 @@ function parseExample(value: unknown, readingItemPublicId: string): VocabularyEx
   };
 }
 
+function parseQuickDistinctionContrastExample(
+  value: unknown,
+): VocabularyQuickDistinctionContrastExample | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const sourceExpression = stringValue(row.source_expression);
+  const targetExpression = stringValue(row.target_expression);
+  return sourceExpression && targetExpression
+    ? { sourceExpression, targetExpression }
+    : null;
+}
+
 function parseQuickDistinction(value: unknown, readingItemPublicId: string): VocabularyQuickDistinction | null {
   const row = asObject(value);
   if (!row) return null;
@@ -233,6 +253,11 @@ function parseQuickDistinction(value: unknown, readingItemPublicId: string): Voc
     readingItemPublicId: owner,
     targetExpression,
     learnerExplanation,
+    sourceUseWhen: stringValue(row.source_use_when),
+    targetUseWhen: stringValue(row.target_use_when),
+    contrastExamples: asArray(row.contrast_examples)
+      .map(parseQuickDistinctionContrastExample)
+      .filter((item): item is VocabularyQuickDistinctionContrastExample => item !== null),
     contentLocale,
   };
 }
@@ -406,7 +431,13 @@ function sanitizeExactLocaleDetail(
         quickDistinctions: item.quickDistinctions.map((distinction) => (
           distinction.contentLocale === exactContentLocaleCode
             ? distinction
-            : { ...distinction, learnerExplanation: null, contentLocale: null }
+            : {
+                ...distinction,
+                learnerExplanation: null,
+                sourceUseWhen: null,
+                targetUseWhen: null,
+                contentLocale: null,
+              }
         )),
       });
     }
