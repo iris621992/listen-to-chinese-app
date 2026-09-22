@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:vocabulary-search && npm run test:knowledge-language && npm run test:home-port && npm run test:architecture-direction && npm run test:character-detail-prototype && next build && npm run test:vocabulary-detail",
+    "build": "npm run test:vocabulary-search && npm run test:knowledge-language && npm run test:home-port && npm run test:character-detail-prototype && npm run test:architecture-direction && next build && npm run test:vocabulary-detail",
     "start": "next start",
     "lint": "eslint .",
     "test:architecture-direction": "node --test scripts/verification/architecture-direction.test.mjs",
