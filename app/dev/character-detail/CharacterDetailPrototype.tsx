@@ -308,8 +308,8 @@ export default function CharacterDetailPrototype() {
     () => FIXTURES.find((item) => item.id === activeCharacterId) ?? FIXTURES[0],
     [activeCharacterId],
   );
-  const [activeReadingId, setActiveReadingId] = useState(FIXTURES[0].pronunciations[0].id);
-  const [activeFormId, setActiveFormId] = useState(FIXTURES[0].forms[0].id);
+  const [activeReadingId, setActiveReadingId] = useState<string>(FIXTURES[0].pronunciations[0].id);
+  const [activeFormId, setActiveFormId] = useState<string>(FIXTURES[0].forms[0].id);
 
   const activeReading =
     fixture.pronunciations.find((reading) => reading.id === activeReadingId) ?? fixture.pronunciations[0];
