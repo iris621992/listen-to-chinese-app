@@ -1,9 +1,14 @@
+import type { VocabularyCharacterOccurrence } from "@/lib/vocabularyCharacterDelivery";
 import type {
   VocabularyClassifier,
   VocabularyCollocation,
+  VocabularyCommonMistake,
+  VocabularyConstruction,
   VocabularyDetail,
   VocabularyExample,
   VocabularyForm,
+  VocabularyKnowledgeLink,
+  VocabularyPracticeLink,
   VocabularyPronunciation,
   VocabularyQuickDistinction,
   VocabularyQuickDistinctionContrastExample,
@@ -157,10 +162,170 @@ function parseQuickDistinction(
   };
 }
 
+function parseConstruction(
+  value: unknown,
+  readingItemPublicId: string,
+  fallbackId: string,
+): VocabularyConstruction | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const patternText = stringValue(row.pattern_text);
+  if (!patternText) return null;
+  return {
+    publicId: stringValue(row.public_id) ?? stringValue(row.id) ?? fallbackId,
+    readingItemPublicId,
+    patternText,
+    explanation: stringValue(row.explanation),
+    contentLocale: stringValue(row.content_locale),
+  };
+}
+
+function parseCommonMistake(
+  value: unknown,
+  readingItemPublicId: string,
+  fallbackId: string,
+): VocabularyCommonMistake | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const incorrectExpression =
+    stringValue(row.incorrect_expression) ?? stringValue(row.incorrect_zh);
+  const correctExpression =
+    stringValue(row.correct_expression) ?? stringValue(row.correct_zh);
+  const learnerExplanation =
+    stringValue(row.learner_explanation)
+    ?? stringValue(row.explanation);
+  if (!incorrectExpression && !correctExpression && !learnerExplanation) return null;
+  return {
+    publicId: stringValue(row.public_id) ?? stringValue(row.id) ?? fallbackId,
+    readingItemPublicId,
+    incorrectExpression,
+    correctExpression,
+    learnerExplanation,
+    contentLocale: stringValue(row.content_locale),
+  };
+}
+
+function parseKnowledgeLink(
+  value: unknown,
+  readingItemPublicId: string,
+  fallbackId: string,
+): VocabularyKnowledgeLink | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const kind = stringValue(row.kind);
+  const scopeKey = stringValue(row.scope_key);
+  const targetLabel = stringValue(row.target_label);
+  if (!kind || !scopeKey || !targetLabel) return null;
+  return {
+    publicId: stringValue(row.public_id) ?? stringValue(row.id) ?? fallbackId,
+    readingItemPublicId,
+    kind,
+    scopeKey,
+    targetLabel,
+    targetSubtitle: stringValue(row.target_subtitle),
+    targetType: stringValue(row.target_type),
+    targetState: stringValue(row.target_state),
+  };
+}
+
+function parsePracticeLink(
+  value: unknown,
+  readingItemPublicId: string,
+  fallbackId: string,
+): VocabularyPracticeLink | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const scopeKey = stringValue(row.scope_key);
+  const targetLabel = stringValue(row.target_label);
+  if (!scopeKey || !targetLabel) return null;
+  return {
+    publicId: stringValue(row.public_id) ?? stringValue(row.id) ?? fallbackId,
+    readingItemPublicId,
+    scopeKey,
+    targetLabel,
+    targetSubtitle: stringValue(row.target_subtitle),
+    targetType: stringValue(row.target_type),
+    targetState: stringValue(row.target_state),
+  };
+}
+
+type DraftReadingExtensions = {
+  usageContext: string | null;
+  socialContext: string | null;
+  pragmaticExplanation: string | null;
+  constructions: VocabularyConstruction[];
+  quickDistinctions: VocabularyQuickDistinction[];
+  commonMistakes: VocabularyCommonMistake[];
+  knowledgeLinks: VocabularyKnowledgeLink[];
+  practiceLinks: VocabularyPracticeLink[];
+};
+
+const emptyDraftReadingExtensions = (): DraftReadingExtensions => ({
+  usageContext: null,
+  socialContext: null,
+  pragmaticExplanation: null,
+  constructions: [],
+  quickDistinctions: [],
+  commonMistakes: [],
+  knowledgeLinks: [],
+  practiceLinks: [],
+});
+
+function parseDraftReadingExtensions(
+  value: unknown,
+  readingItemPublicId: string,
+  itemIndex: number,
+): DraftReadingExtensions {
+  const row = asObject(value);
+  if (!row) return emptyDraftReadingExtensions();
+
+  return {
+    usageContext: stringValue(row.usage_context),
+    socialContext: stringValue(row.social_context),
+    pragmaticExplanation: stringValue(row.pragmatic_explanation),
+    constructions: asArray(row.lexical_constructions)
+      .map((item, index) => parseConstruction(
+        item,
+        readingItemPublicId,
+        `preview-construction:${itemIndex}:${index}`,
+      ))
+      .filter((item): item is VocabularyConstruction => item !== null),
+    quickDistinctions: asArray(row.quick_distinctions)
+      .map((item, index) => parseQuickDistinction(
+        item,
+        readingItemPublicId,
+        `preview-distinction-extension:${itemIndex}:${index}`,
+      ))
+      .filter((item): item is VocabularyQuickDistinction => item !== null),
+    commonMistakes: asArray(row.common_mistakes)
+      .map((item, index) => parseCommonMistake(
+        item,
+        readingItemPublicId,
+        `preview-mistake:${itemIndex}:${index}`,
+      ))
+      .filter((item): item is VocabularyCommonMistake => item !== null),
+    knowledgeLinks: asArray(row.knowledge_links)
+      .map((item, index) => parseKnowledgeLink(
+        item,
+        readingItemPublicId,
+        `preview-knowledge-link:${itemIndex}:${index}`,
+      ))
+      .filter((item): item is VocabularyKnowledgeLink => item !== null),
+    practiceLinks: asArray(row.practice_links)
+      .map((item, index) => parsePracticeLink(
+        item,
+        readingItemPublicId,
+        `preview-practice-link:${itemIndex}:${index}`,
+      ))
+      .filter((item): item is VocabularyPracticeLink => item !== null),
+  };
+}
+
 function parseReadingItem(
   value: unknown,
   pronunciationIndex: number,
   itemIndex: number,
+  extensionByReadingItemId: ReadonlyMap<string, unknown>,
 ): VocabularyReadingItem | null {
   const row = asObject(value);
   if (!row) return null;
@@ -168,6 +333,11 @@ function parseReadingItem(
   const publicId =
     stringValue(row.public_id)
     ?? `preview-ri:${pronunciationIndex}:${itemIndex}`;
+  const extensions = parseDraftReadingExtensions(
+    extensionByReadingItemId.get(publicId),
+    publicId,
+    itemIndex,
+  );
   const itemType = stringValue(row.item_type);
   const contentLocale = stringValue(row.content_locale);
   const explanation = asObject(row.learner_explanation);
@@ -215,7 +385,7 @@ function parseReadingItem(
     )
     .filter((item): item is VocabularyExample => item !== null);
 
-  const quickDistinctions = asArray(row.quick_distinctions)
+  const nestedQuickDistinctions = asArray(row.quick_distinctions)
     .map((item, index) =>
       parseQuickDistinction(
         item,
@@ -224,6 +394,10 @@ function parseReadingItem(
       ),
     )
     .filter((item): item is VocabularyQuickDistinction => item !== null);
+  const quickDistinctions =
+    nestedQuickDistinctions.length > 0
+      ? nestedQuickDistinctions
+      : extensions.quickDistinctions;
 
   return {
     publicId,
@@ -241,17 +415,25 @@ function parseReadingItem(
     fullExplanation: stringValue(explanation.full_explanation),
     usageNote: stringValue(explanation.usage_note),
     memoryTip: stringValue(explanation.memory_tip),
+    usageContext: extensions.usageContext,
+    socialContext: extensions.socialContext,
+    pragmaticExplanation: extensions.pragmaticExplanation,
     translationEquivalents,
     collocations,
     classifiers,
     examples,
+    constructions: extensions.constructions,
     quickDistinctions,
+    commonMistakes: extensions.commonMistakes,
+    knowledgeLinks: extensions.knowledgeLinks,
+    practiceLinks: extensions.practiceLinks,
   };
 }
 
 function parsePronunciation(
   value: unknown,
   pronunciationIndex: number,
+  extensionByReadingItemId: ReadonlyMap<string, unknown>,
 ): VocabularyPronunciation | null {
   const row = asObject(value);
   if (!row) return null;
@@ -270,7 +452,12 @@ function parsePronunciation(
     applicableFormPublicIds: stringArray(row.applicable_form_public_ids),
     readingItems: asArray(row.reading_items)
       .map((item, index) =>
-        parseReadingItem(item, pronunciationIndex, index),
+        parseReadingItem(
+          item,
+          pronunciationIndex,
+          index,
+          extensionByReadingItemId,
+        ),
       )
       .filter((item): item is VocabularyReadingItem => item !== null),
   };
@@ -322,8 +509,54 @@ export function parseVocabularyDraftPreviewPayload(
     .map(parseForm)
     .filter((item): item is VocabularyForm => item !== null);
 
+  const reviewExtensions = asObject(payload.admin_review_extensions);
+  const explicitReadingExtensions = asArray(reviewExtensions?.reading_items);
+  const extensionByReadingItemId = new Map<string, unknown>();
+  for (const extension of explicitReadingExtensions) {
+    const row = asObject(extension);
+    const readingItemId = row ? stringValue(row.reading_item_id) : null;
+    if (readingItemId) extensionByReadingItemId.set(readingItemId, row);
+  }
+
+  // Backward-compatible support for Preview v4, where constructions and
+  // distinctions were emitted as top-level reviewer extensions.
+  if (reviewExtensions) {
+    const grouped = new Map<string, JsonObject>();
+    const ensureGroup = (readingItemId: string) => {
+      const existing = grouped.get(readingItemId) ?? { reading_item_id: readingItemId };
+      grouped.set(readingItemId, existing);
+      return existing;
+    };
+
+    for (const item of asArray(reviewExtensions.lexical_constructions)) {
+      const row = asObject(item);
+      const readingItemId = row ? stringValue(row.reading_item_id) : null;
+      if (!row || !readingItemId) continue;
+      const group = ensureGroup(readingItemId);
+      const current = asArray(group.lexical_constructions);
+      group.lexical_constructions = [...current, row];
+    }
+    for (const item of asArray(reviewExtensions.quick_distinctions)) {
+      const row = asObject(item);
+      const readingItemId = row ? stringValue(row.reading_item_id) : null;
+      if (!row || !readingItemId) continue;
+      const group = ensureGroup(readingItemId);
+      const current = asArray(group.quick_distinctions);
+      group.quick_distinctions = [...current, row];
+    }
+    for (const [readingItemId, group] of grouped) {
+      if (!extensionByReadingItemId.has(readingItemId)) {
+        extensionByReadingItemId.set(readingItemId, group);
+      }
+    }
+  }
+
   const pronunciations = asArray(entry.pronunciations)
-    .map(parsePronunciation)
+    .map((item, index) => parsePronunciation(
+      item,
+      index,
+      extensionByReadingItemId,
+    ))
     .filter((item): item is VocabularyPronunciation => item !== null);
 
   if (forms.length === 0 || pronunciations.length === 0) return null;
@@ -364,4 +597,60 @@ export function parseVocabularyDraftPreviewPayload(
     forms,
     pronunciations,
   };
+}
+
+
+const numberValue = (value: unknown): number | null =>
+  typeof value === "number" && Number.isFinite(value) ? value : null;
+
+export function parseVocabularyDraftPreviewCharacters(
+  value: unknown,
+): VocabularyCharacterOccurrence[] {
+  const payload = asObject(value);
+  if (!payload || payload.preview_only !== true) return [];
+
+  return asArray(payload.characters)
+    .map((value): VocabularyCharacterOccurrence | null => {
+      const row = asObject(value);
+      const character = asObject(row?.character);
+      if (!row || !character) return null;
+      const writtenFormPublicId = stringValue(row.written_form_public_id);
+      const writtenForm = stringValue(row.written_form);
+      const position = numberValue(row.position);
+      const publicId = stringValue(character.public_id);
+      const glyph = stringValue(character.glyph);
+      if (!writtenFormPublicId || !writtenForm || !position || !publicId || !glyph) return null;
+
+      const writingRow = asObject(character.writing);
+      const sourceRepository = writingRow ? stringValue(writingRow.source_repository) : null;
+      const sourceCommit = writingRow ? stringValue(writingRow.source_commit) : null;
+      const sourcePath = writingRow ? stringValue(writingRow.source_path) : null;
+      const licenseCode = writingRow ? stringValue(writingRow.license_code) : null;
+
+      return {
+        writtenFormPublicId,
+        writtenForm,
+        isPrimaryForm: row.is_primary_form === true,
+        scriptProfileCode: stringValue(row.script_profile_code),
+        scriptVariantCode: stringValue(row.script_variant_code),
+        position,
+        lexicalContextPronunciation: stringValue(row.lexical_context_pronunciation),
+        character: {
+          publicId,
+          glyph,
+          standaloneReading: stringValue(character.standalone_reading),
+          hanViet: stringValue(character.han_viet),
+          radical: stringValue(character.radical),
+          strokeCount: numberValue(character.stroke_count),
+          structureCode: stringValue(character.structure_code),
+          structureFormula: stringValue(character.structure_formula),
+          componentNote: stringValue(character.component_note),
+          writing:
+            sourceRepository && sourceCommit && sourcePath && licenseCode
+              ? { sourceRepository, sourceCommit, sourcePath, licenseCode }
+              : null,
+        },
+      };
+    })
+    .filter((item): item is VocabularyCharacterOccurrence => item !== null);
 }
