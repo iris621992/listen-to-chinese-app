@@ -2,6 +2,7 @@ import type { KnowledgeContentLocaleRequest } from "@/lib/knowledgeLanguage";
 import { getLearnerLocale } from "@/lib/learnerLocaleRegistry";
 
 const VOCABULARY_PUBLIC_ID_PATTERN = /^vocab_[a-f0-9]{64}$/u;
+const K1G_PROJECTION_CONTRACT = "K1G_VOCABULARY_FINAL_APPROVED_SURFACE_PUBLIC_PROJECTION_V1";
 const K1F_PROJECTION_CONTRACT = "K1F_VOCABULARY_LOCALIZED_DETAIL_PUBLIC_PROJECTION_V1";
 const K1E_PROJECTION_CONTRACT = "K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1";
 const K1D_PROJECTION_CONTRACT = "K1D_VOCABULARY_RICH_SUPPORT_PUBLIC_PROJECTION_V1";
@@ -77,6 +78,44 @@ export type VocabularyQuickDistinction = {
   contentLocale: string | null;
 };
 
+export type VocabularyConstruction = {
+  publicId: string;
+  readingItemPublicId: string;
+  patternText: string;
+  explanation: string | null;
+  contentLocale: string | null;
+};
+
+export type VocabularyCommonMistake = {
+  publicId: string;
+  readingItemPublicId: string;
+  incorrectExpression: string | null;
+  correctExpression: string | null;
+  learnerExplanation: string | null;
+  contentLocale: string | null;
+};
+
+export type VocabularyKnowledgeLink = {
+  publicId: string;
+  readingItemPublicId: string;
+  kind: string;
+  scopeKey: string;
+  targetLabel: string;
+  targetSubtitle: string | null;
+  targetType: string | null;
+  targetState: string | null;
+};
+
+export type VocabularyPracticeLink = {
+  publicId: string;
+  readingItemPublicId: string;
+  scopeKey: string;
+  targetLabel: string;
+  targetSubtitle: string | null;
+  targetType: string | null;
+  targetState: string | null;
+};
+
 export type VocabularyReadingItem = {
   publicId: string;
   parentPublicId: string | null;
@@ -92,11 +131,18 @@ export type VocabularyReadingItem = {
   fullExplanation: string | null;
   usageNote: string | null;
   memoryTip: string | null;
+  usageContext: string | null;
+  socialContext: string | null;
+  pragmaticExplanation: string | null;
   translationEquivalents: VocabularyTranslationEquivalent[];
   collocations: VocabularyCollocation[];
   classifiers: VocabularyClassifier[];
   examples: VocabularyExample[];
+  constructions: VocabularyConstruction[];
   quickDistinctions: VocabularyQuickDistinction[];
+  commonMistakes: VocabularyCommonMistake[];
+  knowledgeLinks: VocabularyKnowledgeLink[];
+  practiceLinks: VocabularyPracticeLink[];
 };
 
 export type VocabularyPronunciation = {
@@ -262,6 +308,82 @@ function parseQuickDistinction(value: unknown, readingItemPublicId: string): Voc
   };
 }
 
+function parseConstruction(value: unknown, readingItemPublicId: string): VocabularyConstruction | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const publicId = stringValue(row.public_id);
+  const owner = exactRiOwner(row, readingItemPublicId);
+  const patternText = stringValue(row.pattern_text);
+  if (!publicId || !owner || !patternText) return null;
+  return {
+    publicId,
+    readingItemPublicId: owner,
+    patternText,
+    explanation: stringValue(row.explanation),
+    contentLocale: stringValue(row.content_locale),
+  };
+}
+
+function parseCommonMistake(value: unknown, readingItemPublicId: string): VocabularyCommonMistake | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const publicId = stringValue(row.public_id);
+  const owner = exactRiOwner(row, readingItemPublicId);
+  if (!publicId || !owner) return null;
+  const incorrectExpression = stringValue(row.incorrect_expression);
+  const correctExpression = stringValue(row.correct_expression);
+  const learnerExplanation = stringValue(row.learner_explanation);
+  if (!incorrectExpression && !correctExpression && !learnerExplanation) return null;
+  return {
+    publicId,
+    readingItemPublicId: owner,
+    incorrectExpression,
+    correctExpression,
+    learnerExplanation,
+    contentLocale: stringValue(row.content_locale),
+  };
+}
+
+function parseKnowledgeLink(value: unknown, readingItemPublicId: string): VocabularyKnowledgeLink | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const publicId = stringValue(row.public_id);
+  const owner = exactRiOwner(row, readingItemPublicId);
+  const kind = stringValue(row.kind);
+  const scopeKey = stringValue(row.scope_key);
+  const targetLabel = stringValue(row.target_label);
+  if (!publicId || !owner || !kind || !scopeKey || !targetLabel) return null;
+  return {
+    publicId,
+    readingItemPublicId: owner,
+    kind,
+    scopeKey,
+    targetLabel,
+    targetSubtitle: stringValue(row.target_subtitle),
+    targetType: stringValue(row.target_type),
+    targetState: stringValue(row.target_state),
+  };
+}
+
+function parsePracticeLink(value: unknown, readingItemPublicId: string): VocabularyPracticeLink | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const publicId = stringValue(row.public_id);
+  const owner = exactRiOwner(row, readingItemPublicId);
+  const scopeKey = stringValue(row.scope_key);
+  const targetLabel = stringValue(row.target_label);
+  if (!publicId || !owner || !scopeKey || !targetLabel) return null;
+  return {
+    publicId,
+    readingItemPublicId: owner,
+    scopeKey,
+    targetLabel,
+    targetSubtitle: stringValue(row.target_subtitle),
+    targetType: stringValue(row.target_type),
+    targetState: stringValue(row.target_state),
+  };
+}
+
 function parseReadingItem(value: unknown, richSupportEnabled: boolean): VocabularyReadingItem | null {
   const row = asObject(value);
   if (!row) return null;
@@ -286,6 +408,9 @@ function parseReadingItem(value: unknown, richSupportEnabled: boolean): Vocabula
     fullExplanation: stringValue(explanation.full_explanation),
     usageNote: stringValue(explanation.usage_note),
     memoryTip: stringValue(explanation.memory_tip),
+    usageContext: stringValue(row.usage_context),
+    socialContext: stringValue(row.social_context),
+    pragmaticExplanation: stringValue(row.pragmatic_explanation),
     translationEquivalents: asArray(row.translation_equivalents)
       .map(parseTranslationEquivalent)
       .filter((item): item is VocabularyTranslationEquivalent => item !== null),
@@ -304,10 +429,30 @@ function parseReadingItem(value: unknown, richSupportEnabled: boolean): Vocabula
           .map((item) => parseExample(item, publicId))
           .filter((item): item is VocabularyExample => item !== null)
       : [],
+    constructions: richSupportEnabled
+      ? asArray(row.lexical_constructions)
+          .map((item) => parseConstruction(item, publicId))
+          .filter((item): item is VocabularyConstruction => item !== null)
+      : [],
     quickDistinctions: richSupportEnabled
       ? asArray(row.quick_distinctions)
           .map((item) => parseQuickDistinction(item, publicId))
           .filter((item): item is VocabularyQuickDistinction => item !== null)
+      : [],
+    commonMistakes: richSupportEnabled
+      ? asArray(row.common_mistakes)
+          .map((item) => parseCommonMistake(item, publicId))
+          .filter((item): item is VocabularyCommonMistake => item !== null)
+      : [],
+    knowledgeLinks: richSupportEnabled
+      ? asArray(row.knowledge_links)
+          .map((item) => parseKnowledgeLink(item, publicId))
+          .filter((item): item is VocabularyKnowledgeLink => item !== null)
+      : [],
+    practiceLinks: richSupportEnabled
+      ? asArray(row.practice_links)
+          .map((item) => parsePracticeLink(item, publicId))
+          .filter((item): item is VocabularyPracticeLink => item !== null)
       : [],
   };
 }
@@ -353,7 +498,8 @@ function parseVocabularyPayload(value: unknown): VocabularyDetail | null {
   const payload = asObject(value);
   if (!payload) return null;
   const contract = stringValue(payload.projection_contract);
-  const richSupportEnabled = contract === K1F_PROJECTION_CONTRACT
+  const richSupportEnabled = contract === K1G_PROJECTION_CONTRACT
+    || contract === K1F_PROJECTION_CONTRACT
     || contract === K1E_PROJECTION_CONTRACT
     || contract === K1D_PROJECTION_CONTRACT;
   if (!richSupportEnabled && contract !== K1C_PROJECTION_CONTRACT) return null;
@@ -440,6 +586,11 @@ function sanitizeExactLocaleDetail(
             ? example
             : { ...example, translationText: null, contentLocale: null }
         )),
+        constructions: item.constructions.map((construction) => (
+          construction.contentLocale === exactContentLocaleCode
+            ? construction
+            : { ...construction, explanation: null, contentLocale: null }
+        )),
         quickDistinctions: item.quickDistinctions.map((distinction) => (
           distinction.contentLocale === exactContentLocaleCode
             ? distinction
@@ -450,6 +601,11 @@ function sanitizeExactLocaleDetail(
                 targetUseWhen: null,
                 contentLocale: null,
               }
+        )),
+        commonMistakes: item.commonMistakes.map((mistake) => (
+          mistake.contentLocale === exactContentLocaleCode
+            ? mistake
+            : { ...mistake, learnerExplanation: null, contentLocale: null }
         )),
       });
     }
@@ -509,9 +665,15 @@ export async function loadVocabularyDetail(
       p_fallback_locale_code: localeRequest.fallbackLocaleCode,
     };
 
-    const v5 = await supabase.rpc("get_public_vocabulary_entry_v5", args);
-    let data = v5.data;
-    let error = v5.error;
+    const v6 = await supabase.rpc("get_public_vocabulary_entry_v6", args);
+    let data = v6.data;
+    let error = v6.error;
+
+    if (error && isMissingRpc(error, "get_public_vocabulary_entry_v6")) {
+      const v5 = await supabase.rpc("get_public_vocabulary_entry_v5", args);
+      data = v5.data;
+      error = v5.error;
+    }
 
     if (error && isMissingRpc(error, "get_public_vocabulary_entry_v5")) {
       const v4 = await supabase.rpc("get_public_vocabulary_entry_v4", args);
@@ -536,7 +698,9 @@ export async function loadVocabularyDetail(
     if (!payload?.entry) return { status: "NOT_FOUND" };
     if (
       localeRequest.exactContentLocaleCode
-      && stringValue(payload.projection_contract) !== K1F_PROJECTION_CONTRACT
+      && ![K1G_PROJECTION_CONTRACT, K1F_PROJECTION_CONTRACT].includes(
+        stringValue(payload.projection_contract) ?? "",
+      )
     ) {
       return { status: "DATABASE_ERROR" };
     }
