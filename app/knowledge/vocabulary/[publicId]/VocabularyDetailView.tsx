@@ -30,10 +30,17 @@ type Labels = {
   usage: string;
   usageNote: string;
   memoryTip: string;
+  constructions: string;
   collocations: string;
   classifiers: string;
   example: string;
   quickDistinction: string;
+  commonMistakes: string;
+  relatedKnowledge: string;
+  practice: string;
+  usageContext: string;
+  socialContext: string;
+  pragmatics: string;
   characters: string;
   radical: string;
   strokes: string;
@@ -72,10 +79,17 @@ const LABELS: Record<string, Labels> = {
     usage: "Usage",
     usageNote: "Usage note",
     memoryTip: "Memory tip",
+    constructions: "Structures",
     collocations: "Common combinations",
     classifiers: "Measure words",
     example: "Example",
     quickDistinction: "Quick distinction",
+    commonMistakes: "Common mistakes",
+    relatedKnowledge: "Related knowledge",
+    practice: "Practice",
+    usageContext: "Usage & context",
+    socialContext: "Social context",
+    pragmatics: "Pragmatics",
     characters: "Characters",
     radical: "Radical",
     strokes: "Strokes",
@@ -100,10 +114,17 @@ const LABELS: Record<string, Labels> = {
     usage: "Cách dùng",
     usageNote: "Phạm vi sử dụng",
     memoryTip: "Gợi ý ghi nhớ",
+    constructions: "Cấu trúc",
     collocations: "Kết hợp tự nhiên",
     classifiers: "Lượng từ",
     example: "Ví dụ",
     quickDistinction: "Phân biệt nhanh",
+    commonMistakes: "Lỗi dễ mắc",
+    relatedKnowledge: "Kiến thức liên quan",
+    practice: "Luyện tập",
+    usageContext: "Cách dùng & ngữ cảnh",
+    socialContext: "Bối cảnh xã hội",
+    pragmatics: "Sắc thái & ngữ dụng",
     characters: "Hán tự",
     radical: "Bộ thủ",
     strokes: "Số nét",
@@ -128,10 +149,17 @@ const LABELS: Record<string, Labels> = {
     usage: "الاستعمال",
     usageNote: "نطاق الاستعمال",
     memoryTip: "تلميح للتذكر",
+    constructions: "التراكيب",
     collocations: "تراكيب طبيعية",
     classifiers: "كلمات القياس",
     example: "مثال",
     quickDistinction: "تمييز سريع",
+    commonMistakes: "أخطاء شائعة",
+    relatedKnowledge: "معرفة مرتبطة",
+    practice: "تدريب",
+    usageContext: "الاستعمال والسياق",
+    socialContext: "السياق الاجتماعي",
+    pragmatics: "الدلالة التداولية",
     characters: "الحروف الصينية",
     radical: "الجذر",
     strokes: "عدد الخطوط",
@@ -471,7 +499,12 @@ export default function VocabularyDetailView({
                                     REGION_LABELS,
                                   );
                                   const hasLearningProfile = Boolean(
-                                    item.fullExplanation || item.usageNote || item.memoryTip,
+                                    item.fullExplanation
+                                    || item.usageNote
+                                    || item.memoryTip
+                                    || item.usageContext
+                                    || item.socialContext
+                                    || item.pragmaticExplanation,
                                   );
 
                                   return (
@@ -510,6 +543,24 @@ export default function VocabularyDetailView({
                                               <p>{item.usageNote}</p>
                                             </section>
                                           ) : null}
+                                          {item.usageContext ? (
+                                            <section className={`${styles.learningBlock} ${styles.learningBlockSoft}`}>
+                                              <h4>{labels.usageContext}</h4>
+                                              <p>{item.usageContext}</p>
+                                            </section>
+                                          ) : null}
+                                          {item.socialContext ? (
+                                            <section className={`${styles.learningBlock} ${styles.learningBlockSoft}`}>
+                                              <h4>{labels.socialContext}</h4>
+                                              <p>{item.socialContext}</p>
+                                            </section>
+                                          ) : null}
+                                          {item.pragmaticExplanation ? (
+                                            <section className={`${styles.learningBlock} ${styles.learningBlockSoft}`}>
+                                              <h4>{labels.pragmatics}</h4>
+                                              <p>{item.pragmaticExplanation}</p>
+                                            </section>
+                                          ) : null}
                                           {item.memoryTip ? (
                                             <section className={`${styles.learningBlock} ${styles.learningBlockAccent}`}>
                                               <h4>{labels.memoryTip}</h4>
@@ -523,10 +574,14 @@ export default function VocabularyDetailView({
                                         item={item}
                                         sourceExpression={detail.displayForm}
                                         labels={{
+                                          constructions: labels.constructions,
                                           collocations: labels.collocations,
                                           classifiers: labels.classifiers,
                                           example: labels.example,
                                           quickDistinction: labels.quickDistinction,
+                                          commonMistakes: labels.commonMistakes,
+                                          relatedKnowledge: labels.relatedKnowledge,
+                                          practice: labels.practice,
                                         }}
                                       />
                                     </article>
