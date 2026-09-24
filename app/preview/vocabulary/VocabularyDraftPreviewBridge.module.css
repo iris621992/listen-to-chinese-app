@@ -1,0 +1,33 @@
+.statusWrap {
+  width: min(100% - 2rem, 68rem);
+  margin: 3rem auto;
+  border: 1px solid #d8d1c4;
+  border-radius: 1.25rem;
+  background: #fffefb;
+  padding: 1.25rem 1.35rem;
+  color: #5f6259;
+}
+
+.statusWrap strong {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #2d302a;
+  font-size: 1rem;
+}
+
+.statusWrap p {
+  margin: 0;
+  line-height: 1.6;
+}
+
+.previewBanner {
+  width: min(100% - 2rem, 85rem);
+  margin: 0.85rem auto 0;
+  border: 1px solid #d8d1c4;
+  border-radius: 999px;
+  background: #f8f5ee;
+  padding: 0.55rem 0.9rem;
+  color: #5f6259;
+  font-size: 0.78rem;
+  text-align: center;
+}
