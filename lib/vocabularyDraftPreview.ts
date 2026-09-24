@@ -131,7 +131,13 @@ function parseContrastExample(
   const sourceExpression = stringValue(row.source_expression);
   const targetExpression = stringValue(row.target_expression);
   return sourceExpression && targetExpression
-    ? { sourceExpression, targetExpression }
+    ? {
+        sourceExpression,
+        targetExpression,
+        sourceTranslation: stringValue(row.source_translation),
+        targetTranslation: stringValue(row.target_translation),
+        contentLocale: stringValue(row.content_locale),
+      }
     : null;
 }
 
