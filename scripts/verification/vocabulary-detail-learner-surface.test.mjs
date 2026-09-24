@@ -5,10 +5,11 @@ import test from "node:test";
 const read = (path) => readFile(path, "utf8");
 
 test("Vocabulary detail preserves K1B-K1F depth and authoritative Character delivery", async () => {
-  const [loader, characterLoader, page, styles, characterRail, characterRailStyles, writing, writingStyles, sticky, rich, richStyles, pronunciationMeta, pronunciationMetaStyles, knowledge, header, packageJson] = await Promise.all([
+  const [loader, characterLoader, pageRoute, view, styles, characterRail, characterRailStyles, writing, writingStyles, sticky, rich, richStyles, pronunciationMeta, pronunciationMetaStyles, knowledge, header, packageJson] = await Promise.all([
     read("lib/vocabularyDetail.ts"),
     read("lib/vocabularyCharacterDelivery.ts"),
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetail.module.css"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.module.css"),
@@ -23,6 +24,7 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
     read("components/Header.tsx"),
     read("package.json"),
   ]);
+  const page = `${pageRoute}\n${view}`;
 
   assert.match(loader, /get_public_vocabulary_entry_v5/);
   assert.match(loader, /get_public_vocabulary_entry_v4/);
