@@ -137,6 +137,25 @@ export default function VocabularyDraftPreviewBridge() {
     searchParams.get("knowledgeLang"),
   );
   const [state, setState] = useState<BridgeState>({ status: "WAITING" });
+  const copy = interfaceLocale.code === "vi"
+    ? {
+        waitingTitle: "Đang nhận bản nháp từ Admin…",
+        waitingBody: "Draft Preview chỉ hoạt động khi được mở trực tiếp từ phiên Owner hợp lệ.",
+        invalidTitle: "Không thể mở Draft Preview.",
+        invalidBody: "Liên kết review không hợp lệ, đã hết hạn hoặc không được mở từ Admin Staging.",
+        payloadTitle: "Không thể dựng Draft Preview.",
+        payloadBody: "Preview payload không hợp lệ hoặc handoff đã hết hạn.",
+        banner: "Bản xem trước bản nháp · Chỉ dành cho Owner · Không công khai · Tự hết hạn",
+      }
+    : {
+        waitingTitle: "Receiving the draft from Admin…",
+        waitingBody: "Draft Preview works only when opened directly from a valid Owner session.",
+        invalidTitle: "Draft Preview cannot be opened.",
+        invalidBody: "The review handoff is invalid, expired, or was not opened from Admin Staging.",
+        payloadTitle: "Draft Preview cannot be rendered.",
+        payloadBody: "The Preview payload is invalid or the handoff has expired.",
+        banner: "Draft preview · Owner review only · Private · Expires automatically",
+      };
 
   useEffect(() => {
     if (!HANDOFF_PATTERN.test(handoff)) {
@@ -191,6 +210,22 @@ export default function VocabularyDraftPreviewBridge() {
     };
   }, [handoff]);
 
+  useEffect(() => {
+    if (state.status !== "READY") return;
+    const remaining = state.envelope.expiresAt - Date.now();
+    if (remaining <= 0) {
+      setState({ status: "INVALID", reason: "HANDOFF_EXPIRED" });
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      window.sessionStorage.removeItem(
+        `${STORAGE_PREFIX}${state.envelope.handoff}`,
+      );
+      setState({ status: "INVALID", reason: "HANDOFF_EXPIRED" });
+    }, remaining);
+    return () => window.clearTimeout(timer);
+  }, [state]);
+
   const detail = useMemo(() => {
     if (state.status !== "READY") return null;
     if (state.envelope.expiresAt <= Date.now()) return null;
@@ -215,8 +250,8 @@ export default function VocabularyDraftPreviewBridge() {
   if (state.status === "WAITING") {
     return (
       <div className={styles.statusWrap} data-draft-preview-state="waiting">
-        <strong>Đang nhận bản nháp từ Admin…</strong>
-        <p>Draft Preview chỉ hoạt động khi được mở trực tiếp từ phiên Owner hợp lệ.</p>
+        <strong>{copy.waitingTitle}</strong>
+        <p>{copy.waitingBody}</p>
       </div>
     );
   }
@@ -228,8 +263,8 @@ export default function VocabularyDraftPreviewBridge() {
         data-draft-preview-state="invalid"
         data-draft-preview-reason={state.reason}
       >
-        <strong>Không thể mở Draft Preview.</strong>
-        <p>Liên kết review không hợp lệ, đã hết hạn hoặc không được mở từ Admin Staging.</p>
+        <strong>{copy.invalidTitle}</strong>
+        <p>{copy.invalidBody}</p>
       </div>
     );
   }
@@ -240,8 +275,8 @@ export default function VocabularyDraftPreviewBridge() {
         className={styles.statusWrap}
         data-draft-preview-state="invalid-payload"
       >
-        <strong>Không thể dựng Draft Preview.</strong>
-        <p>Preview payload không hợp lệ hoặc handoff đã hết hạn.</p>
+        <strong>{copy.payloadTitle}</strong>
+        <p>{copy.payloadBody}</p>
       </div>
     );
   }
@@ -253,7 +288,7 @@ export default function VocabularyDraftPreviewBridge() {
         data-draft-preview-state="rendered"
         data-draft-preview-contract="K1F_VOCABULARY_LOCALIZED_DETAIL_PUBLIC_PROJECTION_V1"
       >
-        Draft Preview · Owner review only · không công khai · tự hết hạn
+        {copy.banner}
       </div>
       <VocabularyDetailView
         detail={detail}
