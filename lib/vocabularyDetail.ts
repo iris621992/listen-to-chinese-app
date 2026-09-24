@@ -540,7 +540,9 @@ function parseVocabularyPayload(value: unknown): VocabularyDetail | null {
     regionProfileCode: stringValue(entry.region_profile_code),
     requestedLocale,
     fallbackLocale,
-    hanViet: contract === K1F_PROJECTION_CONTRACT ? parseHanViet(entry.han_viet) : null,
+    hanViet: contract === K1G_PROJECTION_CONTRACT || contract === K1F_PROJECTION_CONTRACT
+      ? parseHanViet(entry.han_viet)
+      : null,
     forms,
     pronunciations,
   };
