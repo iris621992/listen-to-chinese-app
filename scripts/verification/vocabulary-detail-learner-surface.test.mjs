@@ -26,6 +26,7 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   ]);
   const page = `${pageRoute}\n${view}`;
 
+  assert.match(loader, /get_public_vocabulary_entry_v6/);
   assert.match(loader, /get_public_vocabulary_entry_v5/);
   assert.match(loader, /get_public_vocabulary_entry_v4/);
   assert.match(loader, /get_public_vocabulary_entry_v3/);
@@ -35,7 +36,8 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(loader, /K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1D_VOCABULARY_RICH_SUPPORT_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1C_VOCABULARY_TE_PUBLIC_PROJECTION_V1/);
-  assert.match(loader, /hanViet:\s*contract === K1F_PROJECTION_CONTRACT \? parseHanViet\(entry\.han_viet\) : null/);
+  assert.match(loader, /hanViet:\s*contract === K1G_PROJECTION_CONTRACT \|\| contract === K1F_PROJECTION_CONTRACT/);
+  assert.match(loader, /\? parseHanViet\(entry\.han_viet\)/);
   assert.match(loader, /learnerMeaning:\s*stringValue\(row\.learner_meaning\)/);
   assert.match(loader, /translation_equivalents/);
   assert.match(loader, /collocations/);
