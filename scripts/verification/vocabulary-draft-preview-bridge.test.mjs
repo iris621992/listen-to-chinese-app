@@ -37,7 +37,8 @@ test("Vocabulary Draft Preview handoff is short-lived, opener-bound, and fail cl
   assert.match(previewBridge, /HANDOFF_TTL_MS = 10 \* 60 \* 1000/);
   assert.match(previewBridge, /window\.opener/);
   assert.match(previewBridge, /event\.source !== opener/);
-  assert.match(previewBridge, /adminStagingOriginFromReferrer/);
+  assert.match(previewBridge, /validatedAdminStagingOrigin/);
+  assert.match(previewBridge, /searchParams\.get\("sourceOrigin"\)/);
   assert.match(previewBridge, /event\.origin !== openerOrigin/);
   assert.match(previewBridge, /opener\.postMessage\(ready, openerOrigin\)/);
   assert.doesNotMatch(previewBridge, /postMessage\([^\n]+, "\*"/);
