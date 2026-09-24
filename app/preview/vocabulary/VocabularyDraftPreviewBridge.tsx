@@ -60,11 +60,10 @@ function isAllowedAdminStagingOrigin(origin: string) {
   }
 }
 
-function adminStagingOriginFromReferrer(): string | null {
-  if (!document.referrer) return null;
+function validatedAdminStagingOrigin(value: string | null): string | null {
+  if (!value || !isAllowedAdminStagingOrigin(value)) return null;
   try {
-    const origin = new URL(document.referrer).origin;
-    return isAllowedAdminStagingOrigin(origin) ? origin : null;
+    return new URL(value).origin;
   } catch {
     return null;
   }
@@ -186,7 +185,9 @@ export default function VocabularyDraftPreviewBridge() {
     }
 
     const opener = window.opener;
-    const openerOrigin = adminStagingOriginFromReferrer();
+    const openerOrigin = validatedAdminStagingOrigin(
+      searchParams.get("sourceOrigin"),
+    );
     if (!opener || !openerOrigin) {
       const timer = window.setTimeout(
         () => setState({ status: "INVALID", reason: "OWNER_HANDOFF_REQUIRED" }),
@@ -228,7 +229,7 @@ export default function VocabularyDraftPreviewBridge() {
       window.clearTimeout(timeout);
       window.removeEventListener("message", onMessage);
     };
-  }, [handoff]);
+  }, [handoff, searchParams]);
 
   useEffect(() => {
     if (state.status !== "READY") return;
