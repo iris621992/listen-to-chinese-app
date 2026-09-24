@@ -140,12 +140,12 @@ export default function VocabularyDraftPreviewBridge() {
   const copy = interfaceLocale.code === "vi"
     ? {
         waitingTitle: "Đang nhận bản nháp từ Admin…",
-        waitingBody: "Draft Preview chỉ hoạt động khi được mở trực tiếp từ phiên Owner hợp lệ.",
-        invalidTitle: "Không thể mở Draft Preview.",
-        invalidBody: "Liên kết review không hợp lệ, đã hết hạn hoặc không được mở từ Admin Staging.",
-        payloadTitle: "Không thể dựng Draft Preview.",
-        payloadBody: "Preview payload không hợp lệ hoặc handoff đã hết hạn.",
-        banner: "Bản xem trước bản nháp · Chỉ dành cho Owner · Không công khai · Tự hết hạn",
+        waitingBody: "Bản xem trước chỉ hoạt động khi được mở trực tiếp từ phiên quản trị hợp lệ.",
+        invalidTitle: "Không thể mở bản xem trước.",
+        invalidBody: "Phiên review không hợp lệ, đã hết hạn hoặc không được mở từ Admin Staging.",
+        payloadTitle: "Không thể dựng bản xem trước.",
+        payloadBody: "Dữ liệu xem trước không hợp lệ hoặc phiên review đã hết hạn.",
+        banner: "Bản xem trước bản nháp · Chỉ dành cho quản trị · Không công khai · Tự hết hạn",
       }
     : {
         waitingTitle: "Receiving the draft from Admin…",
@@ -228,7 +228,6 @@ export default function VocabularyDraftPreviewBridge() {
 
   const detail = useMemo(() => {
     if (state.status !== "READY") return null;
-    if (state.envelope.expiresAt <= Date.now()) return null;
 
     const locale = contentLocaleFor(
       interfaceLocale.code,
