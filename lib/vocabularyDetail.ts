@@ -65,6 +65,9 @@ export type VocabularyExample = {
 export type VocabularyQuickDistinctionContrastExample = {
   sourceExpression: string;
   targetExpression: string;
+  sourceTranslation: string | null;
+  targetTranslation: string | null;
+  contentLocale: string | null;
 };
 
 export type VocabularyQuickDistinction = {
@@ -281,7 +284,13 @@ function parseQuickDistinctionContrastExample(
   const sourceExpression = stringValue(row.source_expression);
   const targetExpression = stringValue(row.target_expression);
   return sourceExpression && targetExpression
-    ? { sourceExpression, targetExpression }
+    ? {
+        sourceExpression,
+        targetExpression,
+        sourceTranslation: stringValue(row.source_translation),
+        targetTranslation: stringValue(row.target_translation),
+        contentLocale: stringValue(row.content_locale),
+      }
     : null;
 }
 
@@ -667,9 +676,15 @@ export async function loadVocabularyDetail(
       p_fallback_locale_code: localeRequest.fallbackLocaleCode,
     };
 
-    const v6 = await supabase.rpc("get_public_vocabulary_entry_v6", args);
-    let data = v6.data;
-    let error = v6.error;
+    const v7 = await supabase.rpc("get_public_vocabulary_entry_v7", args);
+    let data = v7.data;
+    let error = v7.error;
+
+    if (error && isMissingRpc(error, "get_public_vocabulary_entry_v7")) {
+      const v6 = await supabase.rpc("get_public_vocabulary_entry_v6", args);
+      data = v6.data;
+      error = v6.error;
+    }
 
     if (error && isMissingRpc(error, "get_public_vocabulary_entry_v6")) {
       const v5 = await supabase.rpc("get_public_vocabulary_entry_v5", args);
