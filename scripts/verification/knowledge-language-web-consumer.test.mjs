@@ -52,10 +52,10 @@ test("Vocabulary Detail exact Chinese mode consumes truthful K1F locale data", a
   assert.match(page, /loadVocabularyDetail\(publicId, knowledgeContentLocale\)/u);
   assert.match(page, /loadVocabularyCharacterDelivery\(publicId, interfaceLocale\.code\)/u);
   assert.match(page, /KnowledgeLanguageToggle/u);
-  assert.match(page, /knowledgeLanguageUserLabel\(interfaceLocale\.code\)/u);
+  assert.match(page, /knowledgeLanguageUserLabel\(interfaceLocaleCode\)/u);
   assert.match(page, /if \(localeCode === "vi"\) return "Tiếng Việt"/u);
   assert.match(page, /if \(localeCode === "en"\) return "English"/u);
-  assert.match(page, /const showHanViet = interfaceLocale\.code === "vi" && knowledgeLanguage === "user"/u);
+  assert.match(page, /const showHanViet = interfaceLocaleCode === "vi" && knowledgeLanguage === "user"/u);
   assert.equal((page.match(/showHanViet=\{showHanViet\}/gu) ?? []).length, 2);
   assert.doesNotMatch(page, /showHanViet=\{knowledgeLanguage !== "zh"\}/u);
 
@@ -155,8 +155,8 @@ test("Vocabulary final visual corrections keep exact toggle labels and sticky ra
   assert.match(page, /return "Tiếng Việt"/u);
   assert.match(page, /return "English"/u);
   assert.doesNotMatch(page, /userLanguageLabel=\{interfaceLocale\.label\}/u);
-  assert.match(page, /const showHanViet = interfaceLocale\.code === "vi" && knowledgeLanguage === "user"/u);
-  assert.doesNotMatch(page, /interfaceLocale\.code === "en"\s*&&\s*knowledgeLanguage === "user"/u);
+  assert.match(page, /const showHanViet = interfaceLocaleCode === "vi" && knowledgeLanguage === "user"/u);
+  assert.doesNotMatch(page, /interfaceLocaleCode === "en"\s*&&\s*knowledgeLanguage === "user"/u);
 
   assert.match(
     characterStyles,
