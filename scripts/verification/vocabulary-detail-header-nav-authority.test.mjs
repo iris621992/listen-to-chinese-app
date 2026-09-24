@@ -5,11 +5,13 @@ import test from "node:test";
 const read = (path) => readFile(path, "utf8");
 
 test("Vocabulary Detail keeps POS navigation in a dedicated row and preserves the future header action slot", async () => {
-  const [page, sticky, authority] = await Promise.all([
+  const [pageRoute, view, sticky, authority] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyStickyNav.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyHeaderNavAuthority.module.css"),
   ]);
+  const page = `${pageRoute}\n${view}`;
 
   assert.match(page, /<header id="vocabulary-entry-header"/);
   assert.match(page, /<nav className=\{styles\.sectionNav\}/);

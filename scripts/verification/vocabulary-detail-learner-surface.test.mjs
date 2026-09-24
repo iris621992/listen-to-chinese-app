@@ -5,10 +5,11 @@ import test from "node:test";
 const read = (path) => readFile(path, "utf8");
 
 test("Vocabulary detail preserves K1B-K1F depth and authoritative Character delivery", async () => {
-  const [loader, characterLoader, page, styles, characterRail, characterRailStyles, writing, writingStyles, sticky, rich, richStyles, pronunciationMeta, pronunciationMetaStyles, knowledge, header, packageJson] = await Promise.all([
+  const [loader, characterLoader, pageRoute, view, styles, characterRail, characterRailStyles, writing, writingStyles, sticky, rich, richStyles, pronunciationMeta, pronunciationMetaStyles, knowledge, header, packageJson] = await Promise.all([
     read("lib/vocabularyDetail.ts"),
     read("lib/vocabularyCharacterDelivery.ts"),
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetail.module.css"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.module.css"),
@@ -23,7 +24,9 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
     read("components/Header.tsx"),
     read("package.json"),
   ]);
+  const page = `${pageRoute}\n${view}`;
 
+  assert.match(loader, /get_public_vocabulary_entry_v6/);
   assert.match(loader, /get_public_vocabulary_entry_v5/);
   assert.match(loader, /get_public_vocabulary_entry_v4/);
   assert.match(loader, /get_public_vocabulary_entry_v3/);
@@ -33,7 +36,8 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(loader, /K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1D_VOCABULARY_RICH_SUPPORT_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1C_VOCABULARY_TE_PUBLIC_PROJECTION_V1/);
-  assert.match(loader, /hanViet:\s*contract === K1F_PROJECTION_CONTRACT \? parseHanViet\(entry\.han_viet\) : null/);
+  assert.match(loader, /hanViet:\s*contract === K1G_PROJECTION_CONTRACT \|\| contract === K1F_PROJECTION_CONTRACT/);
+  assert.match(loader, /\? parseHanViet\(entry\.han_viet\)/);
   assert.match(loader, /learnerMeaning:\s*stringValue\(row\.learner_meaning\)/);
   assert.match(loader, /translation_equivalents/);
   assert.match(loader, /collocations/);
@@ -204,4 +208,21 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(knowledge, /preservedLearnerContextQuery/);
 
   assert.match(header, /\/brand\/yunchinese-logo\.png/);
+});
+
+test("Quick Distinction contrast examples preserve optional learner translations on the shared renderer", async () => {
+  const [rich, loader] = await Promise.all([
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
+    read("lib/vocabularyDetail.ts"),
+  ]);
+
+  assert.match(loader, /sourceTranslation: string \| null/);
+  assert.match(loader, /targetTranslation: string \| null/);
+  assert.match(loader, /contentLocale: string \| null/);
+  assert.match(loader, /source_translation/);
+  assert.match(loader, /target_translation/);
+  assert.match(loader, /get_public_vocabulary_entry_v7/);
+  assert.match(rich, /example\.sourceTranslation/);
+  assert.match(rich, /example\.targetTranslation/);
+  assert.match(rich, /distinctionTranslation/);
 });

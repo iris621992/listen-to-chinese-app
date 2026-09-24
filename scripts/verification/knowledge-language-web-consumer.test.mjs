@@ -35,31 +35,35 @@ test("Knowledge language state is canonical and independent from interface local
   assert.match(detailSearch, /"knowledgeLang"/u);
 });
 
-test("Vocabulary Detail exact Chinese mode consumes truthful K1F locale data", async () => {
-  const [page, loader, toggle, sticky, rich, characterRail] = await Promise.all([
+test("Vocabulary Detail exact Chinese mode consumes truthful localized projection data", async () => {
+  const [pageRoute, view, loader, toggle, sticky, rich, characterRail] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
     read("lib/vocabularyDetail.ts"),
     read("app/knowledge/vocabulary/[publicId]/KnowledgeLanguageToggle.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyStickyNav.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.tsx"),
   ]);
+  const page = `${pageRoute}\n${view}`;
 
   assert.match(page, /resolveKnowledgeLanguage\(query\?\.knowledgeLang\)/u);
   assert.match(page, /resolveKnowledgeContentLocale\(interfaceLocale\.code, knowledgeLanguage\)/u);
   assert.match(page, /loadVocabularyDetail\(publicId, knowledgeContentLocale\)/u);
   assert.match(page, /loadVocabularyCharacterDelivery\(publicId, interfaceLocale\.code\)/u);
   assert.match(page, /KnowledgeLanguageToggle/u);
-  assert.match(page, /knowledgeLanguageUserLabel\(interfaceLocale\.code\)/u);
+  assert.match(page, /knowledgeLanguageUserLabel\(interfaceLocaleCode\)/u);
   assert.match(page, /if \(localeCode === "vi"\) return "Tiếng Việt"/u);
   assert.match(page, /if \(localeCode === "en"\) return "English"/u);
-  assert.match(page, /const showHanViet = interfaceLocale\.code === "vi" && knowledgeLanguage === "user"/u);
+  assert.match(page, /const showHanViet = interfaceLocaleCode === "vi" && knowledgeLanguage === "user"/u);
   assert.equal((page.match(/showHanViet=\{showHanViet\}/gu) ?? []).length, 2);
   assert.doesNotMatch(page, /showHanViet=\{knowledgeLanguage !== "zh"\}/u);
 
   assert.match(loader, /KnowledgeContentLocaleRequest/u);
   assert.match(loader, /exactContentLocaleCode/u);
-  assert.match(loader, /stringValue\(payload\.projection_contract\) !== K1F_PROJECTION_CONTRACT/u);
+  assert.match(loader, /K1G_PROJECTION_CONTRACT/u);
+  assert.match(loader, /K1F_PROJECTION_CONTRACT/u);
+  assert.match(loader, /\[K1G_PROJECTION_CONTRACT, K1F_PROJECTION_CONTRACT\]\.includes/u);
   assert.match(loader, /detail\.requestedLocale !== exactContentLocaleCode/u);
   assert.match(loader, /item\.contentLocale !== exactContentLocaleCode/u);
   assert.match(loader, /translationEquivalents: exactContentLocaleCode === "zh"/u);
@@ -85,12 +89,14 @@ test("Vocabulary Detail exact Chinese mode consumes truthful K1F locale data", a
 });
 
 test("Vocabulary Detail ports approved segmented toggle without fake Save", async () => {
-  const [page, sticky, toggle, styles] = await Promise.all([
+  const [pageRoute, view, sticky, toggle, styles] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyStickyNav.tsx"),
     read("app/knowledge/vocabulary/[publicId]/KnowledgeLanguageToggle.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetail.module.css"),
   ]);
+  const page = `${pageRoute}\n${view}`;
 
   assert.match(styles, /\.contentToggle\s*\{[\s\S]*display:\s*inline-flex/u);
   assert.match(styles, /border:\s*1px solid #d7d0c2/u);
@@ -106,12 +112,14 @@ test("Vocabulary Detail ports approved segmented toggle without fake Save", asyn
 
 
 test("Structured Quick Distinction renders authored source/target cards without prose parsing", async () => {
-  const [page, loader, rich, styles] = await Promise.all([
+  const [pageRoute, view, loader, rich, styles] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
     read("lib/vocabularyDetail.ts"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css"),
   ]);
+  const page = `${pageRoute}\n${view}`;
 
   assert.match(loader, /sourceUseWhen: string \| null/u);
   assert.match(loader, /targetUseWhen: string \| null/u);
@@ -139,16 +147,18 @@ test("Structured Quick Distinction renders authored source/target cards without 
 });
 
 test("Vocabulary final visual corrections keep exact toggle labels and sticky rail persistence", async () => {
-  const [page, characterStyles] = await Promise.all([
+  const [pageRoute, view, characterStyles] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.module.css"),
   ]);
+  const page = `${pageRoute}\n${view}`;
 
   assert.match(page, /return "Tiếng Việt"/u);
   assert.match(page, /return "English"/u);
   assert.doesNotMatch(page, /userLanguageLabel=\{interfaceLocale\.label\}/u);
-  assert.match(page, /const showHanViet = interfaceLocale\.code === "vi" && knowledgeLanguage === "user"/u);
-  assert.doesNotMatch(page, /interfaceLocale\.code === "en"\s*&&\s*knowledgeLanguage === "user"/u);
+  assert.match(page, /const showHanViet = interfaceLocaleCode === "vi" && knowledgeLanguage === "user"/u);
+  assert.doesNotMatch(page, /interfaceLocaleCode === "en"\s*&&\s*knowledgeLanguage === "user"/u);
 
   assert.match(
     characterStyles,
