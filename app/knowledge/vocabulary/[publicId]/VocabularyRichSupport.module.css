@@ -246,6 +246,19 @@
   line-height: 1.5;
 }
 
+.distinctionExamples span {
+  display: grid;
+  gap: 2px;
+}
+
+.distinctionTranslation {
+  color: #5a5f57;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
 @container (max-width: 620px) {
   .distinctionCompareGrid {
     grid-template-columns: 1fr;
