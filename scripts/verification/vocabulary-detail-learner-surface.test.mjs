@@ -209,3 +209,20 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
 
   assert.match(header, /\/brand\/yunchinese-logo\.png/);
 });
+
+test("Quick Distinction contrast examples preserve optional learner translations on the shared renderer", async () => {
+  const [rich, loader] = await Promise.all([
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
+    read("lib/vocabularyDetail.ts"),
+  ]);
+
+  assert.match(loader, /sourceTranslation: string \| null/);
+  assert.match(loader, /targetTranslation: string \| null/);
+  assert.match(loader, /contentLocale: string \| null/);
+  assert.match(loader, /source_translation/);
+  assert.match(loader, /target_translation/);
+  assert.match(loader, /get_public_vocabulary_entry_v7/);
+  assert.match(rich, /example\.sourceTranslation/);
+  assert.match(rich, /example\.targetTranslation/);
+  assert.match(rich, /distinctionTranslation/);
+});
