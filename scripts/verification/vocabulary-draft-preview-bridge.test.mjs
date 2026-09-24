@@ -113,3 +113,12 @@ test("Vocabulary final approved learner modules stay on the shared renderer", as
   assert.match(loader, /knowledgeLinks:/);
   assert.match(loader, /practiceLinks:/);
 });
+
+
+test("Vocabulary Draft Preview parser preserves localized Quick Distinction contrast translations", async () => {
+  const draftParser = await read("lib/vocabularyDraftPreview.ts");
+
+  assert.match(draftParser, /sourceTranslation: stringValue\(row\.source_translation\)/);
+  assert.match(draftParser, /targetTranslation: stringValue\(row\.target_translation\)/);
+  assert.match(draftParser, /contentLocale: stringValue\(row\.content_locale\)/);
+});
