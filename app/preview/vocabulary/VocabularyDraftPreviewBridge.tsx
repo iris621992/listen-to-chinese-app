@@ -9,7 +9,10 @@ import {
 } from "@/lib/knowledgeLanguage";
 import { preservedLearnerContextQuery } from "@/lib/proficiencyContext";
 import VocabularyDetailView from "@/app/knowledge/vocabulary/[publicId]/VocabularyDetailView";
-import { parseVocabularyDraftPreviewPayload } from "@/lib/vocabularyDraftPreview";
+import {
+  parseVocabularyDraftPreviewCharacters,
+  parseVocabularyDraftPreviewPayload,
+} from "@/lib/vocabularyDraftPreview";
 import styles from "./VocabularyDraftPreviewBridge.module.css";
 
 const HANDOFF_PATTERN = /^[a-f0-9]{32}$/u;
@@ -255,6 +258,17 @@ export default function VocabularyDraftPreviewBridge() {
     );
   }, [state, interfaceLocale.code, knowledgeLanguage]);
 
+  const characters = useMemo(() => {
+    if (state.status !== "READY") return [];
+    const locale = contentLocaleFor(
+      interfaceLocale.code,
+      knowledgeLanguage,
+    );
+    return parseVocabularyDraftPreviewCharacters(
+      state.envelope.payloads[locale],
+    );
+  }, [state, interfaceLocale.code, knowledgeLanguage]);
+
   const learnerContextQuery = preservedLearnerContextQuery({
     uiLang: searchParams.get("uiLang") ?? undefined,
     lang: searchParams.get("lang") ?? undefined,
@@ -308,7 +322,7 @@ export default function VocabularyDraftPreviewBridge() {
       </div>
       <VocabularyDetailView
         detail={detail}
-        characters={[]}
+        characters={characters}
         interfaceLocaleCode={interfaceLocale.code}
         interfaceDirection={interfaceLocale.direction}
         knowledgeLanguage={knowledgeLanguage}
