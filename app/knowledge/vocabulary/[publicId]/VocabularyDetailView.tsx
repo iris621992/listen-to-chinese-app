@@ -198,7 +198,6 @@ const requestedLocaleTranslations = (
 const learnerMeaningParts = (
   item: VocabularyReadingItem,
   requestedLocale: string,
-  _fallbackLocale: string,
 ) => {
   const parts = [
     item.shortLabel,
@@ -274,7 +273,7 @@ export default function VocabularyDetailView({
   const secondaryForms = detail.forms.filter((form) => form.publicId !== primaryForm.publicId);
   const allReadingItems = detail.pronunciations.flatMap((item) => item.readingItems);
   const singleSummary = allReadingItems.length === 1
-    ? learnerMeaningParts(allReadingItems[0], detail.requestedLocale, detail.fallbackLocale).join(", ")
+    ? learnerMeaningParts(allReadingItems[0], detail.requestedLocale).join(", ")
     : null;
   const allPosCodes = distinctPosCodes(allReadingItems);
   const hasReadingNavigation = detail.pronunciations.length > 1;
@@ -465,11 +464,7 @@ export default function VocabularyDetailView({
 
                               <div className={styles.senseStack}>
                                 {group.items.map((item, itemIndex) => {
-                                  const meaningParts = learnerMeaningParts(
-                                    item,
-                                    detail.requestedLocale,
-                                    detail.fallbackLocale,
-                                  );
+                                  const meaningParts = learnerMeaningParts(item, detail.requestedLocale);
                                   const itemRegion = localizedCodeLabel(
                                     item.regionProfileCode,
                                     interfaceLocaleCode,
