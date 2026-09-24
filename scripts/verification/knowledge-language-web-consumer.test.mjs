@@ -35,7 +35,7 @@ test("Knowledge language state is canonical and independent from interface local
   assert.match(detailSearch, /"knowledgeLang"/u);
 });
 
-test("Vocabulary Detail exact Chinese mode consumes truthful K1F locale data", async () => {
+test("Vocabulary Detail exact Chinese mode consumes truthful localized projection data", async () => {
   const [pageRoute, view, loader, toggle, sticky, rich, characterRail] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
@@ -61,7 +61,9 @@ test("Vocabulary Detail exact Chinese mode consumes truthful K1F locale data", a
 
   assert.match(loader, /KnowledgeContentLocaleRequest/u);
   assert.match(loader, /exactContentLocaleCode/u);
-  assert.match(loader, /stringValue\(payload\.projection_contract\) !== K1F_PROJECTION_CONTRACT/u);
+  assert.match(loader, /K1G_PROJECTION_CONTRACT/u);
+  assert.match(loader, /K1F_PROJECTION_CONTRACT/u);
+  assert.match(loader, /\[K1G_PROJECTION_CONTRACT, K1F_PROJECTION_CONTRACT\]\.includes/u);
   assert.match(loader, /detail\.requestedLocale !== exactContentLocaleCode/u);
   assert.match(loader, /item\.contentLocale !== exactContentLocaleCode/u);
   assert.match(loader, /translationEquivalents: exactContentLocaleCode === "zh"/u);
