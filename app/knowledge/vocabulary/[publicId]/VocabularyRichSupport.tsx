@@ -153,7 +153,14 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                       {distinction.contrastExamples.length > 0 ? (
                         <div className={styles.distinctionExamples}>
                           {distinction.contrastExamples.map((example, index) => (
-                            <span key={distinction.publicId + "-source-" + index}>{example.sourceExpression}</span>
+                            <span key={distinction.publicId + "-source-" + index}>
+                              <b>{example.sourceExpression}</b>
+                              {example.sourceTranslation ? (
+                                <small className={styles.distinctionTranslation}>
+                                  {example.sourceTranslation}
+                                </small>
+                              ) : null}
+                            </span>
                           ))}
                         </div>
                       ) : null}
@@ -164,7 +171,14 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                       {distinction.contrastExamples.length > 0 ? (
                         <div className={styles.distinctionExamples}>
                           {distinction.contrastExamples.map((example, index) => (
-                            <span key={distinction.publicId + "-target-" + index}>{example.targetExpression}</span>
+                            <span key={distinction.publicId + "-target-" + index}>
+                              <b>{example.targetExpression}</b>
+                              {example.targetTranslation ? (
+                                <small className={styles.distinctionTranslation}>
+                                  {example.targetTranslation}
+                                </small>
+                              ) : null}
+                            </span>
                           ))}
                         </div>
                       ) : null}
