@@ -23,6 +23,10 @@ test("Vocabulary Draft Preview uses the exact shared learner renderer", async ()
   assert.match(view, /VocabularyCharacterRail/);
   assert.match(view, /VocabularyPronunciationMeta/);
   assert.match(view, /VocabularyDetail\.module\.css/);
+  assert.match(view, /constructions: labels\.constructions/);
+  assert.match(view, /commonMistakes: labels\.commonMistakes/);
+  assert.match(previewBridge, /parseVocabularyDraftPreviewCharacters/);
+  assert.match(previewBridge, /characters=\{characters\}/);
 
   assert.doesNotMatch(previewBridge, /styles\.entryCard|styles\.senseStack|styles\.readingFlow/);
 });
@@ -73,9 +77,39 @@ test("Vocabulary Draft Preview parser accepts Draft identity without weakening p
   assert.match(draftParser, /classifiers/);
   assert.match(draftParser, /examples/);
   assert.match(draftParser, /quick_distinctions/);
+  assert.match(draftParser, /lexical_constructions/);
+  assert.match(draftParser, /common_mistakes/);
+  assert.match(draftParser, /knowledge_links/);
+  assert.match(draftParser, /practice_links/);
+  assert.match(draftParser, /usage_context/);
+  assert.match(draftParser, /admin_review_extensions/);
+  assert.match(draftParser, /parseVocabularyDraftPreviewCharacters/);
   assert.match(draftParser, /parentPublicId/);
 
   assert.match(publicLoader, /VOCABULARY_PUBLIC_ID_PATTERN/);
   assert.match(publicLoader, /if \(!VOCABULARY_PUBLIC_ID_PATTERN\.test\(publicId\)\)/);
   assert.doesNotMatch(publicLoader, /draft-preview/);
+});
+
+test("Vocabulary final approved learner modules stay on the shared renderer", async () => {
+  const [rich, loader] = await Promise.all([
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
+    read("lib/vocabularyDetail.ts"),
+  ]);
+
+  assert.match(rich, /data-vocabulary-module="constructions"/);
+  assert.match(rich, /data-vocabulary-module="common-mistakes"/);
+  assert.match(rich, /data-vocabulary-module="quick-distinction"/);
+  assert.match(rich, /data-vocabulary-module="relations"/);
+  assert.match(rich, /item\.examples\.length/);
+  assert.match(rich, /item\.collocations\.length/);
+  assert.match(rich, /item\.classifiers\.length/);
+
+  assert.match(loader, /get_public_vocabulary_entry_v6/);
+  assert.match(loader, /get_public_vocabulary_entry_v5/);
+  assert.match(loader, /K1G_VOCABULARY_FINAL_APPROVED_SURFACE_PUBLIC_PROJECTION_V1/);
+  assert.match(loader, /constructions:/);
+  assert.match(loader, /commonMistakes:/);
+  assert.match(loader, /knowledgeLinks:/);
+  assert.match(loader, /practiceLinks:/);
 });
