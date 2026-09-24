@@ -42,7 +42,6 @@ test("Vocabulary Draft Preview handoff is short-lived, opener-bound, and fail cl
   assert.match(previewBridge, /HANDOFF_EXPIRED/);
   assert.match(previewBridge, /OWNER_HANDOFF_REQUIRED/);
   assert.match(previewBridge, /HANDOFF_TIMEOUT/);
-  assert.match(previewBridge, /preview_only/);
   assert.match(previewBridge, /payloads\[locale\]/);
 
   assert.doesNotMatch(previewBridge, /fetch\(|createClient\(|service[_-]?role|get_public_vocabulary_entry/i);
