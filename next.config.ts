@@ -13,6 +13,17 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [...legacyProficiencyRedirects];
   },
+  async headers() {
+    return [
+      {
+        source: "/preview/vocabulary",
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+        ],
+      },
+    ];
+  },
 };
 
 export default nextConfig;
