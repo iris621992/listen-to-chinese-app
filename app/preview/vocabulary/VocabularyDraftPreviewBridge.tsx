@@ -60,6 +60,16 @@ function isAllowedAdminStagingOrigin(origin: string) {
   }
 }
 
+function adminStagingOriginFromReferrer(): string | null {
+  if (!document.referrer) return null;
+  try {
+    const origin = new URL(document.referrer).origin;
+    return isAllowedAdminStagingOrigin(origin) ? origin : null;
+  } catch {
+    return null;
+  }
+}
+
 function parseEnvelope(
   value: unknown,
   expectedHandoff: string,
@@ -159,20 +169,30 @@ export default function VocabularyDraftPreviewBridge() {
 
   useEffect(() => {
     if (!HANDOFF_PATTERN.test(handoff)) {
-      setState({ status: "INVALID", reason: "INVALID_HANDOFF" });
-      return;
+      const timer = window.setTimeout(
+        () => setState({ status: "INVALID", reason: "INVALID_HANDOFF" }),
+        0,
+      );
+      return () => window.clearTimeout(timer);
     }
 
     const stored = readStoredEnvelope(handoff);
     if (stored) {
-      setState({ status: "READY", envelope: stored });
-      return;
+      const timer = window.setTimeout(
+        () => setState({ status: "READY", envelope: stored }),
+        0,
+      );
+      return () => window.clearTimeout(timer);
     }
 
     const opener = window.opener;
-    if (!opener) {
-      setState({ status: "INVALID", reason: "OWNER_HANDOFF_REQUIRED" });
-      return;
+    const openerOrigin = adminStagingOriginFromReferrer();
+    if (!opener || !openerOrigin) {
+      const timer = window.setTimeout(
+        () => setState({ status: "INVALID", reason: "OWNER_HANDOFF_REQUIRED" }),
+        0,
+      );
+      return () => window.clearTimeout(timer);
     }
 
     let active = true;
@@ -184,7 +204,7 @@ export default function VocabularyDraftPreviewBridge() {
 
     const onMessage = (event: MessageEvent) => {
       if (!active || event.source !== opener) return;
-      if (!isAllowedAdminStagingOrigin(event.origin)) return;
+      if (event.origin !== openerOrigin) return;
 
       const envelope = parseEnvelope(event.data, handoff, Date.now());
       if (!envelope) return;
@@ -201,7 +221,7 @@ export default function VocabularyDraftPreviewBridge() {
       type: "YUNCHINESE_VOCABULARY_DRAFT_PREVIEW_READY",
       handoff,
     };
-    opener.postMessage(ready, "*");
+    opener.postMessage(ready, openerOrigin);
 
     return () => {
       active = false;
@@ -212,11 +232,7 @@ export default function VocabularyDraftPreviewBridge() {
 
   useEffect(() => {
     if (state.status !== "READY") return;
-    const remaining = state.envelope.expiresAt - Date.now();
-    if (remaining <= 0) {
-      setState({ status: "INVALID", reason: "HANDOFF_EXPIRED" });
-      return;
-    }
+    const remaining = Math.max(0, state.envelope.expiresAt - Date.now());
     const timer = window.setTimeout(() => {
       window.sessionStorage.removeItem(
         `${STORAGE_PREFIX}${state.envelope.handoff}`,
