@@ -36,16 +36,17 @@ test("Knowledge language state is canonical and independent from interface local
 });
 
 test("Vocabulary Detail exact Chinese mode consumes truthful localized projection data", async () => {
-  const [pageRoute, view, loader, toggle, sticky, rich, characterRail] = await Promise.all([
+  const [pageRoute, view, labels, loader, toggle, sticky, rich, characterRail] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetailLabels.ts"),
     read("lib/vocabularyDetail.ts"),
     read("app/knowledge/vocabulary/[publicId]/KnowledgeLanguageToggle.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyStickyNav.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.tsx"),
   ]);
-  const page = `${pageRoute}\n${view}`;
+  const page = `${pageRoute}\n${view}\n${labels}`;
 
   assert.match(page, /resolveKnowledgeLanguage\(query\?\.knowledgeLang\)/u);
   assert.match(page, /resolveKnowledgeContentLocale\(interfaceLocale\.code, knowledgeLanguage\)/u);
