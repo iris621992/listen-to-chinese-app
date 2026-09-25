@@ -8,7 +8,8 @@ import {
 import { preservedLearnerContextQuery } from "@/lib/proficiencyContext";
 import { loadVocabularyCharacterDelivery } from "@/lib/vocabularyCharacterDelivery";
 import { loadVocabularyDetail } from "@/lib/vocabularyDetail";
-import VocabularyDetailView, { vocabularyDetailLabelsFor } from "./VocabularyDetailView";
+import VocabularyDetailView from "./VocabularyDetailView";
+import { vocabularyDetailLabelsFor } from "./VocabularyDetailLabels";
 import styles from "./VocabularyDetail.module.css";
 
 type Props = {
