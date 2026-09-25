@@ -23,11 +23,12 @@ test("Vocabulary detail keeps the server/client label boundary runtime-safe", as
 });
 
 test("Vocabulary detail preserves K1B-K1F depth and authoritative Character delivery", async () => {
-  const [loader, characterLoader, pageRoute, view, styles, characterRail, characterRailStyles, writing, writingStyles, sticky, rich, richStyles, pronunciationMeta, pronunciationMetaStyles, knowledge, header, packageJson] = await Promise.all([
+  const [loader, characterLoader, pageRoute, view, labels, styles, characterRail, characterRailStyles, writing, writingStyles, sticky, rich, richStyles, pronunciationMeta, pronunciationMetaStyles, knowledge, header, packageJson] = await Promise.all([
     read("lib/vocabularyDetail.ts"),
     read("lib/vocabularyCharacterDelivery.ts"),
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetailLabels.ts"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetail.module.css"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyCharacterRail.module.css"),
@@ -42,7 +43,7 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
     read("components/Header.tsx"),
     read("package.json"),
   ]);
-  const page = `${pageRoute}\n${view}`;
+  const page = `${pageRoute}\n${view}\n${labels}`;
 
   assert.match(loader, /get_public_vocabulary_entry_v6/);
   assert.match(loader, /get_public_vocabulary_entry_v5/);
