@@ -4,6 +4,24 @@ import test from "node:test";
 
 const read = (path) => readFile(path, "utf8");
 
+test("Vocabulary detail keeps the server/client label boundary runtime-safe", async () => {
+  const [pageRoute, view, labels] = await Promise.all([
+    read("app/knowledge/vocabulary/[publicId]/page.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetailLabels.ts"),
+  ]);
+
+  assert.match(view, /^"use client";/);
+  assert.doesNotMatch(labels, /^"use client";/);
+  assert.match(labels, /export const vocabularyDetailLabelsFor/);
+  assert.match(labels, /export const knowledgeLanguageUserLabel/);
+  assert.match(pageRoute, /import VocabularyDetailView from "\.\/VocabularyDetailView";/);
+  assert.match(pageRoute, /import \{ vocabularyDetailLabelsFor \} from "\.\/VocabularyDetailLabels";/);
+  assert.doesNotMatch(pageRoute, /VocabularyDetailView,\s*\{\s*vocabularyDetailLabelsFor\s*\}/);
+  assert.match(view, /vocabularyDetailLabelsFor\(interfaceLocaleCode\)/);
+  assert.match(view, /knowledgeLanguageUserLabel\(interfaceLocaleCode\)/);
+});
+
 test("Vocabulary detail preserves K1B-K1F depth and authoritative Character delivery", async () => {
   const [loader, characterLoader, pageRoute, view, styles, characterRail, characterRailStyles, writing, writingStyles, sticky, rich, richStyles, pronunciationMeta, pronunciationMetaStyles, knowledge, header, packageJson] = await Promise.all([
     read("lib/vocabularyDetail.ts"),
