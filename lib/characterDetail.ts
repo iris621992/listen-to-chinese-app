@@ -4,6 +4,40 @@ import { getLearnerLocale } from "@/lib/learnerLocaleRegistry";
 const CHARACTER_PUBLIC_ID_PATTERN = /^char_[a-f0-9]{64}$/u;
 const CHARACTER_PROJECTION_CONTRACT = "CHARACTER_KNOWLEDGE_PUBLIC_PROJECTION_V1";
 
+const CHARACTER_ACCEPTANCE_PREVIEW_BRANCH =
+  "agent/character-detail-learner-delivery-v1";
+const CHARACTER_ACCEPTANCE_STAGING_URL =
+  "https://xqvdbgjfpdxdasxycppi.supabase.co";
+const CHARACTER_ACCEPTANCE_STAGING_PUBLISHABLE_KEY =
+  "sb_publishable_XPdzYMOqCBDuXJBnb2BW7g_pdMqMqgt";
+
+function usesCharacterAcceptanceStaging(): boolean {
+  return (
+    process.env.VERCEL_ENV === "preview"
+    && process.env.VERCEL_GIT_COMMIT_REF === CHARACTER_ACCEPTANCE_PREVIEW_BRANCH
+  );
+}
+
+async function createCharacterRuntimeSupabaseClient() {
+  if (usesCharacterAcceptanceStaging()) {
+    const { createClient } = await import("@supabase/supabase-js");
+    return createClient(
+      CHARACTER_ACCEPTANCE_STAGING_URL,
+      CHARACTER_ACCEPTANCE_STAGING_PUBLISHABLE_KEY,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+        },
+      },
+    );
+  }
+
+  const { createServerSupabaseClient } = await import("@/lib/supabase/server");
+  return createServerSupabaseClient();
+}
+
 type JsonObject = Record<string, unknown>;
 
 export type CharacterApplicability = "PRESENT" | "N/A" | "PENDING";
@@ -302,8 +336,7 @@ export async function loadCharacterDetail(
   if (!localeRequest) return { status: "DATABASE_ERROR" };
 
   try {
-    const { createServerSupabaseClient } = await import("@/lib/supabase/server");
-    const supabase = createServerSupabaseClient();
+    const supabase = await createCharacterRuntimeSupabaseClient();
     const { data, error } = await supabase.rpc("get_public_character_entry_v1", {
       p_public_character_id: publicId,
       p_locale_code: localeRequest.requestedLocaleCode,
