@@ -61,3 +61,16 @@ test("desktop omits redundant Writing navigation while compact layouts can expos
   assert.match(css, /\.mobileOnlyWriting\s*\{[\s\S]*display:\s*none\s*!important/);
   assert.match(css, /max-width:\s*639px[\s\S]*\.mobileOnlyWriting[\s\S]*display:\s*inline-flex\s*!important/);
 });
+
+
+test("Character acceptance Preview binding is exact-branch and Preview-only", () => {
+  assert.match(delivery, /CHARACTER_ACCEPTANCE_PREVIEW_BRANCH/);
+  assert.match(delivery, /agent\/character-detail-learner-delivery-v1/);
+  assert.match(delivery, /process\.env\.VERCEL_ENV === "preview"/);
+  assert.match(delivery, /process\.env\.VERCEL_GIT_COMMIT_REF === CHARACTER_ACCEPTANCE_PREVIEW_BRANCH/);
+  assert.match(delivery, /xqvdbgjfpdxdasxycppi\.supabase\.co/);
+  assert.match(delivery, /sb_publishable_/);
+  assert.match(delivery, /createCharacterRuntimeSupabaseClient/);
+  assert.match(delivery, /createServerSupabaseClient/);
+  assert.doesNotMatch(delivery, /service_role|SUPABASE_SERVICE_ROLE/i);
+});
