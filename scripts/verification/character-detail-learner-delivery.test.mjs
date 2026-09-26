@@ -76,7 +76,7 @@ test("Character acceptance Preview binding is exact-branch and Preview-only", ()
 });
 
 test("IDS structure operators use symbol-capable font fallbacks without rewriting canonical formulas", () => {
-  assert.match(css, /\.structureFormula\s*\{[\s\S]*"Segoe UI Symbol"[\s\S]*"Noto Sans Symbols 2"/);
+  assert.match(css, /\.structureFormula\s*\{[\s\S]*"Segoe UI Symbol"[\s\S]*"Noto Sans Symbols 2"[\s\S]*"SimSun"[\s\S]*"NSimSun"/);
   assert.match(css, /:global\(#characters-rail\)[\s\S]*\[class\*="structureValue"\]/);
   assert.match(css, /:global\(#characters\)[\s\S]*\[class\*="structureValue"\]/);
   assert.match(view, /structureFormula:\s*detail\.structure\.formula/);
