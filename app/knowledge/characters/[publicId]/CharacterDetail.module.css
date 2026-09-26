@@ -106,8 +106,15 @@
   border-radius: 10px;
   background: #f8f6ef;
   padding: 7px 10px;
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "Arial Unicode MS", "Noto Sans CJK SC", "Microsoft YaHei", serif;
   font-size: 17px;
+}
+
+/* Character Detail only: keep canonical IDS formulas intact while adding
+   symbol-capable fallbacks for operators such as U+2FF0 ⿰ in the shared rail. */
+:global(#characters-rail) [class*="structureValue"],
+:global(#characters) [class*="structureValue"] {
+  font-family: "Songti SC", "Noto Serif CJK SC", STSong, "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols 2", "Arial Unicode MS", "Noto Sans CJK SC", "Microsoft YaHei", serif;
 }
 
 .componentList {
