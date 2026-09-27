@@ -47,7 +47,7 @@
   display: grid;
   gap: 3px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #fafbf8;
   padding: 11px 12px;
 }
@@ -160,9 +160,51 @@
 
 .constructionItem {
   display: grid;
-  gap: 4px;
-  padding: 12px 0;
-  border-top: 1px dashed #e7e2d8;
+  gap: 6px;
+  padding: 15px 0;
+  border-top: 1px solid #ebe7df;
+}
+
+.constructionExamples {
+  display: grid;
+  gap: 7px;
+  margin-top: 6px;
+}
+
+.constructionExampleLabel {
+  color: #657066;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.constructionExamples .exampleItem {
+  border-radius: 7px;
+  background: #fafbf8;
+}
+
+.expandButton {
+  width: fit-content;
+  margin-top: 10px;
+  border: 0;
+  background: transparent;
+  padding: 4px 0;
+  color: #536a55;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 680;
+  cursor: pointer;
+}
+
+.expandButton:hover,
+.expandButton:focus-visible {
+  color: #304d34;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.expandButton:focus-visible {
+  outline: 2px solid rgba(89, 106, 78, 0.22);
+  outline-offset: 3px;
 }
 
 .constructionItem:first-child {
@@ -199,7 +241,7 @@
   display: grid;
   gap: 2px;
   border: 0;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #f6f8f4;
   padding: 10px 12px;
 }
@@ -219,7 +261,7 @@
 .classifierList {
   max-width: 520px;
   padding: 11px 13px;
-  border-radius: 10px;
+  border-radius: 8px;
   background: #f7f3fb;
 }
 
@@ -256,7 +298,7 @@
 .distinctionCard {
   min-width: 0;
   border: 0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: #f8faf7;
   padding: 13px;
 }
@@ -366,13 +408,13 @@
 }
 
 .relationBlock {
-  border-radius: 10px;
+  border-radius: 8px;
   background: #fbf8ef;
   padding: 11px 13px;
 }
 
 .practiceBlock {
-  border-radius: 10px;
+  border-radius: 8px;
   background: #f3f6f1;
   padding: 11px 13px;
 }
