@@ -7,8 +7,8 @@ import type { VocabularyCharacterOccurrence } from "@/lib/vocabularyCharacterDel
 import type {
   VocabularyDetail,
   VocabularyReadingItem,
-  VocabularyTranslationEquivalent,
 } from "@/lib/vocabularyDetail";
+import { vocabularySenseHeading } from "@/lib/vocabularySenseHeading";
 import KnowledgeLanguageToggle from "./KnowledgeLanguageToggle";
 import VocabularyCharacterRail from "./VocabularyCharacterRail";
 import VocabularyPronunciationMeta from "./VocabularyPronunciationMeta";
@@ -63,30 +63,6 @@ const localizedCodeLabel = (
 
 const posLabel = (code: string | null, localeCode: string) =>
   code ? POS_LABELS[code]?.[localeCode] ?? POS_LABELS[code]?.en ?? null : null;
-
-const requestedLocaleTranslations = (
-  translations: VocabularyTranslationEquivalent[],
-  requestedLocale: string,
-) => {
-  const language = requestedLocale.split("-")[0];
-  return translations.filter((translation) => {
-    const translationLanguage = translation.localeCode.split("-")[0];
-    return translation.localeCode === requestedLocale || translationLanguage === language;
-  });
-};
-
-const learnerMeaningParts = (
-  item: VocabularyReadingItem,
-  requestedLocale: string,
-) => {
-  const parts = [
-    item.shortLabel,
-    ...requestedLocaleTranslations(item.translationEquivalents, requestedLocale)
-      .map((translation) => translation.expression),
-  ].filter((part): part is string => Boolean(part));
-
-  return [...new Set(parts.map((part) => part.trim()).filter(Boolean))];
-};
 
 const groupByPartOfSpeech = (items: VocabularyReadingItem[]): PosGroup[] => {
   const groups: PosGroup[] = [];
@@ -152,7 +128,7 @@ export default function VocabularyDetailView({
   const secondaryForms = detail.forms.filter((form) => form.publicId !== primaryForm.publicId);
   const allReadingItems = detail.pronunciations.flatMap((item) => item.readingItems);
   const singleSummary = allReadingItems.length === 1
-    ? learnerMeaningParts(allReadingItems[0], detail.requestedLocale).join(", ")
+    ? vocabularySenseHeading(allReadingItems[0])
     : null;
   const allPosCodes = distinctPosCodes(allReadingItems);
   const hasReadingNavigation = detail.pronunciations.length > 1;
@@ -343,7 +319,7 @@ export default function VocabularyDetailView({
 
                               <div className={styles.senseStack}>
                                 {group.items.map((item, itemIndex) => {
-                                  const meaningParts = learnerMeaningParts(item, detail.requestedLocale);
+                                  const meaningHeading = vocabularySenseHeading(item);
                                   const itemRegion = localizedCodeLabel(
                                     item.regionProfileCode,
                                     interfaceLocaleCode,
@@ -369,8 +345,8 @@ export default function VocabularyDetailView({
                                           {item.itemType === "usage" ? (
                                             <span className={styles.usageType}>{labels.usage}</span>
                                           ) : null}
-                                          {meaningParts.length > 0 ? (
-                                            <h3 className={styles.meaning}>{meaningParts.join(", ")}</h3>
+                                          {meaningHeading ? (
+                                            <h3 className={styles.meaning}>{meaningHeading}</h3>
                                           ) : null}
                                           {itemRegion ? (
                                             <div className={styles.tags}>

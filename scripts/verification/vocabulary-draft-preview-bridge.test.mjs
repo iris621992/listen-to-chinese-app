@@ -23,6 +23,10 @@ test("Vocabulary Draft Preview uses the exact shared learner renderer", async ()
   assert.match(view, /VocabularyCharacterRail/);
   assert.match(view, /VocabularyPronunciationMeta/);
   assert.match(view, /VocabularyDetail\.module\.css/);
+  assert.match(view, /vocabularySenseHeading\(allReadingItems\[0\]\)/);
+  assert.match(view, /const meaningHeading = vocabularySenseHeading\(item\)/);
+  assert.doesNotMatch(view, /learnerMeaningParts|requestedLocaleTranslations/);
+  assert.doesNotMatch(view, /translationEquivalents/);
   assert.match(view, /constructions: labels\.constructions/);
   assert.match(view, /commonMistakes: labels\.commonMistakes/);
   assert.match(previewBridge, /parseVocabularyDraftPreviewCharacters/);

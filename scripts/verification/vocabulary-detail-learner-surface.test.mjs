@@ -99,7 +99,11 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(page, /anchors\.set\(group\.posCode, `#pos-\$\{pronunciationPublicId\}-\$\{group\.key\}`\)/);
   assert.match(page, /<span className=\{styles\.senseNum\}>\{itemIndex \+ 1\}<\/span>/);
   assert.doesNotMatch(page, /group\.startIndex/);
-  assert.match(page, /learnerMeaningParts/);
+  assert.doesNotMatch(page, /learnerMeaningParts|requestedLocaleTranslations/);
+  assert.doesNotMatch(page, /translationEquivalents/);
+  assert.match(page, /vocabularySenseHeading\(allReadingItems\[0\]\)/);
+  assert.match(page, /const meaningHeading = vocabularySenseHeading\(item\)/);
+  assert.match(page, /<h3 className=\{styles\.meaning\}>\{meaningHeading\}<\/h3>/);
   assert.match(page, /form\.publicId !== primaryForm\.publicId/);
   assert.doesNotMatch(page, /form\.text !== primaryForm\.text/);
   assert.match(page, /VocabularyPronunciationMeta/);
@@ -244,4 +248,40 @@ test("Quick Distinction contrast examples preserve optional learner translations
   assert.match(rich, /example\.sourceTranslation/);
   assert.match(rich, /example\.targetTranslation/);
   assert.match(rich, /distinctionTranslation/);
+});
+
+
+test("Vocabulary sense headings use shortLabel as the sole learner display authority", async () => {
+  const { vocabularySenseHeading } = await import("../../lib/vocabularySenseHeading.ts");
+
+  const differentTe = {
+    shortLabel: "biết; quen biết; nhận ra",
+    translationEquivalents: [{ expression: "biết" }],
+  };
+  assert.equal(vocabularySenseHeading(differentTe), "biết; quen biết; nhận ra");
+
+  const sameTe = {
+    shortLabel: "nhận thức",
+    translationEquivalents: [{ expression: "nhận thức" }],
+  };
+  assert.equal(vocabularySenseHeading(sameTe), "nhận thức");
+
+  const multipleTe = {
+    shortLabel: "hiểu; nhận thức",
+    translationEquivalents: [
+      { expression: "hiểu" },
+      { expression: "nhận thức" },
+      { expression: "understand" },
+    ],
+  };
+  assert.equal(vocabularySenseHeading(multipleTe), "hiểu; nhận thức");
+
+  const nounRi = {
+    shortLabel: "sự hiểu biết; nhận thức",
+    translationEquivalents: [
+      { expression: "nhận thức" },
+      { expression: "sự hiểu biết" },
+    ],
+  };
+  assert.equal(vocabularySenseHeading(nounRi), "sự hiểu biết; nhận thức");
 });
