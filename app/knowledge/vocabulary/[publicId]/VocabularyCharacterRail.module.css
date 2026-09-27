@@ -14,12 +14,12 @@
 
 .characterRailInner {
   position: sticky;
-  top: 100px;
-  border: 1px solid #d9d2c5;
-  border-radius: 16px;
-  background: rgba(255, 254, 251, 0.76);
-  padding: 14px;
-  box-shadow: none;
+  top: 116px;
+  border: 1px solid #e4ded3;
+  border-radius: 18px;
+  background: #fffefb;
+  padding: 20px;
+  box-shadow: 0 14px 38px rgba(55, 52, 43, 0.045);
 }
 
 .header {
@@ -27,65 +27,64 @@
 }
 
 .characterRail h2 {
-  margin: 0 0 3px;
-  color: #30352f;
-  font-size: 13px;
-  font-weight: 760;
-  letter-spacing: 0;
+  margin: 0;
+  color: #334236;
+  font-size: 18px;
+  font-weight: 690;
   line-height: 1.45;
 }
 
 .railSubtitle {
-  margin: 0 0 10px;
-  color: #5b6158;
+  margin: 5px 0 12px;
+  color: #70766f;
   font-size: 12.5px;
-  line-height: 1.55;
+  line-height: 1.6;
 }
 
 .characterSelector {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
-  margin: 8px 0 10px;
+  gap: 7px;
+  margin: 8px 0 12px;
 }
 
 .characterSelectorButton {
   display: grid;
-  width: 34px;
-  min-width: 34px;
-  height: 32px;
+  width: 46px;
+  min-width: 46px;
+  height: 42px;
   place-items: center;
   padding: 0;
-  border: 1px solid #d7d0c2;
+  border: 1px solid #e4dfd5;
   border-radius: 10px;
-  background: #f8f6ef;
-  color: #30352f;
+  background: #fff;
+  color: #3e4b40;
   font: inherit;
   cursor: pointer;
   box-shadow: none;
 }
 
 .characterSelectorButton[aria-pressed="true"] {
-  border-color: #30352f;
-  background: #30352f;
-  color: #fff;
+  border-color: #c9d7c4;
+  background: #f1f5ee;
+  color: #35543a;
 }
 
 .characterSelectorButton:not([aria-pressed="true"]):hover {
-  border-color: #b9b09f;
-  background: #f5f1e7;
+  border-color: #cfd8ca;
+  background: #f6f8f4;
 }
 
 .characterSelectorButton:focus-visible {
-  outline: 3px solid rgba(54, 95, 122, 0.28);
+  outline: 3px solid rgba(89, 106, 78, 0.24);
   outline-offset: 2px;
 }
 
 .selectorGlyph {
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 17px;
-  font-weight: 500;
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
+  font-size: 21px;
+  font-weight: 560;
   line-height: 1;
 }
 
@@ -95,12 +94,10 @@
 
 .writingLabel {
   margin: 0 0 8px;
-  color: #5f655c;
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.08em;
+  color: #657066;
+  font-size: 12px;
+  font-weight: 650;
   line-height: 1.4;
-  text-transform: uppercase;
 }
 
 .embeddedContent {
@@ -113,32 +110,47 @@
 
 .characterFacts {
   display: grid;
-  gap: 5px;
+  gap: 0;
   margin-top: 10px;
 }
 
 .characterFactLine {
   min-width: 0;
-  color: #5b6158;
-  font-size: 13px;
-  line-height: 1.5;
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px dashed #e5ddcf;
+  color: #6c736c;
+  font-size: 12px;
+  line-height: 1.55;
   overflow-wrap: anywhere;
 }
 
+.characterFactLine:first-child {
+  display: block;
+}
+
 .characterFactLine strong {
-  color: #30352f;
-  font-weight: 700;
+  color: #39463b;
+  font-size: 13px;
+  font-weight: 620;
+}
+
+.bigChinese,
+.fallbackGlyph {
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
+  font-weight: 520;
 }
 
 .bigChinese {
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  color: #39463b;
   font-size: 17px;
-  color: #30352f;
 }
 
 .structureValue {
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 15px;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  font-size: 14px;
 }
 
 .attribution {
@@ -152,26 +164,27 @@
 .detailAction {
   display: flex;
   width: 100%;
-  min-height: 38px;
+  min-height: 42px;
   align-items: center;
   justify-content: center;
-  margin-top: 10px;
-  border-radius: 12px;
-  background: #596a4e;
-  color: #fff;
+  margin-top: 12px;
+  border: 1px solid #c8d2c3;
+  border-radius: 10px;
+  background: #f4f7f2;
+  color: #425542;
   padding: 7px 10px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 680;
   text-decoration: none;
 }
 
 .detailAction:hover,
 .detailAction:focus-visible {
-  background: #4e6045;
+  background: #eaf0e6;
 }
 
 .detailAction:focus-visible {
-  outline: 3px solid rgba(54, 95, 122, 0.28);
+  outline: 3px solid rgba(89, 106, 78, 0.24);
   outline-offset: 2px;
 }
 
@@ -180,14 +193,14 @@
   height: 176px;
   place-items: center;
   gap: 6px;
-  border: 1px solid #d7d0c2;
-  border-radius: 18px;
-  background: #faf9f5;
+  border: 1px solid #e7e1d7;
+  border-radius: 14px;
+  background: #fffefb;
   padding: 12px;
 }
 
 .fallbackGlyph {
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
+  color: #3e6545;
   font-size: 84px;
   line-height: 1;
 }
@@ -202,34 +215,32 @@
 
 @media (max-width: 1100px) {
   .characterRailInner {
-    padding: 11px;
+    top: 100px;
+    padding: 15px;
   }
 
-  .railSubtitle {
-    font-size: 10.5px;
-  }
-
-  .characterSelectorButton {
-    width: 31px;
-    min-width: 31px;
-    height: 30px;
-  }
-
-  .selectorGlyph {
+  .characterRail h2 {
     font-size: 16px;
   }
 
-  .characterFactLine {
+  .railSubtitle {
     font-size: 11px;
   }
 
-  .bigChinese {
-    font-size: 15px;
+  .characterSelectorButton {
+    width: 38px;
+    min-width: 38px;
+    height: 36px;
   }
 
-  .writingUnavailable {
-    height: 146px;
-    border-radius: 14px;
+  .selectorGlyph {
+    font-size: 18px;
+  }
+
+  .characterFactLine {
+    grid-template-columns: 70px minmax(0, 1fr);
+    gap: 7px;
+    font-size: 11px;
   }
 }
 
@@ -238,8 +249,8 @@
     top: 74px;
   }
 
-  .writingLabel {
-    font-size: 9px;
+  .characterRail h2 {
+    font-size: 15px;
   }
 
   .writingUnavailable {
@@ -255,16 +266,16 @@
   .embedded {
     display: block;
     width: 100%;
-    margin-top: 30px;
-    padding-top: 24px;
-    border-top: 1px solid #d8d0c2;
+    margin-top: 28px;
+    padding-top: 22px;
+    border-top: 1px solid #ebe7df;
   }
 
   .embedded .characterRailInner {
     position: static;
     border-radius: 16px;
-    background: #fff;
-    padding: 14px;
+    background: #fffefb;
+    padding: 18px;
   }
 
   .embedded .header {
@@ -280,20 +291,19 @@
   }
 
   .embedded .characterSelectorButton {
-    width: 34px;
-    min-width: 34px;
-    height: 32px;
-    border-radius: 10px;
+    width: 42px;
+    min-width: 42px;
+    height: 40px;
   }
 
   .embedded .selectorGlyph {
-    font-size: 17px;
+    font-size: 19px;
   }
 
   .embedded .embeddedContent {
     display: grid;
     grid-template-columns: 190px 1fr;
-    gap: 16px;
+    gap: 18px;
     align-items: start;
   }
 
@@ -302,6 +312,7 @@
   }
 
   .embedded .characterFactLine {
+    grid-template-columns: 82px minmax(0, 1fr);
     font-size: 13px;
   }
 
@@ -314,106 +325,4 @@
   .embedded .embeddedContent {
     grid-template-columns: 1fr;
   }
-}
-
-
-/* Demo v4 Character rail visual reconciliation. */
-.characterRailInner {
-  border-color: #e4ded3;
-  background: rgba(255, 254, 251, 0.82);
-  padding: 16px;
-}
-
-.characterRail h2 {
-  color: #334236;
-  font-size: 14px;
-  font-weight: 680;
-  text-transform: none;
-}
-
-.railSubtitle {
-  color: #70766f;
-  font-size: 12.5px;
-  line-height: 1.6;
-}
-
-.characterSelectorButton {
-  width: 38px;
-  min-width: 38px;
-  height: 36px;
-  border-color: #e3ded4;
-  background: #fff;
-  color: #3e4b40;
-}
-
-.characterSelectorButton[aria-pressed="true"] {
-  border-color: #c4d3bf;
-  background: #eef3ea;
-  color: #35543a;
-}
-
-.characterSelectorButton:not([aria-pressed="true"]):hover {
-  border-color: #cfd8ca;
-  background: #f6f8f4;
-}
-
-.selectorGlyph,
-.bigChinese,
-.fallbackGlyph {
-  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
-  font-weight: 520;
-}
-
-.selectorGlyph {
-  font-size: 19px;
-}
-
-.writingLabel {
-  color: #657066;
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0;
-  text-transform: none;
-}
-
-.characterFacts {
-  gap: 7px;
-}
-
-.characterFactLine {
-  color: #6c736c;
-  font-size: 13px;
-  line-height: 1.55;
-}
-
-.characterFactLine strong {
-  color: #39463b;
-  font-weight: 620;
-}
-
-.structureValue {
-  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
-  font-size: 14px;
-}
-
-.detailAction {
-  border: 1px solid #c8d2c3;
-  background: #f4f7f2;
-  color: #425542;
-  font-weight: 680;
-}
-
-.detailAction:hover,
-.detailAction:focus-visible {
-  background: #eaf0e6;
-}
-
-.writingUnavailable {
-  border-color: #e8e2d8;
-  background: #fffefb;
-}
-
-.fallbackGlyph {
-  color: #3e6545;
-  font-size: 82px;
 }

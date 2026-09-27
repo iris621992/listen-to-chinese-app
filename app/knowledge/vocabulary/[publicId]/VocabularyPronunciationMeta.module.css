@@ -1,29 +1,30 @@
 .pronMeta {
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
 .pronLine {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
 }
 
 .pinyin {
   color: #a25f3c;
   font-size: 24px;
-  font-weight: 620;
-  letter-spacing: 0.01em;
-  line-height: 1.38;
+  font-weight: 650;
+  letter-spacing: 0.005em;
+  line-height: 1.35;
 }
 
 .secondaryLine {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 8px;
-  margin-top: 7px;
-  color: #697069;
+  gap: 9px;
+  margin-top: 9px;
+  color: #4e584f;
+  font-size: 14px;
 }
 
 .secondaryItem {
@@ -35,15 +36,15 @@
 }
 
 .secondaryLabel {
-  color: #838880;
+  color: #82877f;
   font-size: 12px;
   font-weight: 560;
 }
 
 .hanViet,
 .traditional {
-  color: #465047;
-  font-size: 14.5px;
+  color: #475148;
+  font-size: 14px;
   font-weight: 620;
   line-height: 1.45;
 }
@@ -56,20 +57,28 @@
 
 .traditional {
   font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
+  font-size: 15px;
   font-weight: 520;
 }
 
 .dot {
-  color: #d0c7ba;
+  color: #d3cabd;
   font-size: 11px;
 }
 
 @media (max-width: 800px) and (min-width: 621px) and (min-height: 521px) {
-  .pinyin { font-size: 21px; }
+  .pinyin {
+    font-size: 22px;
+  }
 }
 
 @media (max-width: 620px), (max-width: 900px) and (max-height: 520px) {
-  .pinyin { font-size: 21px; }
+  .pinyin {
+    font-size: 21px;
+  }
+
   .hanViet,
-  .traditional { font-size: 14px; }
+  .traditional {
+    font-size: 14px;
+  }
 }

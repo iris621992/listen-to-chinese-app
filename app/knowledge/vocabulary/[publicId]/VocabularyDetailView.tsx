@@ -127,9 +127,6 @@ export default function VocabularyDetailView({
   const primaryForm = detail.forms.find((form) => form.isPrimary) ?? detail.forms[0];
   const secondaryForms = detail.forms.filter((form) => form.publicId !== primaryForm.publicId);
   const allReadingItems = detail.pronunciations.flatMap((item) => item.readingItems);
-  const singleSummary = allReadingItems.length === 1
-    ? vocabularySenseHeading(allReadingItems[0])
-    : null;
   const allPosCodes = distinctPosCodes(allReadingItems);
   const hasReadingNavigation = detail.pronunciations.length > 1;
 
@@ -209,8 +206,6 @@ export default function VocabularyDetailView({
                   }}
                 />
               ) : null}
-
-              {singleSummary ? <p className={styles.entrySummary}>{singleSummary}</p> : null}
 
               {hasReadingNavigation ? (
                 <div className={styles.readingSelector} aria-label={labels.readings}>
@@ -328,8 +323,7 @@ export default function VocabularyDetailView({
                                     REGION_LABELS,
                                   );
                                   const hasLearningProfile = Boolean(
-                                    item.fullExplanation
-                                    || item.usageNote
+                                    item.usageNote
                                     || item.memoryTip
                                     || item.usageContext
                                     || item.socialContext
@@ -350,6 +344,9 @@ export default function VocabularyDetailView({
                                           {meaningHeading ? (
                                             <h3 className={styles.meaning}>{meaningHeading}</h3>
                                           ) : null}
+                                          {item.fullExplanation ? (
+                                            <p className={styles.meaningExplanation}>{item.fullExplanation}</p>
+                                          ) : null}
                                           {itemRegion ? (
                                             <div className={styles.tags}>
                                               <span className={styles.tag}>{itemRegion}</span>
@@ -360,38 +357,36 @@ export default function VocabularyDetailView({
 
                                       {hasLearningProfile ? (
                                         <div className={styles.senseProfile}>
-                                          {item.fullExplanation ? (
-                                            <section className={styles.learningBlock}>
-                                              <h4>{labels.meaning}</h4>
-                                              <p>{item.fullExplanation}</p>
-                                            </section>
-                                          ) : null}
                                           {item.usageNote ? (
-                                            <section className={`${styles.learningBlock} ${styles.learningBlockSoft}`}>
+                                            <section className={styles.usageBlock}>
                                               <h4>{labels.usageNote}</h4>
                                               <p>{item.usageNote}</p>
                                             </section>
                                           ) : null}
-                                          {item.usageContext ? (
-                                            <section className={`${styles.learningBlock} ${styles.learningBlockSoft}`}>
-                                              <h4>{labels.usageContext}</h4>
-                                              <p>{item.usageContext}</p>
-                                            </section>
-                                          ) : null}
-                                          {item.socialContext ? (
-                                            <section className={`${styles.learningBlock} ${styles.learningBlockSoft}`}>
-                                              <h4>{labels.socialContext}</h4>
-                                              <p>{item.socialContext}</p>
-                                            </section>
-                                          ) : null}
-                                          {item.pragmaticExplanation ? (
-                                            <section className={`${styles.learningBlock} ${styles.learningBlockSoft}`}>
-                                              <h4>{labels.pragmatics}</h4>
-                                              <p>{item.pragmaticExplanation}</p>
-                                            </section>
+                                          {(item.usageContext || item.socialContext || item.pragmaticExplanation) ? (
+                                            <div className={styles.metaGrid}>
+                                              {item.usageContext ? (
+                                                <div className={styles.metaItem}>
+                                                  <b>{labels.usageContext}</b>
+                                                  <span>{item.usageContext}</span>
+                                                </div>
+                                              ) : null}
+                                              {item.socialContext ? (
+                                                <div className={styles.metaItem}>
+                                                  <b>{labels.socialContext}</b>
+                                                  <span>{item.socialContext}</span>
+                                                </div>
+                                              ) : null}
+                                              {item.pragmaticExplanation ? (
+                                                <div className={styles.metaItem}>
+                                                  <b>{labels.pragmatics}</b>
+                                                  <span>{item.pragmaticExplanation}</span>
+                                                </div>
+                                              ) : null}
+                                            </div>
                                           ) : null}
                                           {item.memoryTip ? (
-                                            <section className={`${styles.learningBlock} ${styles.learningBlockAccent}`}>
+                                            <section className={styles.memoryBlock}>
                                               <h4>{labels.memoryTip}</h4>
                                               <p>{item.memoryTip}</p>
                                             </section>

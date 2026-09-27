@@ -2,15 +2,13 @@
   container-type: inline-size;
   display: grid;
   gap: 0;
-  margin: 18px 0 0 40px;
+  margin: 18px 0 0 44px;
 }
 
 .supportBlock,
 .classifierBlock,
 .distinctionBlock,
 .mistakeBlock,
-.relationBlock,
-.practiceBlock,
 .translationDetails {
   min-width: 0;
   margin: 0;
@@ -27,8 +25,8 @@
 .relationBlock > h4,
 .practiceBlock > h4 {
   margin: 0 0 10px;
-  color: #405244;
-  font-size: 13px;
+  color: #334436;
+  font-size: 17px;
   font-weight: 680;
   letter-spacing: 0;
   text-transform: none;
@@ -36,38 +34,22 @@
 
 .exampleList,
 .constructionList,
-.collocationList,
 .classifierList,
 .distinctionList,
 .mistakeList,
 .relationList,
 .translationList {
   display: grid;
-  gap: 10px;
+  gap: 9px;
 }
 
-.exampleItem,
-.constructionItem,
-.classifierItem,
-.distinctionItem,
-.mistakeItem,
-.relationItem,
-.practiceItem,
-.translationItem {
+.exampleItem {
   display: grid;
-  gap: 4px;
-}
-
-.exampleItem + .exampleItem,
-.constructionItem + .constructionItem,
-.classifierItem + .classifierItem,
-.distinctionItem + .distinctionItem,
-.mistakeItem + .mistakeItem,
-.relationItem + .relationItem,
-.practiceItem + .practiceItem,
-.translationItem + .translationItem {
-  padding-top: 11px;
-  border-top: 1px dashed #e7e2d8;
+  gap: 3px;
+  border: 0;
+  border-radius: 12px;
+  background: #fafbf8;
+  padding: 11px 12px;
 }
 
 .exampleChinese,
@@ -89,15 +71,14 @@
 .examplePinyin {
   margin-top: 1px;
   color: #a25f3c;
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
 .exampleTranslation {
-  margin-top: 2px;
-  color: #616861;
-  font-size: 14px;
-  line-height: 1.62;
+  color: #6a716a;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .translationDetails {
@@ -110,9 +91,9 @@
   gap: 8px;
   width: fit-content;
   cursor: pointer;
-  color: #516153;
+  color: #526153;
   font-size: 13px;
-  font-weight: 670;
+  font-weight: 650;
   list-style: none;
 }
 
@@ -143,10 +124,20 @@
 }
 
 .translationList {
-  margin-top: 10px;
+  margin-top: 8px;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 9px;
   background: #faf8f3;
+}
+
+.translationItem {
+  display: grid;
+  gap: 4px;
+}
+
+.translationItem + .translationItem {
+  padding-top: 10px;
+  border-top: 1px dashed #e7e2d8;
 }
 
 .translationItem strong {
@@ -163,8 +154,25 @@
   line-height: 1.55;
 }
 
+.constructionList {
+  gap: 0;
+}
+
+.constructionItem {
+  display: grid;
+  gap: 4px;
+  padding: 12px 0;
+  border-top: 1px dashed #e7e2d8;
+}
+
+.constructionItem:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
 .constructionPattern {
-  font-size: 16px;
+  font-size: 14.5px;
+  font-weight: 680;
   line-height: 1.55;
 }
 
@@ -175,27 +183,30 @@
 .relationItem p,
 .practiceItem p {
   margin: 0;
-  color: #5c635d;
-  font-size: 13.5px;
-  line-height: 1.62;
+  color: #5e655e;
+  font-size: 13px;
+  line-height: 1.65;
 }
 
 .collocationList {
+  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
+  gap: 7px;
 }
 
 .collocationItem {
   min-width: 0;
   display: grid;
   gap: 2px;
-  padding: 9px 11px;
+  border: 0;
   border-radius: 10px;
   background: #f6f8f4;
+  padding: 10px 12px;
 }
 
 .collocationExpression {
-  font-size: 15px;
+  font-size: 14px;
+  font-weight: 650;
   line-height: 1.5;
 }
 
@@ -205,10 +216,6 @@
   line-height: 1.5;
 }
 
-.classifierBlock {
-  margin-top: 2px;
-}
-
 .classifierList {
   max-width: 520px;
   padding: 11px 13px;
@@ -216,54 +223,46 @@
   background: #f7f3fb;
 }
 
+.classifierItem {
+  display: grid;
+  gap: 4px;
+}
+
 .classifierItem strong {
-  color: #7057a0;
+  color: #7358a7;
   font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
   font-size: 18px;
-  font-weight: 560;
-}
-
-.distinctionBlock,
-.mistakeBlock {
-  margin-top: 2px;
-  padding: 16px 15px;
-  border-top: 0;
-  border-radius: 12px;
-}
-
-.distinctionBlock {
-  background: #fbf8f2;
-}
-
-.mistakeBlock {
-  margin-top: 12px;
-  background: #fff8f7;
+  font-weight: 650;
 }
 
 .structuredDistinction {
   display: grid;
-  gap: 10px;
+  gap: 11px;
 }
 
 .distinctionIntro {
   margin: 0;
   color: #565e57;
-  font-size: 13.5px;
+  font-size: 13px;
   line-height: 1.62;
 }
 
 .distinctionCompareGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 .distinctionCard {
   min-width: 0;
   border: 0;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.72);
-  padding: 11px 12px;
+  border-radius: 12px;
+  background: #f8faf7;
+  padding: 13px;
+}
+
+.distinctionCard + .distinctionCard {
+  background: #fbf8f2;
 }
 
 .distinctionTerm {
@@ -306,30 +305,86 @@
   line-height: 1.5;
 }
 
-.mistakeContrast {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 14px;
-  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
+.distinctionItem {
+  display: grid;
+  gap: 4px;
 }
 
-.mistakeContrast span { color: #8b4d45; }
-.mistakeContrast strong { color: #476047; font-weight: 650; }
+.mistakeList {
+  gap: 12px;
+}
+
+.mistakeItem {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+}
+
+.mistakeItem + .mistakeItem {
+  padding-top: 12px;
+  border-top: 1px dashed #e7e2d8;
+}
+
+.mistakeContrast {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.mistakeContrast span,
+.mistakeContrast strong {
+  min-width: 0;
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-weight: 560;
+}
+
+.mistakeContrast span {
+  background: #fff5f4;
+  color: #8d4744;
+}
+
+.mistakeContrast strong {
+  background: #f2f8f3;
+  color: #3f6a50;
+}
 
 .relationGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
-  padding-top: 17px;
+  padding-top: 19px;
   border-top: 1px solid #ebe7df;
 }
 
 .relationBlock,
 .practiceBlock {
-  padding: 0;
-  border: 0;
+  min-width: 0;
+}
+
+.relationBlock {
+  border-radius: 10px;
+  background: #fbf8ef;
+  padding: 11px 13px;
+}
+
+.practiceBlock {
+  border-radius: 10px;
+  background: #f3f6f1;
+  padding: 11px 13px;
+}
+
+.relationList {
+  gap: 8px;
+}
+
+.relationItem,
+.practiceItem {
+  display: grid;
+  gap: 3px;
 }
 
 .relationKind {
@@ -340,7 +395,6 @@
   color: #6a7169;
   font-size: 10.5px;
   font-weight: 650;
-  text-transform: none;
 }
 
 .relationItem strong,
@@ -349,12 +403,6 @@
   font-size: 14px;
   font-weight: 650;
   line-height: 1.5;
-}
-
-.practiceBlock {
-  padding: 13px 14px;
-  border-radius: 11px;
-  background: #f3f6f1;
 }
 
 @container (max-width: 620px) {
@@ -366,20 +414,35 @@
   .distinctionCompareGrid {
     grid-template-columns: 1fr;
   }
+
+  .mistakeContrast {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 1100px) {
-  .supportStack { margin-left: 0; }
+  .supportStack {
+    margin-left: 0;
+  }
 }
 
 @media (max-width: 620px), (max-width: 900px) and (max-height: 520px) {
-  .supportStack { margin-left: 0; }
+  .supportStack {
+    margin-left: 0;
+  }
+
   .supportBlock,
   .classifierBlock,
-  .translationDetails { padding-block: 16px; }
+  .translationDetails,
   .distinctionBlock,
-  .mistakeBlock { padding: 14px; }
+  .mistakeBlock {
+    padding-block: 16px;
+  }
+
   .collocationList,
   .distinctionCompareGrid,
-  .relationGrid { grid-template-columns: 1fr; }
+  .relationGrid,
+  .mistakeContrast {
+    grid-template-columns: 1fr;
+  }
 }
