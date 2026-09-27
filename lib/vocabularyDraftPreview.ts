@@ -182,6 +182,13 @@ function parseConstruction(
     readingItemPublicId,
     patternText,
     explanation: stringValue(row.explanation),
+    examples: asArray(row.examples)
+      .map((item, index) => parseExample(
+        item,
+        readingItemPublicId,
+        `${fallbackId}:example:${index}`,
+      ))
+      .filter((item): item is VocabularyExample => item !== null),
     contentLocale: stringValue(row.content_locale),
   };
 }
