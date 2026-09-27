@@ -359,8 +359,11 @@
 
 @container (max-width: 620px) {
   .collocationList,
-  .distinctionCompareGrid,
   .relationGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .distinctionCompareGrid {
     grid-template-columns: 1fr;
   }
 }
