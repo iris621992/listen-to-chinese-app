@@ -45,17 +45,19 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   ]);
   const page = `${pageRoute}\n${view}\n${labels}`;
 
+  assert.match(loader, /get_public_vocabulary_entry_v7/);
   assert.match(loader, /get_public_vocabulary_entry_v6/);
   assert.match(loader, /get_public_vocabulary_entry_v5/);
   assert.match(loader, /get_public_vocabulary_entry_v4/);
   assert.match(loader, /get_public_vocabulary_entry_v3/);
   assert.match(loader, /get_public_vocabulary_entry_v2/);
   assert.match(loader, /isMissingRpc/);
+  assert.match(loader, /K1H_VOCABULARY_CONSTRUCTION_SCOPED_EXAMPLES_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1F_VOCABULARY_LOCALIZED_DETAIL_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1D_VOCABULARY_RICH_SUPPORT_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1C_VOCABULARY_TE_PUBLIC_PROJECTION_V1/);
-  assert.match(loader, /hanViet:\s*contract === K1G_PROJECTION_CONTRACT \|\| contract === K1F_PROJECTION_CONTRACT/);
+  assert.match(loader, /hanViet:\s*contract === K1H_PROJECTION_CONTRACT[\s\S]*K1G_PROJECTION_CONTRACT[\s\S]*K1F_PROJECTION_CONTRACT/);
   assert.match(loader, /\? parseHanViet\(entry\.han_viet\)/);
   assert.match(loader, /learnerMeaning:\s*stringValue\(row\.learner_meaning\)/);
   assert.match(loader, /translation_equivalents/);
@@ -203,6 +205,15 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.ok(rich.indexOf("item.constructions.length > 0") < rich.indexOf("item.collocations.length > 0"));
   assert.ok(rich.indexOf("item.collocations.length > 0") < rich.indexOf("item.classifiers.length > 0"));
   assert.match(rich, /item\.examples\.length > 0/);
+  assert.match(rich, /useState/);
+  assert.match(rich, /item\.examples\.slice\(0, 2\)/);
+  assert.match(rich, /item\.collocations\.slice\(0, 4\)/);
+  assert.match(rich, /construction\.examples\.length > 0/);
+  assert.match(rich, /construction\.examples\.map/);
+  assert.match(rich, /aria-expanded=\{examplesExpanded\}/);
+  assert.match(rich, /aria-expanded=\{collocationsExpanded\}/);
+  assert.match(rich, /labels\.showMore/);
+  assert.match(rich, /labels\.collapse/);
   assert.match(rich, /item\.translationEquivalents\.length > 0/);
   assert.match(rich, /data-vocabulary-module="translation-equivalents"/);
   assert.match(rich, /item\.quickDistinctions\.length > 0/);
@@ -215,6 +226,8 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(richStyles, /\.classifierBlock/);
   assert.match(richStyles, /\.collocationMeaning/);
   assert.match(richStyles, /\.exampleChinese/);
+  assert.match(richStyles, /\.constructionExamples/);
+  assert.match(richStyles, /\.expandButton/);
   assert.doesNotMatch(richStyles, /\.behaviorGrid/);
 
   assert.match(styles, /\.workspace/);
