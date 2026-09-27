@@ -127,6 +127,9 @@ export default function VocabularyDetailView({
   const primaryForm = detail.forms.find((form) => form.isPrimary) ?? detail.forms[0];
   const secondaryForms = detail.forms.filter((form) => form.publicId !== primaryForm.publicId);
   const allReadingItems = detail.pronunciations.flatMap((item) => item.readingItems);
+  const singleSummary = allReadingItems.length === 1
+    ? vocabularySenseHeading(allReadingItems[0])
+    : null;
   const allPosCodes = distinctPosCodes(allReadingItems);
   const hasReadingNavigation = detail.pronunciations.length > 1;
 
@@ -188,7 +191,11 @@ export default function VocabularyDetailView({
       />
 
       <div className={styles.workspace}>
-        <article id="vocabulary-entry-card" className={styles.entryCard}>
+        <article
+          id="vocabulary-entry-card"
+          className={styles.entryCard}
+          data-single-sense={singleSummary ? "true" : undefined}
+        >
           <header id="vocabulary-entry-header" className={styles.entryHeader}>
             <div className={styles.headwordWrap}>
               <div className={styles.writtenLine}>

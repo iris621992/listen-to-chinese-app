@@ -92,10 +92,10 @@
 .contentToggle {
   display: inline-flex;
   overflow: hidden;
-  border: 1px solid #ddd7cb;
-  border-radius: 10px;
-  background: #fff;
-  padding: 2px;
+  border: 1px solid #d7d0c2;
+  border-radius: 12px;
+  background: #f8f5ee;
+  padding: 3px;
 }
 
 .contentToggleButton {
@@ -112,9 +112,10 @@
 }
 
 .contentToggleButton[aria-pressed="true"] {
-  background: #5d7054;
-  color: #fff;
-  font-weight: 680;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(45, 48, 42, 0.08);
+  color: #30352f;
+  font-weight: 760;
 }
 
 .contentToggleButton:focus-visible {
@@ -189,6 +190,7 @@
 }
 
 .sectionNav {
+  position: static;
   display: flex;
   gap: 0.2rem;
   overflow-x: auto;
