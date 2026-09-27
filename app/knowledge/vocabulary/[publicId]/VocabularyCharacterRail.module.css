@@ -315,3 +315,105 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Demo v4 Character rail visual reconciliation. */
+.characterRailInner {
+  border-color: #e4ded3;
+  background: rgba(255, 254, 251, 0.82);
+  padding: 16px;
+}
+
+.characterRail h2 {
+  color: #334236;
+  font-size: 14px;
+  font-weight: 680;
+  text-transform: none;
+}
+
+.railSubtitle {
+  color: #70766f;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.characterSelectorButton {
+  width: 38px;
+  min-width: 38px;
+  height: 36px;
+  border-color: #e3ded4;
+  background: #fff;
+  color: #3e4b40;
+}
+
+.characterSelectorButton[aria-pressed="true"] {
+  border-color: #c4d3bf;
+  background: #eef3ea;
+  color: #35543a;
+}
+
+.characterSelectorButton:not([aria-pressed="true"]):hover {
+  border-color: #cfd8ca;
+  background: #f6f8f4;
+}
+
+.selectorGlyph,
+.bigChinese,
+.fallbackGlyph {
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
+  font-weight: 520;
+}
+
+.selectorGlyph {
+  font-size: 19px;
+}
+
+.writingLabel {
+  color: #657066;
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.characterFacts {
+  gap: 7px;
+}
+
+.characterFactLine {
+  color: #6c736c;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.characterFactLine strong {
+  color: #39463b;
+  font-weight: 620;
+}
+
+.structureValue {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  font-size: 14px;
+}
+
+.detailAction {
+  border: 1px solid #c8d2c3;
+  background: #f4f7f2;
+  color: #425542;
+  font-weight: 680;
+}
+
+.detailAction:hover,
+.detailAction:focus-visible {
+  background: #eaf0e6;
+}
+
+.writingUnavailable {
+  border-color: #e8e2d8;
+  background: #fffefb;
+}
+
+.fallbackGlyph {
+  color: #3e6545;
+  font-size: 82px;
+}

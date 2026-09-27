@@ -107,7 +107,9 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(page, /form\.publicId !== primaryForm\.publicId/);
   assert.doesNotMatch(page, /form\.text !== primaryForm\.text/);
   assert.match(page, /VocabularyPronunciationMeta/);
-  assert.match(page, /hanViet=\{detail\.hanViet\?\.text \?\? null\}/);
+  assert.match(page, /hanViet=\{showHanViet \? detail\.hanViet\?\.text \?\? null : null\}/);
+  assert.match(page, /traditionalForms=\{secondaryForms\.map/);
+  assert.match(page, /translationEquivalent:\s*labels\.translationEquivalent/);
   assert.doesNotMatch(page, /extractHanCharacters/);
   assert.doesNotMatch(page, /Script=Han/);
   assert.match(page, /VocabularyStickyNav/);
@@ -126,15 +128,19 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.doesNotMatch(page, /Ỷ TỬ|搬椅子|一把椅子/);
 
   assert.match(pronunciationMeta, /hanViet:\s*string \| null/);
-  assert.match(pronunciationMeta, /hanViet \? \(/);
+  assert.match(pronunciationMeta, /traditionalForms:\s*string\[\]/);
+  assert.match(pronunciationMeta, /labels:\s*\{/);
+  assert.match(pronunciationMeta, /styles\.secondaryLine/);
   assert.match(pronunciationMeta, /styles\.dot/);
   assert.match(pronunciationMeta, /styles\.hanViet/);
+  assert.match(pronunciationMeta, /styles\.traditional/);
   assert.doesNotMatch(pronunciationMeta, /Ỷ TỬ|活动|椅子/);
   assert.match(pronunciationMetaStyles, /\.pinyin/);
-  assert.match(pronunciationMetaStyles, /font-size:\s*21px/);
+  assert.match(pronunciationMetaStyles, /font-size:\s*24px/);
+  assert.match(pronunciationMetaStyles, /\.secondaryLine/);
   assert.match(pronunciationMetaStyles, /\.hanViet/);
-  assert.match(pronunciationMetaStyles, /font-size:\s*17px/);
-  assert.match(pronunciationMetaStyles, /\.dot/);
+  assert.match(pronunciationMetaStyles, /font-size:\s*14\.5px/);
+  assert.match(pronunciationMetaStyles, /\.traditional/);
 
   assert.match(characterRail, /^"use client";/);
   assert.match(characterRail, /useState/);
@@ -156,8 +162,8 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.doesNotMatch(characterRail, /活动|椅子|出租车|运动/);
   assert.match(characterRailStyles, /\.characterSelector/);
   assert.match(characterRailStyles, /\.characterSelectorButton\[aria-pressed="true"\]/);
-  assert.match(characterRailStyles, /background:\s*#30352f/);
-  assert.match(characterRailStyles, /color:\s*#fff/);
+  assert.match(characterRailStyles, /background:\s*#eef3ea/);
+  assert.match(characterRailStyles, /color:\s*#35543a/);
   assert.match(characterRailStyles, /\.selectedCharacter/);
   assert.doesNotMatch(characterRailStyles, /\.characterIdentity/);
   assert.doesNotMatch(characterRailStyles, /grid-template-columns:\s*repeat\(2/);
@@ -193,16 +199,23 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(rich, /classifier\.learnerNote/);
   assert.match(rich, /collocation\.learnerMeaning/);
   assert.match(rich, /styles\.collocationMeaning/);
-  assert.ok(rich.indexOf("item.classifiers.length > 0") < rich.indexOf("item.collocations.length > 0 ? ("));
+  assert.ok(rich.indexOf("item.examples.length > 0") < rich.indexOf("item.constructions.length > 0"));
+  assert.ok(rich.indexOf("item.constructions.length > 0") < rich.indexOf("item.collocations.length > 0"));
+  assert.ok(rich.indexOf("item.collocations.length > 0") < rich.indexOf("item.classifiers.length > 0"));
   assert.match(rich, /item\.examples\.length > 0/);
+  assert.match(rich, /item\.translationEquivalents\.length > 0/);
+  assert.match(rich, /data-vocabulary-module="translation-equivalents"/);
   assert.match(rich, /item\.quickDistinctions\.length > 0/);
   assert.match(rich, /distinction\.learnerExplanation/);
   assert.match(rich, /return null/);
   assert.doesNotMatch(rich, /活动|椅子|出租车|运动|搬椅子|一把椅子/);
   assert.doesNotMatch(rich, /reviewed semantic zones|Sense \/ RI|translation boundary|missing_data_behavior|INTERNAL SAMPLE|provisional/i);
   assert.match(richStyles, /\.supportStack/);
+  assert.match(richStyles, /\.translationDetails/);
+  assert.match(richStyles, /\.classifierBlock/);
   assert.match(richStyles, /\.collocationMeaning/);
   assert.match(richStyles, /\.exampleChinese/);
+  assert.doesNotMatch(richStyles, /\.behaviorGrid/);
 
   assert.match(styles, /\.workspace/);
   assert.match(styles, /\.compactSticky/);

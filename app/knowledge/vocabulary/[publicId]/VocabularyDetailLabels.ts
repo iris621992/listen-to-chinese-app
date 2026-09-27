@@ -27,6 +27,8 @@ export type VocabularyDetailLabels = {
   radical: string;
   strokes: string;
   hanViet: string;
+  traditional: string;
+  translationEquivalent: string;
   writingOpen: string;
   writingReplay: string;
   writingUnavailable: string;
@@ -65,6 +67,8 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     radical: "Radical",
     strokes: "Strokes",
     hanViet: "Sino-Vietnamese",
+    traditional: "Traditional",
+    translationEquivalent: "Translation equivalents",
     writingOpen: "View writing",
     writingReplay: "Replay",
     writingUnavailable: "Writing data is temporarily unavailable.",
@@ -100,6 +104,8 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     radical: "Bộ thủ",
     strokes: "Số nét",
     hanViet: "Hán Việt",
+    traditional: "Phồn thể",
+    translationEquivalent: "Tương đương khi dịch",
     writingOpen: "Xem cách viết",
     writingReplay: "Viết lại",
     writingUnavailable: "Dữ liệu cách viết tạm thời không tải được.",
@@ -135,6 +141,8 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     radical: "الجذر",
     strokes: "عدد الخطوط",
     hanViet: "القراءة الصينية الفيتنامية",
+    traditional: "الصيغة التقليدية",
+    translationEquivalent: "مكافئات الترجمة",
     writingOpen: "عرض طريقة الكتابة",
     writingReplay: "إعادة",
     writingUnavailable: "بيانات الكتابة غير متاحة مؤقتًا.",

@@ -196,15 +196,17 @@ export default function VocabularyDetailView({
             <div className={styles.headwordWrap}>
               <div className={styles.writtenLine}>
                 <h1 className={styles.headword}>{detail.displayForm}</h1>
-                {secondaryForms.map((form) => (
-                  <span key={form.publicId} className={styles.traditional}>{form.text}</span>
-                ))}
               </div>
 
               {primaryPronunciation ? (
                 <VocabularyPronunciationMeta
                   pronunciation={primaryPronunciation.pronunciation}
-                  hanViet={detail.hanViet?.text ?? null}
+                  hanViet={showHanViet ? detail.hanViet?.text ?? null : null}
+                  traditionalForms={secondaryForms.map((form) => form.text)}
+                  labels={{
+                    hanViet: labels.hanViet,
+                    traditional: labels.traditional,
+                  }}
                 />
               ) : null}
 
@@ -405,6 +407,7 @@ export default function VocabularyDetailView({
                                           collocations: labels.collocations,
                                           classifiers: labels.classifiers,
                                           example: labels.example,
+                                          translationEquivalent: labels.translationEquivalent,
                                           quickDistinction: labels.quickDistinction,
                                           commonMistakes: labels.commonMistakes,
                                           relatedKnowledge: labels.relatedKnowledge,

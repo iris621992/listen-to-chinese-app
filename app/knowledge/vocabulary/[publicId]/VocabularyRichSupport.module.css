@@ -1,193 +1,244 @@
 .supportStack {
   container-type: inline-size;
   display: grid;
-  gap: 15px;
-  margin: 15px 0 0 40px;
+  gap: 0;
+  margin: 18px 0 0 40px;
 }
 
-.supportBlock {
-  border: 1px solid #d8d1c4;
-  border-radius: 15px;
-  background: #fffefb;
-  padding: 14px 15px;
-  box-shadow: 0 1px 0 rgba(45, 48, 42, 0.025);
-}
-
-.supportBlock > h4 {
-  margin: 0 0 7px;
-  color: #5f655c;
-  font-size: 12.5px;
-  font-weight: 760;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-}
-
-.behaviorGrid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.behaviorItem {
+.supportBlock,
+.classifierBlock,
+.distinctionBlock,
+.mistakeBlock,
+.relationBlock,
+.practiceBlock,
+.translationDetails {
   min-width: 0;
-  border: 1px solid #dcd5c8;
-  border-radius: 12px;
-  background: #fbf9f3;
-  padding: 11px 12px;
+  margin: 0;
+  padding: 19px 0;
+  border: 0;
+  border-top: 1px solid #ebe7df;
+  background: transparent;
 }
 
-.behaviorTitle {
-  display: block;
-  margin-bottom: 4px;
-  color: #2d302a;
+.supportBlock > h4,
+.classifierBlock > h4,
+.distinctionBlock > h4,
+.mistakeBlock > h4,
+.relationBlock > h4,
+.practiceBlock > h4 {
+  margin: 0 0 10px;
+  color: #405244;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 680;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
+.exampleList,
+.constructionList,
 .collocationList,
 .classifierList,
-.exampleList,
-.distinctionList {
+.distinctionList,
+.mistakeList,
+.relationList,
+.translationList {
   display: grid;
-  gap: 7px;
-}
-
-.collocationItem {
-  display: grid;
-  grid-template-columns: auto 1fr;
   gap: 10px;
-  align-items: start;
 }
 
-.collocationExpression {
-  color: #2d302a;
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 16px;
-  font-weight: 700;
-  line-height: 1.55;
-  white-space: nowrap;
-}
-
-.collocationMeaning {
-  padding-top: 2px;
-  color: #6b6f66;
-  font-size: 12.5px;
-  line-height: 1.55;
-}
-
+.exampleItem,
+.constructionItem,
 .classifierItem,
-.distinctionItem {
+.distinctionItem,
+.mistakeItem,
+.relationItem,
+.practiceItem,
+.translationItem {
   display: grid;
   gap: 4px;
 }
 
+.exampleItem + .exampleItem,
+.constructionItem + .constructionItem,
 .classifierItem + .classifierItem,
 .distinctionItem + .distinctionItem,
-.exampleItem + .exampleItem {
-  padding-top: 12px;
-  border-top: 1px dashed #d7d0c2;
+.mistakeItem + .mistakeItem,
+.relationItem + .relationItem,
+.practiceItem + .practiceItem,
+.translationItem + .translationItem {
+  padding-top: 11px;
+  border-top: 1px dashed #e7e2d8;
 }
 
+.exampleChinese,
+.constructionPattern,
+.collocationExpression,
 .classifierItem strong,
-.distinctionItem strong {
-  color: #2d302a;
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.classifierItem p,
-.distinctionItem p {
-  margin: 0;
-  color: #2d302a;
-  font-size: 15px;
-  line-height: 1.62;
-}
-
-.exampleList {
-  gap: 13px;
-}
-
-.exampleItem {
-  display: grid;
-  gap: 0;
+.distinctionItem strong,
+.distinctionTerm {
+  color: #304032;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  font-weight: 560;
 }
 
 .exampleChinese {
-  color: #2d302a;
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 19px;
-  line-height: 1.55;
+  font-size: 17px;
+  line-height: 1.65;
 }
 
 .examplePinyin {
-  margin-top: 3px;
-  color: #765835;
-  font-size: 14.5px;
+  margin-top: 1px;
+  color: #a25f3c;
+  font-size: 13.5px;
   line-height: 1.55;
 }
 
 .exampleTranslation {
-  margin-top: 4px;
-  color: #2d302a;
+  margin-top: 2px;
+  color: #616861;
+  font-size: 14px;
+  line-height: 1.62;
+}
+
+.translationDetails {
+  padding-block: 13px;
+}
+
+.translationDetails summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  cursor: pointer;
+  color: #516153;
+  font-size: 13px;
+  font-weight: 670;
+  list-style: none;
+}
+
+.translationDetails summary::-webkit-details-marker {
+  display: none;
+}
+
+.translationDetails summary::before {
+  content: "⌄";
+  color: #6f8062;
+  font-size: 15px;
+  transform: translateY(-1px);
+}
+
+.translationDetails[open] summary::before {
+  transform: rotate(180deg);
+}
+
+.translationCount {
+  min-width: 21px;
+  height: 21px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f0f3ed;
+  color: #657162;
+  font-size: 11px;
+}
+
+.translationList {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #faf8f3;
+}
+
+.translationItem strong {
+  color: #37453a;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.translationItem p,
+.translationItem small {
+  margin: 0;
+  color: #6b716a;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.constructionPattern {
   font-size: 16px;
-  line-height: 1.6;
+  line-height: 1.55;
+}
+
+.constructionItem p,
+.classifierItem p,
+.distinctionItem p,
+.mistakeItem p,
+.relationItem p,
+.practiceItem p {
+  margin: 0;
+  color: #5c635d;
+  font-size: 13.5px;
+  line-height: 1.62;
+}
+
+.collocationList {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.collocationItem {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+  padding: 9px 11px;
+  border-radius: 10px;
+  background: #f6f8f4;
+}
+
+.collocationExpression {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.collocationMeaning {
+  color: #6a716a;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.classifierBlock {
+  margin-top: 2px;
+}
+
+.classifierList {
+  max-width: 520px;
+  padding: 11px 13px;
+  border-radius: 10px;
+  background: #f7f3fb;
+}
+
+.classifierItem strong {
+  color: #7057a0;
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
+  font-size: 18px;
+  font-weight: 560;
+}
+
+.distinctionBlock,
+.mistakeBlock {
+  margin-top: 2px;
+  padding: 16px 15px;
+  border-top: 0;
+  border-radius: 12px;
 }
 
 .distinctionBlock {
-  border-color: #e2cda9;
-  background: #fff8ee;
+  background: #fbf8f2;
 }
 
-@media (max-width: 1100px) {
-  .supportStack {
-    margin-left: 0;
-  }
-
-  .behaviorGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.mistakeBlock {
+  margin-top: 12px;
+  background: #fff8f7;
 }
-
-@container (max-width: 620px) {
-  .behaviorGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .collocationItem {
-    grid-template-columns: 1fr;
-    gap: 2px;
-  }
-}
-
-@media (max-width: 620px), (max-width: 900px) and (max-height: 520px) {
-  .supportStack {
-    margin-left: 0;
-    gap: 11px;
-  }
-
-  .supportBlock {
-    min-width: 0;
-    width: 100%;
-    padding: 14px 15px;
-  }
-
-  .behaviorGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .collocationItem {
-    grid-template-columns: 1fr;
-    gap: 2px;
-  }
-
-  .classifierItem p,
-  .distinctionItem p {
-    font-size: 15px;
-    line-height: 1.64;
-  }
-}
-
 
 .structuredDistinction {
   display: grid;
@@ -196,9 +247,9 @@
 
 .distinctionIntro {
   margin: 0;
-  color: #454a43;
-  font-size: 14px;
-  line-height: 1.6;
+  color: #565e57;
+  font-size: 13.5px;
+  line-height: 1.62;
 }
 
 .distinctionCompareGrid {
@@ -209,162 +260,123 @@
 
 .distinctionCard {
   min-width: 0;
-  border: 1px solid #dfd7ca;
-  border-radius: 12px;
-  background: #fffdf8;
-  padding: 12px 13px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 11px 12px;
 }
 
 .distinctionTerm {
   display: block;
-  color: #2d302a;
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 19px;
-  font-weight: 700;
+  font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", STSong, SimSun, serif;
+  font-size: 18px;
+  font-weight: 560;
   line-height: 1.45;
 }
 
 .distinctionUse {
-  margin: 6px 0 0;
-  color: #41463f;
-  font-size: 14px;
+  margin: 5px 0 0;
+  color: #5c635d;
+  font-size: 13px;
   line-height: 1.6;
 }
 
 .distinctionExamples {
   display: grid;
-  gap: 4px;
+  gap: 6px;
   margin-top: 9px;
   padding-top: 8px;
-  border-top: 1px dashed #ddd4c7;
-}
-
-.distinctionExamples span {
-  color: #2d302a;
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 14px;
-  line-height: 1.5;
+  border-top: 1px dashed #e2d9ca;
 }
 
 .distinctionExamples span {
   display: grid;
   gap: 2px;
+  color: #344137;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  font-size: 13.5px;
+  line-height: 1.5;
 }
 
 .distinctionTranslation {
-  color: #5a5f57;
+  color: #737972;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 400;
   line-height: 1.5;
-}
-
-@container (max-width: 620px) {
-  .distinctionCompareGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 620px), (max-width: 900px) and (max-height: 520px) {
-  .distinctionCompareGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
-
-.constructionList,
-.mistakeList,
-.relationList {
-  display: grid;
-  gap: 9px;
-}
-
-.constructionItem {
-  display: grid;
-  gap: 5px;
-}
-
-.constructionItem + .constructionItem,
-.mistakeItem + .mistakeItem,
-.relationItem + .relationItem {
-  padding-top: 10px;
-  border-top: 1px dashed #d7d0c2;
-}
-
-.constructionPattern {
-  color: #2d302a;
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 18px;
-  line-height: 1.5;
-}
-
-.constructionItem p,
-.mistakeItem p,
-.relationItem p {
-  margin: 0;
-  color: #454a43;
-  font-size: 14px;
-  line-height: 1.62;
-}
-
-.mistakeBlock {
-  border-color: #e2cda9;
-  background: #fff8ee;
-}
-
-.mistakeItem {
-  display: grid;
-  gap: 7px;
 }
 
 .mistakeContrast {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 14px;
-  font-family: "Songti SC", "Noto Serif CJK SC", STSong, serif;
-  font-size: 16px;
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  font-size: 14px;
   line-height: 1.5;
 }
 
-.mistakeContrast span {
-  color: #8b4d3e;
-}
-
-.mistakeContrast strong {
-  color: #476047;
-}
+.mistakeContrast span { color: #8b4d45; }
+.mistakeContrast strong { color: #476047; font-weight: 650; }
 
 .relationGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
+  padding-top: 17px;
+  border-top: 1px solid #ebe7df;
 }
 
-.relationItem {
-  display: grid;
-  gap: 3px;
+.relationBlock,
+.practiceBlock {
+  padding: 0;
+  border: 0;
 }
 
 .relationKind {
   width: fit-content;
-  border: 1px solid #d7d0c2;
   border-radius: 999px;
-  background: #fbf9f3;
-  padding: 2px 7px;
-  color: #666b62;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
+  background: #f4f5f1;
+  padding: 3px 7px;
+  color: #6a7169;
+  font-size: 10.5px;
+  font-weight: 650;
+  text-transform: none;
 }
 
-.relationItem strong {
-  color: #2d302a;
-  font-size: 15px;
+.relationItem strong,
+.practiceItem strong {
+  color: #39463b;
+  font-size: 14px;
+  font-weight: 650;
   line-height: 1.5;
 }
 
-@media (max-width: 700px) {
+.practiceBlock {
+  padding: 13px 14px;
+  border-radius: 11px;
+  background: #f3f6f1;
+}
+
+@container (max-width: 620px) {
+  .collocationList,
+  .distinctionCompareGrid,
   .relationGrid {
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 1100px) {
+  .supportStack { margin-left: 0; }
+}
+
+@media (max-width: 620px), (max-width: 900px) and (max-height: 520px) {
+  .supportStack { margin-left: 0; }
+  .supportBlock,
+  .classifierBlock,
+  .translationDetails { padding-block: 16px; }
+  .distinctionBlock,
+  .mistakeBlock { padding: 14px; }
+  .collocationList,
+  .distinctionCompareGrid,
+  .relationGrid { grid-template-columns: 1fr; }
 }

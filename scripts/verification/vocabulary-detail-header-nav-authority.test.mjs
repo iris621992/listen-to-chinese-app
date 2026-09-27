@@ -4,12 +4,12 @@ import test from "node:test";
 
 const read = (path) => readFile(path, "utf8");
 
-test("Vocabulary Detail keeps POS navigation in a dedicated row and preserves the future header action slot", async () => {
-  const [pageRoute, view, sticky, authority] = await Promise.all([
+test("Vocabulary Detail keeps lexical identity above dedicated POS/read navigation without stacked reconciliation CSS", async () => {
+  const [pageRoute, view, sticky, styles] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyStickyNav.tsx"),
-    read("app/knowledge/vocabulary/[publicId]/VocabularyHeaderNavAuthority.module.css"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetail.module.css"),
   ]);
   const page = `${pageRoute}\n${view}`;
 
@@ -20,7 +20,6 @@ test("Vocabulary Detail keeps POS navigation in a dedicated row and preserves th
     "POS / reading navigation must follow the lexical header instead of sharing its top row",
   );
 
-  assert.match(sticky, /VocabularyHeaderNavAuthority\.module\.css/);
   assert.match(sticky, /data-sticky-top-row/);
   assert.match(sticky, /data-sticky-action-slot/);
   assert.match(sticky, /data-sticky-nav/);
@@ -29,12 +28,14 @@ test("Vocabulary Detail keeps POS navigation in a dedicated row and preserves th
     "sticky identity/action row must precede the dedicated navigation row",
   );
 
-  assert.match(authority, /#vocabulary-entry-card > div\[aria-label\]/);
-  assert.match(authority, /display:\s*none !important/);
-  assert.match(authority, /#vocabulary-entry-card > nav/);
-  assert.match(authority, /data-sticky-action-slot/);
-  assert.match(authority, /data-sticky-nav/);
+  assert.match(styles, /\.posSummary\s*\{[\s\S]*display:\s*none/);
+  assert.match(styles, /\.sectionNav\s*\{[\s\S]*position:\s*static/);
+  assert.match(styles, /data-vocabulary-sticky="true"/);
+  assert.match(styles, /data-sticky-top-row/);
+  assert.match(styles, /data-sticky-action-slot/);
+  assert.match(styles, /\.compactNav/);
 
+  assert.doesNotMatch(sticky, /VocabularyDemoFidelity|VocabularyTypographyRuntime|VocabularyVisualReconciliation|VocabularyHeaderNavAuthority/);
   assert.doesNotMatch(sticky, /Tiếng Việt|中文|Lưu|Save/);
   assert.doesNotMatch(page, /saveButton|saved-item|content-toggle/i);
 });
