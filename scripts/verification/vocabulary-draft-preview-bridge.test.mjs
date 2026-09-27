@@ -82,6 +82,8 @@ test("Vocabulary Draft Preview parser accepts Draft identity without weakening p
   assert.match(draftParser, /examples/);
   assert.match(draftParser, /quick_distinctions/);
   assert.match(draftParser, /lexical_constructions/);
+  assert.match(draftParser, /row\.examples/);
+  assert.match(draftParser, /examples:\s*asArray\(row\.examples\)/);
   assert.match(draftParser, /common_mistakes/);
   assert.match(draftParser, /knowledge_links/);
   assert.match(draftParser, /practice_links/);
@@ -109,8 +111,10 @@ test("Vocabulary final approved learner modules stay on the shared renderer", as
   assert.match(rich, /item\.collocations\.length/);
   assert.match(rich, /item\.classifiers\.length/);
 
+  assert.match(loader, /get_public_vocabulary_entry_v7/);
   assert.match(loader, /get_public_vocabulary_entry_v6/);
   assert.match(loader, /get_public_vocabulary_entry_v5/);
+  assert.match(loader, /K1H_VOCABULARY_CONSTRUCTION_SCOPED_EXAMPLES_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1G_VOCABULARY_FINAL_APPROVED_SURFACE_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /constructions:/);
   assert.match(loader, /commonMistakes:/);
