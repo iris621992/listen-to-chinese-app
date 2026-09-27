@@ -2,6 +2,7 @@ import type { KnowledgeContentLocaleRequest } from "@/lib/knowledgeLanguage";
 import { getLearnerLocale } from "@/lib/learnerLocaleRegistry";
 
 const VOCABULARY_PUBLIC_ID_PATTERN = /^vocab_[a-f0-9]{64}$/u;
+const K1H_PROJECTION_CONTRACT = "K1H_VOCABULARY_CONSTRUCTION_SCOPED_EXAMPLES_PUBLIC_PROJECTION_V1";
 const K1G_PROJECTION_CONTRACT = "K1G_VOCABULARY_FINAL_APPROVED_SURFACE_PUBLIC_PROJECTION_V1";
 const K1F_PROJECTION_CONTRACT = "K1F_VOCABULARY_LOCALIZED_DETAIL_PUBLIC_PROJECTION_V1";
 const K1E_PROJECTION_CONTRACT = "K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1";
@@ -86,6 +87,7 @@ export type VocabularyConstruction = {
   readingItemPublicId: string;
   patternText: string;
   explanation: string | null;
+  examples: VocabularyExample[];
   contentLocale: string | null;
 };
 
@@ -329,6 +331,9 @@ function parseConstruction(value: unknown, readingItemPublicId: string): Vocabul
     readingItemPublicId: owner,
     patternText,
     explanation: stringValue(row.explanation),
+    examples: asArray(row.examples)
+      .map((item) => parseExample(item, readingItemPublicId))
+      .filter((item): item is VocabularyExample => item !== null),
     contentLocale: stringValue(row.content_locale),
   };
 }
@@ -507,7 +512,8 @@ function parseVocabularyPayload(value: unknown): VocabularyDetail | null {
   const payload = asObject(value);
   if (!payload) return null;
   const contract = stringValue(payload.projection_contract);
-  const richSupportEnabled = contract === K1G_PROJECTION_CONTRACT
+  const richSupportEnabled = contract === K1H_PROJECTION_CONTRACT
+    || contract === K1G_PROJECTION_CONTRACT
     || contract === K1F_PROJECTION_CONTRACT
     || contract === K1E_PROJECTION_CONTRACT
     || contract === K1D_PROJECTION_CONTRACT;
@@ -549,7 +555,9 @@ function parseVocabularyPayload(value: unknown): VocabularyDetail | null {
     regionProfileCode: stringValue(entry.region_profile_code),
     requestedLocale,
     fallbackLocale,
-    hanViet: contract === K1G_PROJECTION_CONTRACT || contract === K1F_PROJECTION_CONTRACT
+    hanViet: contract === K1H_PROJECTION_CONTRACT
+      || contract === K1G_PROJECTION_CONTRACT
+      || contract === K1F_PROJECTION_CONTRACT
       ? parseHanViet(entry.han_viet)
       : null,
     forms,
@@ -715,7 +723,7 @@ export async function loadVocabularyDetail(
     if (!payload?.entry) return { status: "NOT_FOUND" };
     if (
       localeRequest.exactContentLocaleCode
-      && ![K1G_PROJECTION_CONTRACT, K1F_PROJECTION_CONTRACT].includes(
+      && ![K1H_PROJECTION_CONTRACT, K1G_PROJECTION_CONTRACT, K1F_PROJECTION_CONTRACT].includes(
         stringValue(payload.projection_contract) ?? "",
       )
     ) {
