@@ -414,6 +414,8 @@ export default function VocabularyDetailView({
                                           commonMistakes: labels.commonMistakes,
                                           relatedKnowledge: labels.relatedKnowledge,
                                           practice: labels.practice,
+                                          showMore: labels.showMore,
+                                          collapse: labels.collapse,
                                         }}
                                       />
                                     </article>
