@@ -34,6 +34,8 @@ export type VocabularyDetailLabels = {
   writingUnavailable: string;
   writingSource: string;
   unavailable: string;
+  showMore: string;
+  collapse: string;
 };
 
 
@@ -74,6 +76,8 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     writingUnavailable: "Writing data is temporarily unavailable.",
     writingSource: "Stroke data",
     unavailable: "This vocabulary entry is temporarily unavailable.",
+    showMore: "Show more",
+    collapse: "Collapse",
   },
   vi: {
     knowledge: "Kiến thức",
@@ -111,6 +115,8 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     writingUnavailable: "Dữ liệu cách viết tạm thời không tải được.",
     writingSource: "Dữ liệu nét",
     unavailable: "Mục từ này hiện chưa thể hiển thị.",
+    showMore: "Xem thêm",
+    collapse: "Thu gọn",
   },
   ar: {
     knowledge: "المعرفة",
@@ -148,6 +154,8 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     writingUnavailable: "بيانات الكتابة غير متاحة مؤقتًا.",
     writingSource: "بيانات الخطوط",
     unavailable: "هذا المدخل غير متاح مؤقتًا.",
+    showMore: "عرض المزيد",
+    collapse: "طي",
   },
 };
 
