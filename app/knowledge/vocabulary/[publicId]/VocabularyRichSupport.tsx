@@ -1,4 +1,7 @@
-import type { VocabularyReadingItem } from "@/lib/vocabularyDetail";
+"use client";
+
+import { useState } from "react";
+import type { VocabularyExample, VocabularyReadingItem } from "@/lib/vocabularyDetail";
 import styles from "./VocabularyRichSupport.module.css";
 
 type Props = {
@@ -14,10 +17,36 @@ type Props = {
     commonMistakes: string;
     relatedKnowledge: string;
     practice: string;
+    showMore: string;
+    collapse: string;
   };
 };
 
+function LearnerExample({
+  example,
+}: {
+  example: VocabularyExample;
+}) {
+  return (
+    <div className={styles.exampleItem}>
+      <span className={styles.exampleChinese}>{example.chineseText}</span>
+      {example.pinyinText ? (
+        <span className={styles.examplePinyin}>{example.pinyinText}</span>
+      ) : null}
+      {example.translationText ? (
+        <span className={styles.exampleTranslation}>{example.translationText}</span>
+      ) : null}
+    </div>
+  );
+}
+
 export default function VocabularyRichSupport({ item, sourceExpression, labels }: Props) {
+  const [examplesExpanded, setExamplesExpanded] = useState(false);
+  const [collocationsExpanded, setCollocationsExpanded] = useState(false);
+  const visibleExamples = examplesExpanded ? item.examples : item.examples.slice(0, 2);
+  const visibleCollocations = collocationsExpanded
+    ? item.collocations
+    : item.collocations.slice(0, 4);
   const hasRelations = item.knowledgeLinks.length > 0 || item.practiceLinks.length > 0;
   const hasRichSupport =
     item.examples.length > 0
@@ -37,16 +66,20 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
         <section className={styles.supportBlock} data-vocabulary-module="examples">
           <h4>{labels.example}</h4>
           <div className={styles.exampleList}>
-            {item.examples.map((example) => (
-              <div key={example.publicId} className={styles.exampleItem}>
-                <span className={styles.exampleChinese}>{example.chineseText}</span>
-                {example.pinyinText ? <span className={styles.examplePinyin}>{example.pinyinText}</span> : null}
-                {example.translationText ? (
-                  <span className={styles.exampleTranslation}>{example.translationText}</span>
-                ) : null}
-              </div>
+            {visibleExamples.map((example) => (
+              <LearnerExample key={example.publicId} example={example} />
             ))}
           </div>
+          {item.examples.length > 2 ? (
+            <button
+              type="button"
+              className={styles.expandButton}
+              aria-expanded={examplesExpanded}
+              onClick={() => setExamplesExpanded((value) => !value)}
+            >
+              {examplesExpanded ? labels.collapse : labels.showMore}
+            </button>
+          ) : null}
         </section>
       ) : null}
 
@@ -76,6 +109,14 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
               <div key={construction.publicId} className={styles.constructionItem}>
                 <strong className={styles.constructionPattern}>{construction.patternText}</strong>
                 {construction.explanation ? <p>{construction.explanation}</p> : null}
+                {construction.examples.length > 0 ? (
+                  <div className={styles.constructionExamples}>
+                    <span className={styles.constructionExampleLabel}>{labels.example}</span>
+                    {construction.examples.map((example) => (
+                      <LearnerExample key={example.publicId} example={example} />
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
@@ -86,7 +127,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
         <section className={styles.supportBlock} data-vocabulary-module="collocations">
           <h4>{labels.collocations}</h4>
           <div className={styles.collocationList}>
-            {item.collocations.map((collocation) => (
+            {visibleCollocations.map((collocation) => (
               <div key={collocation.publicId} className={styles.collocationItem}>
                 <b className={styles.collocationExpression}>{collocation.expression}</b>
                 {collocation.learnerMeaning ? (
@@ -95,6 +136,16 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
               </div>
             ))}
           </div>
+          {item.collocations.length > 4 ? (
+            <button
+              type="button"
+              className={styles.expandButton}
+              aria-expanded={collocationsExpanded}
+              onClick={() => setCollocationsExpanded((value) => !value)}
+            >
+              {collocationsExpanded ? labels.collapse : labels.showMore}
+            </button>
+          ) : null}
         </section>
       ) : null}
 
