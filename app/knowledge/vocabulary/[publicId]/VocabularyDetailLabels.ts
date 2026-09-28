@@ -27,11 +27,15 @@ export type VocabularyDetailLabels = {
   radical: string;
   strokes: string;
   hanViet: string;
+  traditional: string;
+  translationEquivalent: string;
   writingOpen: string;
   writingReplay: string;
   writingUnavailable: string;
   writingSource: string;
   unavailable: string;
+  showMore: string;
+  collapse: string;
 };
 
 
@@ -65,11 +69,15 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     radical: "Radical",
     strokes: "Strokes",
     hanViet: "Sino-Vietnamese",
+    traditional: "Traditional",
+    translationEquivalent: "Translation equivalents",
     writingOpen: "View writing",
     writingReplay: "Replay",
     writingUnavailable: "Writing data is temporarily unavailable.",
     writingSource: "Stroke data",
     unavailable: "This vocabulary entry is temporarily unavailable.",
+    showMore: "Show more",
+    collapse: "Collapse",
   },
   vi: {
     knowledge: "Kiến thức",
@@ -100,11 +108,15 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     radical: "Bộ thủ",
     strokes: "Số nét",
     hanViet: "Hán Việt",
+    traditional: "Phồn thể",
+    translationEquivalent: "Tương đương khi dịch",
     writingOpen: "Xem cách viết",
     writingReplay: "Viết lại",
     writingUnavailable: "Dữ liệu cách viết tạm thời không tải được.",
     writingSource: "Dữ liệu nét",
     unavailable: "Mục từ này hiện chưa thể hiển thị.",
+    showMore: "Xem thêm",
+    collapse: "Thu gọn",
   },
   ar: {
     knowledge: "المعرفة",
@@ -135,11 +147,15 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     radical: "الجذر",
     strokes: "عدد الخطوط",
     hanViet: "القراءة الصينية الفيتنامية",
+    traditional: "الصيغة التقليدية",
+    translationEquivalent: "مكافئات الترجمة",
     writingOpen: "عرض طريقة الكتابة",
     writingReplay: "إعادة",
     writingUnavailable: "بيانات الكتابة غير متاحة مؤقتًا.",
     writingSource: "بيانات الخطوط",
     unavailable: "هذا المدخل غير متاح مؤقتًا.",
+    showMore: "عرض المزيد",
+    collapse: "طي",
   },
 };
 

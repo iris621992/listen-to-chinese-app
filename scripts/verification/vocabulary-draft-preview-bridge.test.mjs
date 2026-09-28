@@ -23,6 +23,10 @@ test("Vocabulary Draft Preview uses the exact shared learner renderer", async ()
   assert.match(view, /VocabularyCharacterRail/);
   assert.match(view, /VocabularyPronunciationMeta/);
   assert.match(view, /VocabularyDetail\.module\.css/);
+  assert.match(view, /vocabularySenseHeading\(allReadingItems\[0\]\)/);
+  assert.match(view, /const meaningHeading = vocabularySenseHeading\(item\)/);
+  assert.doesNotMatch(view, /learnerMeaningParts|requestedLocaleTranslations/);
+  assert.doesNotMatch(view, /translationEquivalents/);
   assert.match(view, /constructions: labels\.constructions/);
   assert.match(view, /commonMistakes: labels\.commonMistakes/);
   assert.match(previewBridge, /parseVocabularyDraftPreviewCharacters/);
@@ -78,6 +82,8 @@ test("Vocabulary Draft Preview parser accepts Draft identity without weakening p
   assert.match(draftParser, /examples/);
   assert.match(draftParser, /quick_distinctions/);
   assert.match(draftParser, /lexical_constructions/);
+  assert.match(draftParser, /row\.examples/);
+  assert.match(draftParser, /examples:\s*asArray\(row\.examples\)/);
   assert.match(draftParser, /common_mistakes/);
   assert.match(draftParser, /knowledge_links/);
   assert.match(draftParser, /practice_links/);
@@ -105,8 +111,13 @@ test("Vocabulary final approved learner modules stay on the shared renderer", as
   assert.match(rich, /item\.collocations\.length/);
   assert.match(rich, /item\.classifiers\.length/);
 
+  assert.match(loader, /get_public_vocabulary_entry_v9/);
+  assert.match(loader, /get_public_vocabulary_entry_v8/);
+  assert.match(loader, /get_public_vocabulary_entry_v7/);
   assert.match(loader, /get_public_vocabulary_entry_v6/);
   assert.match(loader, /get_public_vocabulary_entry_v5/);
+  assert.match(loader, /K1I_VOCABULARY_LOCALIZED_LEARNER_EXAMPLES_PUBLIC_PROJECTION_V1/);
+  assert.match(loader, /K1H_VOCABULARY_CONSTRUCTION_SCOPED_EXAMPLES_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1G_VOCABULARY_FINAL_APPROVED_SURFACE_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /constructions:/);
   assert.match(loader, /commonMistakes:/);
@@ -118,7 +129,13 @@ test("Vocabulary final approved learner modules stay on the shared renderer", as
 test("Vocabulary Draft Preview parser preserves localized Quick Distinction contrast translations", async () => {
   const draftParser = await read("lib/vocabularyDraftPreview.ts");
 
+  assert.match(draftParser, /sourcePinyin: stringValue\(row\.source_pinyin\)/);
+  assert.match(draftParser, /targetPinyin: stringValue\(row\.target_pinyin\)/);
   assert.match(draftParser, /sourceTranslation: stringValue\(row\.source_translation\)/);
   assert.match(draftParser, /targetTranslation: stringValue\(row\.target_translation\)/);
+  assert.match(draftParser, /incorrectPinyin/);
+  assert.match(draftParser, /incorrectTranslation/);
+  assert.match(draftParser, /correctPinyin/);
+  assert.match(draftParser, /correctTranslation/);
   assert.match(draftParser, /contentLocale: stringValue\(row\.content_locale\)/);
 });

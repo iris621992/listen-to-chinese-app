@@ -45,17 +45,22 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   ]);
   const page = `${pageRoute}\n${view}\n${labels}`;
 
+  assert.match(loader, /get_public_vocabulary_entry_v9/);
+  assert.match(loader, /get_public_vocabulary_entry_v8/);
+  assert.match(loader, /get_public_vocabulary_entry_v7/);
   assert.match(loader, /get_public_vocabulary_entry_v6/);
   assert.match(loader, /get_public_vocabulary_entry_v5/);
   assert.match(loader, /get_public_vocabulary_entry_v4/);
   assert.match(loader, /get_public_vocabulary_entry_v3/);
   assert.match(loader, /get_public_vocabulary_entry_v2/);
   assert.match(loader, /isMissingRpc/);
+  assert.match(loader, /K1I_VOCABULARY_LOCALIZED_LEARNER_EXAMPLES_PUBLIC_PROJECTION_V1/);
+  assert.match(loader, /K1H_VOCABULARY_CONSTRUCTION_SCOPED_EXAMPLES_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1F_VOCABULARY_LOCALIZED_DETAIL_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1D_VOCABULARY_RICH_SUPPORT_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1C_VOCABULARY_TE_PUBLIC_PROJECTION_V1/);
-  assert.match(loader, /hanViet:\s*contract === K1G_PROJECTION_CONTRACT \|\| contract === K1F_PROJECTION_CONTRACT/);
+  assert.match(loader, /hanViet:\s*contract === K1I_PROJECTION_CONTRACT[\s\S]*K1H_PROJECTION_CONTRACT[\s\S]*K1G_PROJECTION_CONTRACT[\s\S]*K1F_PROJECTION_CONTRACT/);
   assert.match(loader, /\? parseHanViet\(entry\.han_viet\)/);
   assert.match(loader, /learnerMeaning:\s*stringValue\(row\.learner_meaning\)/);
   assert.match(loader, /translation_equivalents/);
@@ -99,11 +104,17 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(page, /anchors\.set\(group\.posCode, `#pos-\$\{pronunciationPublicId\}-\$\{group\.key\}`\)/);
   assert.match(page, /<span className=\{styles\.senseNum\}>\{itemIndex \+ 1\}<\/span>/);
   assert.doesNotMatch(page, /group\.startIndex/);
-  assert.match(page, /learnerMeaningParts/);
+  assert.doesNotMatch(page, /learnerMeaningParts|requestedLocaleTranslations/);
+  assert.doesNotMatch(page, /translationEquivalents/);
+  assert.match(page, /vocabularySenseHeading\(allReadingItems\[0\]\)/);
+  assert.match(page, /const meaningHeading = vocabularySenseHeading\(item\)/);
+  assert.match(page, /<h3 className=\{styles\.meaning\}>\{meaningHeading\}<\/h3>/);
   assert.match(page, /form\.publicId !== primaryForm\.publicId/);
   assert.doesNotMatch(page, /form\.text !== primaryForm\.text/);
   assert.match(page, /VocabularyPronunciationMeta/);
-  assert.match(page, /hanViet=\{detail\.hanViet\?\.text \?\? null\}/);
+  assert.match(page, /hanViet=\{showHanViet \? detail\.hanViet\?\.text \?\? null : null\}/);
+  assert.match(page, /traditionalForms=\{secondaryForms\.map/);
+  assert.match(page, /translationEquivalent:\s*labels\.translationEquivalent/);
   assert.doesNotMatch(page, /extractHanCharacters/);
   assert.doesNotMatch(page, /Script=Han/);
   assert.match(page, /VocabularyStickyNav/);
@@ -122,15 +133,19 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.doesNotMatch(page, /Ỷ TỬ|搬椅子|一把椅子/);
 
   assert.match(pronunciationMeta, /hanViet:\s*string \| null/);
-  assert.match(pronunciationMeta, /hanViet \? \(/);
+  assert.match(pronunciationMeta, /traditionalForms:\s*string\[\]/);
+  assert.match(pronunciationMeta, /labels:\s*\{/);
+  assert.match(pronunciationMeta, /styles\.secondaryLine/);
   assert.match(pronunciationMeta, /styles\.dot/);
   assert.match(pronunciationMeta, /styles\.hanViet/);
+  assert.match(pronunciationMeta, /styles\.traditional/);
   assert.doesNotMatch(pronunciationMeta, /Ỷ TỬ|活动|椅子/);
   assert.match(pronunciationMetaStyles, /\.pinyin/);
-  assert.match(pronunciationMetaStyles, /font-size:\s*21px/);
+  assert.match(pronunciationMetaStyles, /font-size:\s*24px/);
+  assert.match(pronunciationMetaStyles, /\.secondaryLine/);
   assert.match(pronunciationMetaStyles, /\.hanViet/);
-  assert.match(pronunciationMetaStyles, /font-size:\s*17px/);
-  assert.match(pronunciationMetaStyles, /\.dot/);
+  assert.match(pronunciationMetaStyles, /font-size:\s*14\.5px/);
+  assert.match(pronunciationMetaStyles, /\.traditional/);
 
   assert.match(characterRail, /^"use client";/);
   assert.match(characterRail, /useState/);
@@ -152,8 +167,8 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.doesNotMatch(characterRail, /活动|椅子|出租车|运动/);
   assert.match(characterRailStyles, /\.characterSelector/);
   assert.match(characterRailStyles, /\.characterSelectorButton\[aria-pressed="true"\]/);
-  assert.match(characterRailStyles, /background:\s*#30352f/);
-  assert.match(characterRailStyles, /color:\s*#fff/);
+  assert.match(characterRailStyles, /background:\s*#eef3ea/);
+  assert.match(characterRailStyles, /color:\s*#35543a/);
   assert.match(characterRailStyles, /\.selectedCharacter/);
   assert.doesNotMatch(characterRailStyles, /\.characterIdentity/);
   assert.doesNotMatch(characterRailStyles, /grid-template-columns:\s*repeat\(2/);
@@ -189,16 +204,41 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(rich, /classifier\.learnerNote/);
   assert.match(rich, /collocation\.learnerMeaning/);
   assert.match(rich, /styles\.collocationMeaning/);
-  assert.ok(rich.indexOf("item.classifiers.length > 0") < rich.indexOf("item.collocations.length > 0 ? ("));
+  assert.ok(rich.indexOf("item.examples.length > 0") < rich.indexOf("item.constructions.length > 0"));
+  assert.ok(rich.indexOf("item.constructions.length > 0") < rich.indexOf("item.collocations.length > 0"));
+  assert.ok(rich.indexOf("item.collocations.length > 0") < rich.indexOf("item.classifiers.length > 0"));
   assert.match(rich, /item\.examples\.length > 0/);
+  assert.match(rich, /useState/);
+  assert.match(rich, /item\.examples\.slice\(0, 2\)/);
+  assert.match(rich, /item\.collocations\.slice\(0, 4\)/);
+  assert.match(rich, /construction\.examples\.length > 0/);
+  assert.match(rich, /construction\.examples\.map/);
+  assert.match(rich, /aria-expanded=\{examplesExpanded\}/);
+  assert.match(rich, /aria-expanded=\{collocationsExpanded\}/);
+  assert.match(rich, /labels\.showMore/);
+  assert.match(rich, /labels\.collapse/);
+  assert.match(rich, /item\.translationEquivalents\.length > 0/);
+  assert.match(rich, /data-vocabulary-module="translation-equivalents"/);
   assert.match(rich, /item\.quickDistinctions\.length > 0/);
   assert.match(rich, /distinction\.learnerExplanation/);
   assert.match(rich, /return null/);
   assert.doesNotMatch(rich, /活动|椅子|出租车|运动|搬椅子|一把椅子/);
   assert.doesNotMatch(rich, /reviewed semantic zones|Sense \/ RI|translation boundary|missing_data_behavior|INTERNAL SAMPLE|provisional/i);
   assert.match(richStyles, /\.supportStack/);
+  assert.match(richStyles, /\.translationDetails/);
+  assert.match(richStyles, /\.classifierBlock/);
   assert.match(richStyles, /\.collocationMeaning/);
   assert.match(richStyles, /\.exampleChinese/);
+  assert.match(richStyles, /\.constructionExamples/);
+  assert.match(richStyles, /\.expandButton/);
+  assert.match(richStyles, /\.distinctionCard[\s\S]*border-radius:\s*6px/);
+  assert.match(richStyles, /\.mistakeContrast span,[\s\S]*border-radius:\s*6px/);
+  assert.match(richStyles, /\.collocationItem[\s\S]*border-radius:\s*6px/);
+  assert.match(richStyles, /\.classifierList[\s\S]*border-radius:\s*6px/);
+  assert.match(styles, /\.metaGrid[\s\S]*display:\s*grid/);
+  assert.match(styles, /\.metaItem\s*\{[^}]*border-radius:\s*8px/);
+  assert.doesNotMatch(styles, /\.metaItem\s*\{[^}]*border-radius:\s*999px/);
+  assert.doesNotMatch(richStyles, /\.behaviorGrid/);
 
   assert.match(styles, /\.workspace/);
   assert.match(styles, /\.compactSticky/);
@@ -235,13 +275,69 @@ test("Quick Distinction contrast examples preserve optional learner translations
     read("lib/vocabularyDetail.ts"),
   ]);
 
+  assert.match(loader, /sourcePinyin: string \| null/);
+  assert.match(loader, /targetPinyin: string \| null/);
   assert.match(loader, /sourceTranslation: string \| null/);
   assert.match(loader, /targetTranslation: string \| null/);
-  assert.match(loader, /contentLocale: string \| null/);
+  assert.match(loader, /incorrectPinyin: string \| null/);
+  assert.match(loader, /incorrectTranslation: string \| null/);
+  assert.match(loader, /correctPinyin: string \| null/);
+  assert.match(loader, /correctTranslation: string \| null/);
+  assert.match(loader, /source_pinyin/);
+  assert.match(loader, /target_pinyin/);
+  assert.match(loader, /incorrect_pinyin/);
+  assert.match(loader, /correct_pinyin/);
+  assert.match(loader, /incorrect_translation/);
+  assert.match(loader, /correct_translation/);
   assert.match(loader, /source_translation/);
   assert.match(loader, /target_translation/);
-  assert.match(loader, /get_public_vocabulary_entry_v7/);
+  assert.match(loader, /get_public_vocabulary_entry_v9/);
+  assert.match(rich, /example\.sourcePinyin/);
+  assert.match(rich, /example\.targetPinyin/);
   assert.match(rich, /example\.sourceTranslation/);
   assert.match(rich, /example\.targetTranslation/);
+  assert.match(rich, /mistake\.incorrectPinyin/);
+  assert.match(rich, /mistake\.incorrectTranslation/);
+  assert.match(rich, /mistake\.correctPinyin/);
+  assert.match(rich, /mistake\.correctTranslation/);
+  assert.match(rich, /distinctionPinyin/);
   assert.match(rich, /distinctionTranslation/);
+  assert.match(rich, /mistakePinyin/);
+  assert.match(rich, /mistakeTranslation/);
+});
+
+
+test("Vocabulary sense headings use shortLabel as the sole learner display authority", async () => {
+  const { vocabularySenseHeading } = await import("../../lib/vocabularySenseHeading.ts");
+
+  const differentTe = {
+    shortLabel: "biết; quen biết; nhận ra",
+    translationEquivalents: [{ expression: "biết" }],
+  };
+  assert.equal(vocabularySenseHeading(differentTe), "biết; quen biết; nhận ra");
+
+  const sameTe = {
+    shortLabel: "nhận thức",
+    translationEquivalents: [{ expression: "nhận thức" }],
+  };
+  assert.equal(vocabularySenseHeading(sameTe), "nhận thức");
+
+  const multipleTe = {
+    shortLabel: "hiểu; nhận thức",
+    translationEquivalents: [
+      { expression: "hiểu" },
+      { expression: "nhận thức" },
+      { expression: "understand" },
+    ],
+  };
+  assert.equal(vocabularySenseHeading(multipleTe), "hiểu; nhận thức");
+
+  const nounRi = {
+    shortLabel: "sự hiểu biết; nhận thức",
+    translationEquivalents: [
+      { expression: "nhận thức" },
+      { expression: "sự hiểu biết" },
+    ],
+  };
+  assert.equal(vocabularySenseHeading(nounRi), "sự hiểu biết; nhận thức");
 });

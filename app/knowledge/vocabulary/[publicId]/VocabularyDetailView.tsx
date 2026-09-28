@@ -7,8 +7,8 @@ import type { VocabularyCharacterOccurrence } from "@/lib/vocabularyCharacterDel
 import type {
   VocabularyDetail,
   VocabularyReadingItem,
-  VocabularyTranslationEquivalent,
 } from "@/lib/vocabularyDetail";
+import { vocabularySenseHeading } from "@/lib/vocabularySenseHeading";
 import KnowledgeLanguageToggle from "./KnowledgeLanguageToggle";
 import VocabularyCharacterRail from "./VocabularyCharacterRail";
 import VocabularyPronunciationMeta from "./VocabularyPronunciationMeta";
@@ -63,30 +63,6 @@ const localizedCodeLabel = (
 
 const posLabel = (code: string | null, localeCode: string) =>
   code ? POS_LABELS[code]?.[localeCode] ?? POS_LABELS[code]?.en ?? null : null;
-
-const requestedLocaleTranslations = (
-  translations: VocabularyTranslationEquivalent[],
-  requestedLocale: string,
-) => {
-  const language = requestedLocale.split("-")[0];
-  return translations.filter((translation) => {
-    const translationLanguage = translation.localeCode.split("-")[0];
-    return translation.localeCode === requestedLocale || translationLanguage === language;
-  });
-};
-
-const learnerMeaningParts = (
-  item: VocabularyReadingItem,
-  requestedLocale: string,
-) => {
-  const parts = [
-    item.shortLabel,
-    ...requestedLocaleTranslations(item.translationEquivalents, requestedLocale)
-      .map((translation) => translation.expression),
-  ].filter((part): part is string => Boolean(part));
-
-  return [...new Set(parts.map((part) => part.trim()).filter(Boolean))];
-};
 
 const groupByPartOfSpeech = (items: VocabularyReadingItem[]): PosGroup[] => {
   const groups: PosGroup[] = [];
@@ -152,7 +128,7 @@ export default function VocabularyDetailView({
   const secondaryForms = detail.forms.filter((form) => form.publicId !== primaryForm.publicId);
   const allReadingItems = detail.pronunciations.flatMap((item) => item.readingItems);
   const singleSummary = allReadingItems.length === 1
-    ? learnerMeaningParts(allReadingItems[0], detail.requestedLocale).join(", ")
+    ? vocabularySenseHeading(allReadingItems[0])
     : null;
   const allPosCodes = distinctPosCodes(allReadingItems);
   const hasReadingNavigation = detail.pronunciations.length > 1;
@@ -215,24 +191,28 @@ export default function VocabularyDetailView({
       />
 
       <div className={styles.workspace}>
-        <article id="vocabulary-entry-card" className={styles.entryCard}>
+        <article
+          id="vocabulary-entry-card"
+          className={styles.entryCard}
+          data-single-sense={singleSummary ? "true" : undefined}
+        >
           <header id="vocabulary-entry-header" className={styles.entryHeader}>
             <div className={styles.headwordWrap}>
               <div className={styles.writtenLine}>
                 <h1 className={styles.headword}>{detail.displayForm}</h1>
-                {secondaryForms.map((form) => (
-                  <span key={form.publicId} className={styles.traditional}>{form.text}</span>
-                ))}
               </div>
 
               {primaryPronunciation ? (
                 <VocabularyPronunciationMeta
                   pronunciation={primaryPronunciation.pronunciation}
-                  hanViet={detail.hanViet?.text ?? null}
+                  hanViet={showHanViet ? detail.hanViet?.text ?? null : null}
+                  traditionalForms={secondaryForms.map((form) => form.text)}
+                  labels={{
+                    hanViet: labels.hanViet,
+                    traditional: labels.traditional,
+                  }}
                 />
               ) : null}
-
-              {singleSummary ? <p className={styles.entrySummary}>{singleSummary}</p> : null}
 
               {hasReadingNavigation ? (
                 <div className={styles.readingSelector} aria-label={labels.readings}>
@@ -343,15 +323,14 @@ export default function VocabularyDetailView({
 
                               <div className={styles.senseStack}>
                                 {group.items.map((item, itemIndex) => {
-                                  const meaningParts = learnerMeaningParts(item, detail.requestedLocale);
+                                  const meaningHeading = vocabularySenseHeading(item);
                                   const itemRegion = localizedCodeLabel(
                                     item.regionProfileCode,
                                     interfaceLocaleCode,
                                     REGION_LABELS,
                                   );
                                   const hasLearningProfile = Boolean(
-                                    item.fullExplanation
-                                    || item.usageNote
+                                    item.usageNote
                                     || item.memoryTip
                                     || item.usageContext
                                     || item.socialContext
@@ -369,8 +348,11 @@ export default function VocabularyDetailView({
                                           {item.itemType === "usage" ? (
                                             <span className={styles.usageType}>{labels.usage}</span>
                                           ) : null}
-                                          {meaningParts.length > 0 ? (
-                                            <h3 className={styles.meaning}>{meaningParts.join(", ")}</h3>
+                                          {meaningHeading ? (
+                                            <h3 className={styles.meaning}>{meaningHeading}</h3>
+                                          ) : null}
+                                          {item.fullExplanation ? (
+                                            <p className={styles.meaningExplanation}>{item.fullExplanation}</p>
                                           ) : null}
                                           {itemRegion ? (
                                             <div className={styles.tags}>
@@ -382,38 +364,36 @@ export default function VocabularyDetailView({
 
                                       {hasLearningProfile ? (
                                         <div className={styles.senseProfile}>
-                                          {item.fullExplanation ? (
-                                            <section className={styles.learningBlock}>
-                                              <h4>{labels.meaning}</h4>
-                                              <p>{item.fullExplanation}</p>
-                                            </section>
-                                          ) : null}
                                           {item.usageNote ? (
-                                            <section className={`${styles.learningBlock} ${styles.learningBlockSoft}`}>
+                                            <section className={styles.usageBlock}>
                                               <h4>{labels.usageNote}</h4>
                                               <p>{item.usageNote}</p>
                                             </section>
                                           ) : null}
-                                          {item.usageContext ? (
-                                            <section className={`${styles.learningBlock} ${styles.learningBlockSoft}`}>
-                                              <h4>{labels.usageContext}</h4>
-                                              <p>{item.usageContext}</p>
-                                            </section>
-                                          ) : null}
-                                          {item.socialContext ? (
-                                            <section className={`${styles.learningBlock} ${styles.learningBlockSoft}`}>
-                                              <h4>{labels.socialContext}</h4>
-                                              <p>{item.socialContext}</p>
-                                            </section>
-                                          ) : null}
-                                          {item.pragmaticExplanation ? (
-                                            <section className={`${styles.learningBlock} ${styles.learningBlockSoft}`}>
-                                              <h4>{labels.pragmatics}</h4>
-                                              <p>{item.pragmaticExplanation}</p>
-                                            </section>
+                                          {(item.usageContext || item.socialContext || item.pragmaticExplanation) ? (
+                                            <div className={styles.metaGrid}>
+                                              {item.usageContext ? (
+                                                <div className={styles.metaItem}>
+                                                  <b>{labels.usageContext}</b>
+                                                  <span>{item.usageContext}</span>
+                                                </div>
+                                              ) : null}
+                                              {item.socialContext ? (
+                                                <div className={styles.metaItem}>
+                                                  <b>{labels.socialContext}</b>
+                                                  <span>{item.socialContext}</span>
+                                                </div>
+                                              ) : null}
+                                              {item.pragmaticExplanation ? (
+                                                <div className={styles.metaItem}>
+                                                  <b>{labels.pragmatics}</b>
+                                                  <span>{item.pragmaticExplanation}</span>
+                                                </div>
+                                              ) : null}
+                                            </div>
                                           ) : null}
                                           {item.memoryTip ? (
-                                            <section className={`${styles.learningBlock} ${styles.learningBlockAccent}`}>
+                                            <section className={styles.memoryBlock}>
                                               <h4>{labels.memoryTip}</h4>
                                               <p>{item.memoryTip}</p>
                                             </section>
@@ -429,10 +409,13 @@ export default function VocabularyDetailView({
                                           collocations: labels.collocations,
                                           classifiers: labels.classifiers,
                                           example: labels.example,
+                                          translationEquivalent: labels.translationEquivalent,
                                           quickDistinction: labels.quickDistinction,
                                           commonMistakes: labels.commonMistakes,
                                           relatedKnowledge: labels.relatedKnowledge,
                                           practice: labels.practice,
+                                          showMore: labels.showMore,
+                                          collapse: labels.collapse,
                                         }}
                                       />
                                     </article>

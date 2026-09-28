@@ -3,10 +3,6 @@
 import { useEffect, useState } from "react";
 import type { KnowledgeLanguage } from "@/lib/knowledgeLanguage";
 import KnowledgeLanguageToggle from "./KnowledgeLanguageToggle";
-import "./VocabularyDemoFidelity.module.css";
-import "./VocabularyTypographyRuntime.module.css";
-import "./VocabularyVisualReconciliation.module.css";
-import "./VocabularyHeaderNavAuthority.module.css";
 import styles from "./VocabularyDetail.module.css";
 
 type NavItem = {
