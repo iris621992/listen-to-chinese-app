@@ -456,29 +456,27 @@
 }
 
 .metaGrid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
+  display: grid;
+  gap: 8px;
 }
 
 .metaItem {
-  display: flex;
+  display: grid;
   max-width: 100%;
-  align-items: baseline;
-  gap: 6px;
-  border-radius: 999px;
+  gap: 3px;
+  border-radius: 8px;
   background: #f5f7f3;
-  padding: 6px 10px;
-  color: #6d736d;
-  font-size: 12px;
-  line-height: 1.5;
+  padding: 10px 12px;
+  color: #5e655e;
+  font-size: 13px;
+  line-height: 1.65;
 }
 
 .metaItem b {
-  flex: 0 0 auto;
   color: #617061;
-  font-size: 11px;
-  font-weight: 650;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .metaItem span {
@@ -714,10 +712,8 @@
   }
 
   .metaItem {
-    border-radius: 10px;
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 2px;
+    border-radius: 8px;
+    gap: 3px;
   }
 
   .subsense {
