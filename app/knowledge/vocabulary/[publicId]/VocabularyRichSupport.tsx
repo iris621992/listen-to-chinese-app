@@ -192,6 +192,9 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                           {distinction.contrastExamples.map((example, index) => (
                             <span key={distinction.publicId + "-source-" + index}>
                               <b>{example.sourceExpression}</b>
+                              {example.sourcePinyin ? (
+                                <small className={styles.distinctionPinyin}>{example.sourcePinyin}</small>
+                              ) : null}
                               {example.sourceTranslation ? (
                                 <small className={styles.distinctionTranslation}>{example.sourceTranslation}</small>
                               ) : null}
@@ -208,6 +211,9 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                           {distinction.contrastExamples.map((example, index) => (
                             <span key={distinction.publicId + "-target-" + index}>
                               <b>{example.targetExpression}</b>
+                              {example.targetPinyin ? (
+                                <small className={styles.distinctionPinyin}>{example.targetPinyin}</small>
+                              ) : null}
                               {example.targetTranslation ? (
                                 <small className={styles.distinctionTranslation}>{example.targetTranslation}</small>
                               ) : null}
@@ -232,8 +238,28 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
               <article key={mistake.publicId} className={styles.mistakeItem}>
                 {(mistake.incorrectExpression || mistake.correctExpression) ? (
                   <div className={styles.mistakeContrast}>
-                    {mistake.incorrectExpression ? <span>✕ {mistake.incorrectExpression}</span> : null}
-                    {mistake.correctExpression ? <strong>✓ {mistake.correctExpression}</strong> : null}
+                    {mistake.incorrectExpression ? (
+                      <span>
+                        <b className={styles.mistakeExpression}>✕ {mistake.incorrectExpression}</b>
+                        {mistake.incorrectPinyin ? (
+                          <small className={styles.mistakePinyin}>{mistake.incorrectPinyin}</small>
+                        ) : null}
+                        {mistake.incorrectTranslation ? (
+                          <small className={styles.mistakeTranslation}>{mistake.incorrectTranslation}</small>
+                        ) : null}
+                      </span>
+                    ) : null}
+                    {mistake.correctExpression ? (
+                      <strong>
+                        <b className={styles.mistakeExpression}>✓ {mistake.correctExpression}</b>
+                        {mistake.correctPinyin ? (
+                          <small className={styles.mistakePinyin}>{mistake.correctPinyin}</small>
+                        ) : null}
+                        {mistake.correctTranslation ? (
+                          <small className={styles.mistakeTranslation}>{mistake.correctTranslation}</small>
+                        ) : null}
+                      </strong>
+                    ) : null}
                   </div>
                 ) : null}
                 {mistake.learnerExplanation ? <p>{mistake.learnerExplanation}</p> : null}
