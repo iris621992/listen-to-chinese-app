@@ -111,6 +111,7 @@ test("Vocabulary final approved learner modules stay on the shared renderer", as
   assert.match(rich, /item\.collocations\.length/);
   assert.match(rich, /item\.classifiers\.length/);
 
+  assert.match(loader, /get_public_vocabulary_entry_v8/);
   assert.match(loader, /get_public_vocabulary_entry_v7/);
   assert.match(loader, /get_public_vocabulary_entry_v6/);
   assert.match(loader, /get_public_vocabulary_entry_v5/);
