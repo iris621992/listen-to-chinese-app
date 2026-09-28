@@ -2,6 +2,7 @@ import type { KnowledgeContentLocaleRequest } from "@/lib/knowledgeLanguage";
 import { getLearnerLocale } from "@/lib/learnerLocaleRegistry";
 
 const VOCABULARY_PUBLIC_ID_PATTERN = /^vocab_[a-f0-9]{64}$/u;
+const K1I_PROJECTION_CONTRACT = "K1I_VOCABULARY_LOCALIZED_LEARNER_EXAMPLES_PUBLIC_PROJECTION_V1";
 const K1H_PROJECTION_CONTRACT = "K1H_VOCABULARY_CONSTRUCTION_SCOPED_EXAMPLES_PUBLIC_PROJECTION_V1";
 const K1G_PROJECTION_CONTRACT = "K1G_VOCABULARY_FINAL_APPROVED_SURFACE_PUBLIC_PROJECTION_V1";
 const K1F_PROJECTION_CONTRACT = "K1F_VOCABULARY_LOCALIZED_DETAIL_PUBLIC_PROJECTION_V1";
@@ -524,7 +525,8 @@ function parseVocabularyPayload(value: unknown): VocabularyDetail | null {
   const payload = asObject(value);
   if (!payload) return null;
   const contract = stringValue(payload.projection_contract);
-  const richSupportEnabled = contract === K1H_PROJECTION_CONTRACT
+  const richSupportEnabled = contract === K1I_PROJECTION_CONTRACT
+    || contract === K1H_PROJECTION_CONTRACT
     || contract === K1G_PROJECTION_CONTRACT
     || contract === K1F_PROJECTION_CONTRACT
     || contract === K1E_PROJECTION_CONTRACT
@@ -567,7 +569,8 @@ function parseVocabularyPayload(value: unknown): VocabularyDetail | null {
     regionProfileCode: stringValue(entry.region_profile_code),
     requestedLocale,
     fallbackLocale,
-    hanViet: contract === K1H_PROJECTION_CONTRACT
+    hanViet: contract === K1I_PROJECTION_CONTRACT
+      || contract === K1H_PROJECTION_CONTRACT
       || contract === K1G_PROJECTION_CONTRACT
       || contract === K1F_PROJECTION_CONTRACT
       ? parseHanViet(entry.han_viet)
@@ -696,9 +699,15 @@ export async function loadVocabularyDetail(
       p_fallback_locale_code: localeRequest.fallbackLocaleCode,
     };
 
-    const v8 = await supabase.rpc("get_public_vocabulary_entry_v8", args);
-    let data = v8.data;
-    let error = v8.error;
+    const v9 = await supabase.rpc("get_public_vocabulary_entry_v9", args);
+    let data = v9.data;
+    let error = v9.error;
+
+    if (error && isMissingRpc(error, "get_public_vocabulary_entry_v9")) {
+      const v8 = await supabase.rpc("get_public_vocabulary_entry_v8", args);
+      data = v8.data;
+      error = v8.error;
+    }
 
     if (error && isMissingRpc(error, "get_public_vocabulary_entry_v8")) {
       const v7 = await supabase.rpc("get_public_vocabulary_entry_v7", args);
@@ -741,7 +750,7 @@ export async function loadVocabularyDetail(
     if (!payload?.entry) return { status: "NOT_FOUND" };
     if (
       localeRequest.exactContentLocaleCode
-      && ![K1H_PROJECTION_CONTRACT, K1G_PROJECTION_CONTRACT, K1F_PROJECTION_CONTRACT].includes(
+      && ![K1I_PROJECTION_CONTRACT, K1H_PROJECTION_CONTRACT, K1G_PROJECTION_CONTRACT, K1F_PROJECTION_CONTRACT].includes(
         stringValue(payload.projection_contract) ?? "",
       )
     ) {
