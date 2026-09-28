@@ -133,7 +133,9 @@ function parseContrastExample(
   return sourceExpression && targetExpression
     ? {
         sourceExpression,
+        sourcePinyin: stringValue(row.source_pinyin),
         targetExpression,
+        targetPinyin: stringValue(row.target_pinyin),
         sourceTranslation: stringValue(row.source_translation),
         targetTranslation: stringValue(row.target_translation),
         contentLocale: stringValue(row.content_locale),
@@ -212,7 +214,15 @@ function parseCommonMistake(
     publicId: stringValue(row.public_id) ?? stringValue(row.id) ?? fallbackId,
     readingItemPublicId,
     incorrectExpression,
+    incorrectPinyin:
+      stringValue(row.incorrect_pinyin) ?? stringValue(row.incorrectPinyin),
+    incorrectTranslation:
+      stringValue(row.incorrect_translation) ?? stringValue(row.incorrectTranslation),
     correctExpression,
+    correctPinyin:
+      stringValue(row.correct_pinyin) ?? stringValue(row.correctPinyin),
+    correctTranslation:
+      stringValue(row.correct_translation) ?? stringValue(row.correctTranslation),
     learnerExplanation,
     contentLocale: stringValue(row.content_locale),
   };
