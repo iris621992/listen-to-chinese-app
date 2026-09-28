@@ -684,9 +684,15 @@ export async function loadVocabularyDetail(
       p_fallback_locale_code: localeRequest.fallbackLocaleCode,
     };
 
-    const v7 = await supabase.rpc("get_public_vocabulary_entry_v7", args);
-    let data = v7.data;
-    let error = v7.error;
+    const v8 = await supabase.rpc("get_public_vocabulary_entry_v8", args);
+    let data = v8.data;
+    let error = v8.error;
+
+    if (error && isMissingRpc(error, "get_public_vocabulary_entry_v8")) {
+      const v7 = await supabase.rpc("get_public_vocabulary_entry_v7", args);
+      data = v7.data;
+      error = v7.error;
+    }
 
     if (error && isMissingRpc(error, "get_public_vocabulary_entry_v7")) {
       const v6 = await supabase.rpc("get_public_vocabulary_entry_v6", args);
