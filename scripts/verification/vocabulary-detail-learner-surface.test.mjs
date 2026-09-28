@@ -229,6 +229,13 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(richStyles, /\.exampleChinese/);
   assert.match(richStyles, /\.constructionExamples/);
   assert.match(richStyles, /\.expandButton/);
+  assert.match(richStyles, /\.distinctionCard[\s\S]*border-radius:\s*6px/);
+  assert.match(richStyles, /\.mistakeContrast span,[\s\S]*border-radius:\s*6px/);
+  assert.match(richStyles, /\.collocationItem[\s\S]*border-radius:\s*6px/);
+  assert.match(richStyles, /\.classifierList[\s\S]*border-radius:\s*6px/);
+  assert.match(styles, /\.metaGrid[\s\S]*display:\s*grid/);
+  assert.match(styles, /\.metaItem[\s\S]*border-radius:\s*8px/);
+  assert.doesNotMatch(styles, /\.metaItem[\s\S]*border-radius:\s*999px/);
   assert.doesNotMatch(richStyles, /\.behaviorGrid/);
 
   assert.match(styles, /\.workspace/);
@@ -275,6 +282,8 @@ test("Quick Distinction contrast examples preserve optional learner translations
   assert.match(rich, /example\.sourceTranslation/);
   assert.match(rich, /example\.targetTranslation/);
   assert.match(rich, /distinctionTranslation/);
+  assert.doesNotMatch(loader, /sourcePinyin|targetPinyin|source_pinyin|target_pinyin/);
+  assert.doesNotMatch(loader, /incorrectPinyin|correctPinyin|incorrect_pinyin|correct_pinyin/);
 });
 
 
