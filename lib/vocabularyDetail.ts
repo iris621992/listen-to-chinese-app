@@ -65,7 +65,9 @@ export type VocabularyExample = {
 
 export type VocabularyQuickDistinctionContrastExample = {
   sourceExpression: string;
+  sourcePinyin: string | null;
   targetExpression: string;
+  targetPinyin: string | null;
   sourceTranslation: string | null;
   targetTranslation: string | null;
   contentLocale: string | null;
@@ -95,7 +97,11 @@ export type VocabularyCommonMistake = {
   publicId: string;
   readingItemPublicId: string;
   incorrectExpression: string | null;
+  incorrectPinyin: string | null;
+  incorrectTranslation: string | null;
   correctExpression: string | null;
+  correctPinyin: string | null;
+  correctTranslation: string | null;
   learnerExplanation: string | null;
   contentLocale: string | null;
 };
@@ -288,7 +294,9 @@ function parseQuickDistinctionContrastExample(
   return sourceExpression && targetExpression
     ? {
         sourceExpression,
+        sourcePinyin: stringValue(row.source_pinyin),
         targetExpression,
+        targetPinyin: stringValue(row.target_pinyin),
         sourceTranslation: stringValue(row.source_translation),
         targetTranslation: stringValue(row.target_translation),
         contentLocale: stringValue(row.content_locale),
@@ -352,7 +360,11 @@ function parseCommonMistake(value: unknown, readingItemPublicId: string): Vocabu
     publicId,
     readingItemPublicId: owner,
     incorrectExpression,
+    incorrectPinyin: stringValue(row.incorrect_pinyin),
+    incorrectTranslation: stringValue(row.incorrect_translation),
     correctExpression,
+    correctPinyin: stringValue(row.correct_pinyin),
+    correctTranslation: stringValue(row.correct_translation),
     learnerExplanation,
     contentLocale: stringValue(row.content_locale),
   };
