@@ -241,7 +241,7 @@
   display: grid;
   gap: 2px;
   border: 0;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #f6f8f4;
   padding: 10px 12px;
 }
@@ -261,7 +261,7 @@
 .classifierList {
   max-width: 520px;
   padding: 11px 13px;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #f7f3fb;
 }
 
@@ -298,7 +298,7 @@
 .distinctionCard {
   min-width: 0;
   border: 0;
-  border-radius: 8px;
+  border-radius: 6px;
   background: #f8faf7;
   padding: 13px;
 }
@@ -379,7 +379,7 @@
 .mistakeContrast span,
 .mistakeContrast strong {
   min-width: 0;
-  border-radius: 9px;
+  border-radius: 6px;
   padding: 9px 11px;
   font-weight: 560;
 }
