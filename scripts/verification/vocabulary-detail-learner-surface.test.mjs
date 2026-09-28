@@ -45,6 +45,7 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   ]);
   const page = `${pageRoute}\n${view}\n${labels}`;
 
+  assert.match(loader, /get_public_vocabulary_entry_v8/);
   assert.match(loader, /get_public_vocabulary_entry_v7/);
   assert.match(loader, /get_public_vocabulary_entry_v6/);
   assert.match(loader, /get_public_vocabulary_entry_v5/);
