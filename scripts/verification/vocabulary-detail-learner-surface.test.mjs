@@ -45,6 +45,7 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   ]);
   const page = `${pageRoute}\n${view}\n${labels}`;
 
+  assert.match(loader, /get_public_vocabulary_entry_v9/);
   assert.match(loader, /get_public_vocabulary_entry_v8/);
   assert.match(loader, /get_public_vocabulary_entry_v7/);
   assert.match(loader, /get_public_vocabulary_entry_v6/);
@@ -53,12 +54,13 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(loader, /get_public_vocabulary_entry_v3/);
   assert.match(loader, /get_public_vocabulary_entry_v2/);
   assert.match(loader, /isMissingRpc/);
+  assert.match(loader, /K1I_VOCABULARY_LOCALIZED_LEARNER_EXAMPLES_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1H_VOCABULARY_CONSTRUCTION_SCOPED_EXAMPLES_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1F_VOCABULARY_LOCALIZED_DETAIL_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1D_VOCABULARY_RICH_SUPPORT_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1C_VOCABULARY_TE_PUBLIC_PROJECTION_V1/);
-  assert.match(loader, /hanViet:\s*contract === K1H_PROJECTION_CONTRACT[\s\S]*K1G_PROJECTION_CONTRACT[\s\S]*K1F_PROJECTION_CONTRACT/);
+  assert.match(loader, /hanViet:\s*contract === K1I_PROJECTION_CONTRACT[\s\S]*K1H_PROJECTION_CONTRACT[\s\S]*K1G_PROJECTION_CONTRACT[\s\S]*K1F_PROJECTION_CONTRACT/);
   assert.match(loader, /\? parseHanViet\(entry\.han_viet\)/);
   assert.match(loader, /learnerMeaning:\s*stringValue\(row\.learner_meaning\)/);
   assert.match(loader, /translation_equivalents/);
@@ -273,17 +275,35 @@ test("Quick Distinction contrast examples preserve optional learner translations
     read("lib/vocabularyDetail.ts"),
   ]);
 
+  assert.match(loader, /sourcePinyin: string \| null/);
+  assert.match(loader, /targetPinyin: string \| null/);
   assert.match(loader, /sourceTranslation: string \| null/);
   assert.match(loader, /targetTranslation: string \| null/);
-  assert.match(loader, /contentLocale: string \| null/);
+  assert.match(loader, /incorrectPinyin: string \| null/);
+  assert.match(loader, /incorrectTranslation: string \| null/);
+  assert.match(loader, /correctPinyin: string \| null/);
+  assert.match(loader, /correctTranslation: string \| null/);
+  assert.match(loader, /source_pinyin/);
+  assert.match(loader, /target_pinyin/);
+  assert.match(loader, /incorrect_pinyin/);
+  assert.match(loader, /correct_pinyin/);
+  assert.match(loader, /incorrect_translation/);
+  assert.match(loader, /correct_translation/);
   assert.match(loader, /source_translation/);
   assert.match(loader, /target_translation/);
-  assert.match(loader, /get_public_vocabulary_entry_v7/);
+  assert.match(loader, /get_public_vocabulary_entry_v9/);
+  assert.match(rich, /example\.sourcePinyin/);
+  assert.match(rich, /example\.targetPinyin/);
   assert.match(rich, /example\.sourceTranslation/);
   assert.match(rich, /example\.targetTranslation/);
+  assert.match(rich, /mistake\.incorrectPinyin/);
+  assert.match(rich, /mistake\.incorrectTranslation/);
+  assert.match(rich, /mistake\.correctPinyin/);
+  assert.match(rich, /mistake\.correctTranslation/);
+  assert.match(rich, /distinctionPinyin/);
   assert.match(rich, /distinctionTranslation/);
-  assert.doesNotMatch(loader, /sourcePinyin|targetPinyin|source_pinyin|target_pinyin/);
-  assert.doesNotMatch(loader, /incorrectPinyin|correctPinyin|incorrect_pinyin|correct_pinyin/);
+  assert.match(rich, /mistakePinyin/);
+  assert.match(rich, /mistakeTranslation/);
 });
 
 
