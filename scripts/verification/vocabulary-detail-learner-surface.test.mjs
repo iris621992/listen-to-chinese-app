@@ -236,8 +236,8 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(richStyles, /\.collocationItem[\s\S]*border-radius:\s*6px/);
   assert.match(richStyles, /\.classifierList[\s\S]*border-radius:\s*6px/);
   assert.match(styles, /\.metaGrid[\s\S]*display:\s*grid/);
-  assert.match(styles, /\.metaItem[\s\S]*border-radius:\s*8px/);
-  assert.doesNotMatch(styles, /\.metaItem[\s\S]*border-radius:\s*999px/);
+  assert.match(styles, /\.metaItem\s*\{[^}]*border-radius:\s*8px/);
+  assert.doesNotMatch(styles, /\.metaItem\s*\{[^}]*border-radius:\s*999px/);
   assert.doesNotMatch(richStyles, /\.behaviorGrid/);
 
   assert.match(styles, /\.workspace/);
