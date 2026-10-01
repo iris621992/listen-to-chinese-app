@@ -139,3 +139,38 @@ test("Vocabulary Draft Preview parser preserves localized Quick Distinction cont
   assert.match(draftParser, /correctTranslation/);
   assert.match(draftParser, /contentLocale: stringValue\(row\.content_locale\)/);
 });
+
+
+test("Vocabulary Preview banner distinguishes published public projection from draft preview", async () => {
+  const previewBridge = await read(
+    "app/preview/vocabulary/VocabularyDraftPreviewBridge.tsx",
+  );
+
+  assert.match(
+    previewBridge,
+    /published_preview_source/,
+  );
+  assert.match(
+    previewBridge,
+    /source_kind === "current_public_projection"/,
+  );
+  assert.match(
+    previewBridge,
+    /Bản xem trước mục đã xuất bản · Chỉ dành cho quản trị · Không công khai · Tự hết hạn/,
+  );
+  assert.match(
+    previewBridge,
+    /Published entry preview · Owner review only · Private · Expires automatically/,
+  );
+  assert.match(
+    previewBridge,
+    /Bản xem trước bản nháp · Chỉ dành cho quản trị · Không công khai · Tự hết hạn/,
+  );
+  assert.match(
+    previewBridge,
+    /Draft preview · Owner review only · Private · Expires automatically/,
+  );
+
+  assert.doesNotMatch(previewBridge, /previewSource/);
+  assert.doesNotMatch(previewBridge, /searchParams\.get\("previewSource"\)/);
+});

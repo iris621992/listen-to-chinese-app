@@ -130,6 +130,13 @@ function storeEnvelope(envelope: PreviewEnvelope) {
   );
 }
 
+function isPublishedPreviewEnvelope(envelope: PreviewEnvelope): boolean {
+  const source = isObject(envelope.payloads.vi.published_preview_source)
+    ? envelope.payloads.vi.published_preview_source
+    : null;
+  return source?.source_kind === "current_public_projection";
+}
+
 function contentLocaleFor(
   interfaceLocaleCode: string,
   knowledgeLanguage: KnowledgeLanguage,
@@ -149,6 +156,8 @@ export default function VocabularyDraftPreviewBridge() {
     searchParams.get("knowledgeLang"),
   );
   const [state, setState] = useState<BridgeState>({ status: "WAITING" });
+  const isPublishedPreview =
+    state.status === "READY" && isPublishedPreviewEnvelope(state.envelope);
   const copy = interfaceLocale.code === "vi"
     ? {
         waitingTitle: "Đang nhận bản nháp từ Admin…",
@@ -157,7 +166,9 @@ export default function VocabularyDraftPreviewBridge() {
         invalidBody: "Phiên review không hợp lệ, đã hết hạn hoặc không được mở từ Admin Staging.",
         payloadTitle: "Không thể dựng bản xem trước.",
         payloadBody: "Dữ liệu xem trước không hợp lệ hoặc phiên review đã hết hạn.",
-        banner: "Bản xem trước bản nháp · Chỉ dành cho quản trị · Không công khai · Tự hết hạn",
+        banner: isPublishedPreview
+          ? "Bản xem trước mục đã xuất bản · Chỉ dành cho quản trị · Không công khai · Tự hết hạn"
+          : "Bản xem trước bản nháp · Chỉ dành cho quản trị · Không công khai · Tự hết hạn",
       }
     : {
         waitingTitle: "Receiving the draft from Admin…",
@@ -166,7 +177,9 @@ export default function VocabularyDraftPreviewBridge() {
         invalidBody: "The review handoff is invalid, expired, or was not opened from Admin Staging.",
         payloadTitle: "Draft Preview cannot be rendered.",
         payloadBody: "The Preview payload is invalid or the handoff has expired.",
-        banner: "Draft preview · Owner review only · Private · Expires automatically",
+        banner: isPublishedPreview
+          ? "Published entry preview · Owner review only · Private · Expires automatically"
+          : "Draft preview · Owner review only · Private · Expires automatically",
       };
 
   useEffect(() => {
