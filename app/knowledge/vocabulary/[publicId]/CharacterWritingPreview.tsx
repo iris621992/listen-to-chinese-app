@@ -53,6 +53,8 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
 
     const target = targetRef.current;
     let active = true;
+    const loadController = new AbortController();
+    let writer: ReturnType<typeof HanziWriter.create> | null = null;
     let lastDimensions = "";
 
     const clearAutoplayTimer = () => {
@@ -62,7 +64,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
       }
     };
 
-    const renderWriter = () => {
+    const renderOrResizeWriter = () => {
       if (!active) return;
       const bounds = target.getBoundingClientRect();
       const width = Math.floor(bounds.width);
@@ -70,17 +72,23 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
       const dimensions = `${width}:${height}`;
       if (width < 1 || height < 1 || dimensions === lastDimensions) return;
       lastDimensions = dimensions;
+      const padding = Math.round(Math.min(width, height) * GLYPH_PADDING_RATIO);
+
+      // Layout and language changes keep the current writer and animation state.
+      if (writer) {
+        writer.updateDimensions({ width, height, padding });
+        return;
+      }
+
       clearAutoplayTimer();
       target.replaceChildren();
       writerRef.current = null;
       setLoading(true);
 
-      const shortEdge = Math.min(width, height);
-      let writer: ReturnType<typeof HanziWriter.create> | null = null;
       writer = HanziWriter.create(target, glyph, {
         width,
         height,
-        padding: Math.round(shortEdge * GLYPH_PADDING_RATIO),
+        padding,
         showOutline: true,
         showCharacter: prefersReducedMotion,
         strokeColor: "#2f4b3a",
@@ -94,7 +102,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
             return;
           }
 
-          fetch(sourceUrl, { cache: "force-cache" })
+          fetch(sourceUrl, { cache: "force-cache", signal: loadController.signal })
             .then((response) => {
               if (!response.ok) throw new Error("writing-data-unavailable");
               return response.json();
@@ -117,13 +125,14 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
             });
         },
         onLoadCharDataSuccess: () => {
-          if (!active) return;
-          writerRef.current = writer;
+          if (!active || !writer) return;
+          const loadedWriter = writer;
+          writerRef.current = loadedWriter;
           setLoading(false);
           clearAutoplayTimer();
           autoplayTimerRef.current = setTimeout(() => {
-            if (!active) return;
-            void writer?.animateCharacter();
+            if (!active || writerRef.current !== loadedWriter) return;
+            void loadedWriter.animateCharacter();
             autoplayTimerRef.current = null;
           }, AUTOPLAY_DELAY_MS);
         },
@@ -137,15 +146,17 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
       });
     };
 
-    renderWriter();
-    const resizeObserver = new ResizeObserver(renderWriter);
+    renderOrResizeWriter();
+    const resizeObserver = new ResizeObserver(renderOrResizeWriter);
     resizeObserver.observe(target);
 
     return () => {
       active = false;
+      loadController.abort();
       clearAutoplayTimer();
       resizeObserver.disconnect();
-      writerRef.current = null;
+      if (writerRef.current === writer) writerRef.current = null;
+      writer = null;
       target.replaceChildren();
     };
   }, [failed, glyph, reloadNonce, sourceUrl]);

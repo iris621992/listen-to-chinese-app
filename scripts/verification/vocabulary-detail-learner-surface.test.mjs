@@ -1,8 +1,184 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import vm from "node:vm";
+import ts from "typescript";
 
 const read = (path) => readFile(path, "utf8");
+
+// Execute the real component with controlled hooks, pending loads, timers and sizes.
+async function writingLifecycleHarness() {
+  const source = await read("app/knowledge/vocabulary/[publicId]/CharacterWritingPreview.tsx");
+  const compiled = ts.transpileModule(source, {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
+  }).outputText;
+  const hooks = [];
+  const effects = [];
+  const writers = [];
+  const observers = [];
+  const requests = [];
+  const timers = new Map();
+  let cursor = 0;
+  let timerId = 0;
+  let bounds = { width: 280, height: 176 };
+  const target = {
+    children: [],
+    getBoundingClientRect: () => bounds,
+    replaceChildren() { this.children = []; },
+  };
+  const react = {
+    useMemo: (factory) => { cursor += 1; return factory(); },
+    useRef: (value) => {
+      const index = cursor++;
+      hooks[index] ??= { current: index === 1 ? target : value };
+      return hooks[index];
+    },
+    useState: (initial) => {
+      const index = cursor++;
+      hooks[index] ??= { value: initial };
+      return [hooks[index].value, (value) => {
+        hooks[index].value = typeof value === "function" ? value(hooks[index].value) : value;
+      }];
+    },
+    useEffect: (effect, deps) => {
+      const index = cursor++;
+      const previous = hooks[index];
+      if (!previous || deps.some((dep, i) => dep !== previous.deps[i])) {
+        effects.push(() => {
+          previous?.cleanup?.();
+          hooks[index] = { deps, cleanup: effect() };
+        });
+      }
+    },
+  };
+  const jsx = (type, props) => ({ type, props });
+  const componentModule = { exports: {} };
+  vm.runInNewContext(compiled, {
+    module: componentModule, exports: componentModule.exports, AbortController,
+    require: (name) => {
+      if (name === "react") return react;
+      if (name === "react/jsx-runtime") return { jsx, jsxs: jsx, Fragment: "fragment" };
+      if (name.endsWith(".css")) return {};
+      if (name === "hanzi-writer") return {
+        create: (container, glyph, options) => {
+          const writer = {
+            glyph, options, dimensions: [], animations: 0,
+            updateDimensions(value) { this.dimensions.push(value); },
+            animateCharacter() { this.animations += 1; return Promise.resolve(); },
+          };
+          writers.push(writer);
+          container.children.push(writer);
+          options.charDataLoader(glyph, () => options.onLoadCharDataSuccess(),
+            () => options.onLoadCharDataError());
+          return writer;
+        },
+      };
+      throw new Error(`Unexpected import: ${name}`);
+    },
+    fetch: (url, options) => new Promise((resolve, reject) => {
+      requests.push({ url, options, resolve, reject });
+      options.signal.addEventListener("abort", () => reject(new Error("aborted")));
+    }),
+    ResizeObserver: class {
+      constructor(callback) { this.callback = callback; this.disconnected = false; observers.push(this); }
+      observe() {}
+      disconnect() { this.disconnected = true; }
+    },
+    setTimeout: (callback) => { timers.set(++timerId, callback); return timerId; },
+    clearTimeout: (id) => timers.delete(id),
+  });
+  const render = (glyph = "知", language = "vi") => {
+    cursor = 0;
+    const tree = componentModule.exports.default({ glyph, writing: {
+      sourceRepository: "chanind/hanzi-writer-data",
+      sourceCommit: "68d10a4b21150cae5e1ebbd223eed289cf32d90c",
+      sourcePath: `data/${glyph}.json`,
+    }, labels: { replay: language, unavailable: language } });
+    effects.splice(0).forEach((effect) => effect());
+    return tree;
+  };
+  const findButton = (node) => {
+    if (!node || typeof node !== "object") return null;
+    if (node.type === "button") return node;
+    const children = node.props?.children;
+    for (const child of Array.isArray(children) ? children : [children]) {
+      const result = findButton(child);
+      if (result) return result;
+    }
+    return null;
+  };
+  return {
+    render, writers, observers, requests, timers, target,
+    resize(width, height) { bounds = { width, height }; observers.at(-1).callback(); },
+    async load(index) {
+      requests[index].resolve({ ok: true, json: async () => ({ strokes: ["stroke"], medians: [[]] }) });
+      await new Promise((resolve) => setImmediate(resolve));
+    },
+    runTimers() { const callbacks = [...timers.values()]; timers.clear(); callbacks.forEach((callback) => callback()); },
+    replay(tree) { findButton(tree).props.onClick(); },
+    unmount() { hooks.forEach((hook) => hook?.cleanup?.()); },
+  };
+}
+
+test("Writing preserves one instance through pending loads, language switches, animation and resize", async () => {
+  const h = await writingLifecycleHarness();
+  h.render();
+  for (const language of ["zh", "vi", "zh", "vi"]) {
+    h.render("知", language);
+    h.resize(language === "vi" ? 280 : 220, 176);
+  }
+  assert.equal(h.writers.length, 1);
+  assert.equal(h.requests.length, 1);
+  assert.equal(h.target.children.length, 1);
+  assert.equal(h.writers[0].dimensions.length, 4);
+  await h.load(0);
+  h.runTimers();
+  assert.equal(h.writers[0].animations, 1);
+  h.render("知", "zh");
+  h.resize(390, 190);
+  h.resize(390, 190);
+  assert.equal(h.writers[0].dimensions.length, 5);
+  assert.equal(h.writers[0].animations, 1);
+  const tree = h.render();
+  h.replay(tree);
+  h.replay(tree);
+  assert.equal(h.writers[0].animations, 3);
+  assert.equal(h.writers.length, 1);
+  h.unmount();
+  assert.equal(h.target.children.length, 0);
+});
+
+test("Writing invalidates old loads, callbacks, observers and autoplay when changing glyph or unmounting", async () => {
+  const h = await writingLifecycleHarness();
+  h.render();
+  h.render("道");
+  assert.equal(h.requests[0].options.signal.aborted, true);
+  assert.equal(h.observers[0].disconnected, true);
+  h.writers[0].options.onLoadCharDataSuccess();
+  h.writers[0].options.onLoadCharDataError();
+  h.observers[0].callback();
+  await h.load(0);
+  assert.equal(h.timers.size, 0);
+  assert.equal(h.writers.length, 2);
+  assert.equal(h.target.children.length, 1);
+  await h.load(1);
+  assert.equal(h.timers.size, 1);
+  const staleAutoplay = [...h.timers.values()][0];
+  h.render("知");
+  assert.equal(h.timers.size, 0);
+  staleAutoplay();
+  assert.equal(h.writers[1].animations, 0);
+  await h.load(2);
+  h.runTimers();
+  assert.equal(h.writers[2].animations, 1);
+  h.unmount();
+  h.writers[2].options.onLoadCharDataSuccess();
+  h.writers[2].options.onLoadCharDataError();
+  assert.equal(h.requests[2].options.signal.aborted, true);
+  assert.equal(h.observers[2].disconnected, true);
+  assert.equal(h.timers.size, 0);
+  assert.equal(h.target.children.length, 0);
+});
 
 test("Vocabulary detail keeps the server/client label boundary runtime-safe", async () => {
   const [pageRoute, view, labels] = await Promise.all([
@@ -185,7 +361,7 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(writing, /Array\.isArray\(payload\.medians\)/);
   assert.match(writing, /HanziWriter\.create/);
   assert.match(writing, /onLoadCharDataSuccess/);
-  assert.match(writing, /void writer\?\.animateCharacter\(\)/);
+  assert.match(writing, /void loadedWriter\.animateCharacter\(\)/);
   assert.match(writing, /void writerRef\.current\.animateCharacter\(\)/);
   assert.match(writing, /prefers-reduced-motion: reduce|prefersReducedMotion/);
   assert.match(writing, /showCharacter:\s*prefersReducedMotion/);
