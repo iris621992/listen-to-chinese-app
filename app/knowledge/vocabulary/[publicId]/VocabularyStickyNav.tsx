@@ -139,6 +139,14 @@ export default function VocabularyStickyNav({
         for (const entry of visibleItems) {
           if (entry.target.getBoundingClientRect().top <= threshold) current = entry.item.href;
         }
+
+        const reachedDocumentEnd =
+          window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+        if (reachedDocumentEnd) {
+          const terminal = visibleItems.at(-1);
+          if (terminal) current = terminal.item.href;
+        }
+
         setActiveHref(current);
       }
     };
