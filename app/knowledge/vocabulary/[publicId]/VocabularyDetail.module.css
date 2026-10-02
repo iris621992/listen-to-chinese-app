@@ -659,6 +659,10 @@
     order: 2;
   }
 
+  .mobileOnlyNavItem {
+    display: inline-flex !important;
+  }
+
   .senseProfile {
     margin-inline-start: 0;
   }
