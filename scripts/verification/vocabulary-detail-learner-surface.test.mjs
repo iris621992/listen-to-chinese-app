@@ -7,7 +7,7 @@ import ts from "typescript";
 const read = (path) => readFile(path, "utf8");
 
 // Execute the real component with controlled hooks, pending loads, timers and sizes.
-async function writingLifecycleHarness(realRenderer = false) {
+async function writingLifecycleHarness(realRenderer = false, intrinsicGrid = false) {
   const source = await read("app/knowledge/vocabulary/[publicId]/CharacterWritingPreview.tsx");
   const compiled = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
@@ -34,6 +34,9 @@ async function writingLifecycleHarness(realRenderer = false) {
   const element = (nodeName) => ({
     nodeName, children: [], attributes: new Map(),
     style: { removeProperty(name) { delete this[name]; } }, parentNode: null,
+    get parentElement() { return this.parentNode; },
+    get clientWidth() { return bounds.width; },
+    get clientHeight() { return bounds.height; },
     get id() { return this.getAttribute("id"); },
     getBoundingClientRect: () => bounds,
     addEventListener() {},
@@ -62,6 +65,19 @@ async function writingLifecycleHarness(realRenderer = false) {
     },
   });
   const target = element("div");
+  const pad = element("div");
+  pad.appendChild(target);
+  if (intrinsicGrid) {
+    // A grid child's automatic minimum can retain its fixed-size SVG when
+    // the CSS-sized pad shrinks. Measuring the child feeds the old size back.
+    target.getBoundingClientRect = () => {
+      const svg = target.querySelectorAll("svg")[0];
+      return {
+        width: Math.max(bounds.width, Number(svg?.getAttribute("width") ?? 0)),
+        height: Math.max(bounds.height, Number(svg?.getAttribute("height") ?? 0)),
+      };
+    };
+  }
   const actualHanziWriter = realRenderer ? vm.runInNewContext(
     `${await read("node_modules/hanzi-writer/dist/hanzi-writer.js")}\nHanziWriter;`,
     { window: browserWindow, document: { createElementNS: (_ns, name) => element(name), addEventListener() {} },
@@ -123,7 +139,7 @@ async function writingLifecycleHarness(realRenderer = false) {
     }),
     ResizeObserver: class {
       constructor(callback) { this.callback = callback; this.disconnected = false; observers.push(this); }
-      observe() {}
+      observe(node) { this.observed = node; }
       disconnect() { this.disconnected = true; }
     },
     MutationObserver: class {
@@ -155,7 +171,7 @@ async function writingLifecycleHarness(realRenderer = false) {
     return null;
   };
   return {
-    render, writers, observers, clipObservers, clipWrites, requests, timers, target, browserWindow,
+    render, writers, observers, clipObservers, clipWrites, requests, timers, target, pad, browserWindow,
     get currentWriter() { return hooks[2].current; },
     resize(width, height) { bounds = { width, height }; observers.at(-1).callback(); },
     async load(index) {
@@ -211,6 +227,25 @@ test("Real Hanzi Writer SVG clips survive query navigation without recreating th
   assertLocalClips();
   h.unmount();
   assert.ok(h.clipObservers.every((observer) => observer.disconnected));
+});
+
+test("Real SVG follows the CSS pad when a grid child retains its previous size", async () => {
+  const h = await writingLifecycleHarness(true, true);
+  h.render();
+  await h.load(0);
+  const writer = h.currentWriter;
+  // Interior pad sizes across mobile → tablet → desktop → mobile layouts.
+  for (const [width, height] of [[292, 188], [164, 130], [244, 174], [292, 188], [164, 130]]) {
+    h.resize(width, height);
+    assert.equal(h.currentWriter, writer);
+    const svgs = h.target.querySelectorAll("svg");
+    assert.equal(svgs.length, 1);
+    assert.equal(Number(svgs[0].getAttribute("width")), width);
+    assert.equal(Number(svgs[0].getAttribute("height")), height);
+    assert.deepEqual(h.target.getBoundingClientRect(), { width, height });
+  }
+  assert.equal(h.observers[0].observed, h.pad);
+  h.unmount();
 });
 
 test("Writing preserves one instance through pending loads, language switches, animation and resize", async () => {

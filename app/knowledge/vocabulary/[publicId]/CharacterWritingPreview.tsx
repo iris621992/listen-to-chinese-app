@@ -52,6 +52,8 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
     if (failed || !sourceUrl || !targetRef.current) return;
 
     const target = targetRef.current;
+    const pad = target.parentElement;
+    if (!pad) return;
     let active = true;
     const loadController = new AbortController();
     let writer: ReturnType<typeof HanziWriter.create> | null = null;
@@ -86,9 +88,11 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
 
     const renderOrResizeWriter = () => {
       if (!active) return;
-      const bounds = target.getBoundingClientRect();
-      const width = Math.floor(bounds.width);
-      const height = Math.floor(bounds.height);
+      // The grid child's automatic minimum can retain the old SVG dimensions
+      // when the pad shrinks. Use the CSS-sized pad's interior, not its child,
+      // so the SVG does not determine the next size it is asked to render.
+      const width = pad.clientWidth;
+      const height = pad.clientHeight;
       const dimensions = `${width}:${height}`;
       if (width < 1 || height < 1 || dimensions === lastDimensions) return;
       lastDimensions = dimensions;
@@ -169,7 +173,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
 
     renderOrResizeWriter();
     const resizeObserver = new ResizeObserver(renderOrResizeWriter);
-    resizeObserver.observe(target);
+    resizeObserver.observe(pad);
 
     return () => {
       active = false;
