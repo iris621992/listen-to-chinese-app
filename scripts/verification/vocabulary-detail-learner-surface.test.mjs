@@ -244,7 +244,11 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(styles, /\.compactSticky/);
   assert.match(styles, /\.landscapeRail/);
   assert.match(styles, /\.hasMultipleReadings:has\(\.readingSection:target\)/);
-  assert.match(styles, /\.mobileOnlyNavItem/);
+  assert.match(styles, /\.mobileOnlyNavItem\s*\{[^}]*display:\s*none\s*!important/);
+  assert.match(
+    styles,
+    /@media \(max-width: 620px\), \(max-width: 900px\) and \(max-height: 520px\) \{[\s\S]*?\.mobileOnlyNavItem\s*\{[^}]*display:\s*inline-flex\s*!important/,
+  );
   assert.match(styles, /@media \(max-width: 900px\) and \(max-height: 520px\) and \(orientation: landscape\)/);
 
   assert.match(sticky, /window\.addEventListener\("scroll"/);
