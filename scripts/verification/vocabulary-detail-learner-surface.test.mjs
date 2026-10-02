@@ -257,6 +257,14 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(sticky, /vocabulary-entry-card/);
   assert.match(sticky, /styles\.compactSticky/);
   assert.match(sticky, /styles\.landscapeRail/);
+  assert.match(
+    sticky,
+    /window\.scrollY \+ window\.innerHeight >= document\.documentElement\.scrollHeight - 2/,
+  );
+  assert.match(
+    sticky,
+    /if \(reachedDocumentEnd\) \{[\s\S]*?visibleItems\.at\(-1\)[\s\S]*?current = terminal\.item\.href/,
+  );
 
   for (const source of [loader, characterLoader, page, characterRail, sticky, rich, pronunciationMeta]) {
     assert.doesNotMatch(source, /出租车|出租車|chūzūchē|xe taxi/);
