@@ -57,6 +57,26 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
     let writer: ReturnType<typeof HanziWriter.create> | null = null;
     let lastDimensions = "";
 
+    // Hanzi Writer 3.7.3 prefixes SVG clips with location.href. A client-side
+    // locale/query change invalidates those URLs and exposes the wide animation
+    // medians. Bind only masks owned by this pad to stable local fragments.
+    const bindLocalStrokeClips = () => {
+      if (!active) return;
+      const maskIds = new Set(
+        Array.from(target.querySelectorAll("clipPath[id]"), (mask) => mask.id),
+      );
+      for (const path of target.querySelectorAll("[clip-path]")) {
+        const maskId = path.getAttribute("clip-path")?.match(/#([^"'()\s]+)["']?\)$/u)?.[1];
+        if (maskId && maskIds.has(maskId)) {
+          path.setAttribute("clip-path", `url("#${maskId}")`);
+        }
+      }
+    };
+    // The library's load-success callback precedes its SVG mount. Observe child
+    // insertion so initial and resized renderers are rebound before painting.
+    const clipObserver = new MutationObserver(bindLocalStrokeClips);
+    clipObserver.observe(target, { childList: true, subtree: true });
+
     const clearAutoplayTimer = () => {
       if (autoplayTimerRef.current !== null) {
         clearTimeout(autoplayTimerRef.current);
@@ -77,6 +97,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
       // Layout and language changes keep the current writer and animation state.
       if (writer) {
         writer.updateDimensions({ width, height, padding });
+        bindLocalStrokeClips();
         return;
       }
 
@@ -155,6 +176,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
       loadController.abort();
       clearAutoplayTimer();
       resizeObserver.disconnect();
+      clipObserver.disconnect();
       if (writerRef.current === writer) writerRef.current = null;
       writer = null;
       target.replaceChildren();

@@ -7,7 +7,7 @@ import ts from "typescript";
 const read = (path) => readFile(path, "utf8");
 
 // Execute the real component with controlled hooks, pending loads, timers and sizes.
-async function writingLifecycleHarness() {
+async function writingLifecycleHarness(realRenderer = false) {
   const source = await read("app/knowledge/vocabulary/[publicId]/CharacterWritingPreview.tsx");
   const compiled = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX },
@@ -18,14 +18,55 @@ async function writingLifecycleHarness() {
   const observers = [];
   const requests = [];
   const timers = new Map();
+  const clipObservers = [];
+  const clipWrites = [];
+  const browserWindow = {
+    location: { href: "https://learner.test/preview/vocabulary?uiLang=vi&lang=vi" },
+    requestAnimationFrame: () => 1,
+    cancelAnimationFrame() {},
+  };
   let cursor = 0;
   let timerId = 0;
   let bounds = { width: 280, height: 176 };
-  const target = {
-    children: [],
+  const notifyMutation = () => queueMicrotask(() => {
+    clipObservers.filter((observer) => !observer.disconnected).forEach((observer) => observer.callback());
+  });
+  const element = (nodeName) => ({
+    nodeName, children: [], attributes: new Map(),
+    style: { removeProperty(name) { delete this[name]; } }, parentNode: null,
+    get id() { return this.getAttribute("id"); },
     getBoundingClientRect: () => bounds,
-    replaceChildren() { this.children = []; },
-  };
+    addEventListener() {},
+    getAttribute(name) { return this.attributes.get(name) ?? null; },
+    setAttribute(name, value) {
+      this.attributes.set(name, String(value));
+      if (name === "clip-path") clipWrites.push(String(value));
+    },
+    setAttributeNS(_namespace, name, value) { this.setAttribute(name, value); },
+    appendChild(child) { child.parentNode = this; this.children.push(child); notifyMutation(); return child; },
+    removeChild(child) { this.children = this.children.filter((item) => item !== child); child.parentNode = null; notifyMutation(); },
+    replaceChildren() { this.children = []; notifyMutation(); },
+    set innerHTML(_value) { this.replaceChildren(); },
+    querySelectorAll(selector) {
+      const found = [];
+      const visit = (node) => {
+        for (const child of node.children ?? []) {
+          if ((selector === "clipPath[id]" && child.nodeName === "clipPath" && child.id)
+            || (selector === "[clip-path]" && child.getAttribute?.("clip-path") !== null && child.getAttribute?.("clip-path") !== undefined)
+            || (selector === "svg" && child.nodeName === "svg")) found.push(child);
+          visit(child);
+        }
+      };
+      visit(this);
+      return found;
+    },
+  });
+  const target = element("div");
+  const actualHanziWriter = realRenderer ? vm.runInNewContext(
+    `${await read("node_modules/hanzi-writer/dist/hanzi-writer.js")}\nHanziWriter;`,
+    { window: browserWindow, document: { createElementNS: (_ns, name) => element(name), addEventListener() {} },
+      setTimeout, clearTimeout, performance },
+  ) : null;
   const react = {
     useMemo: (factory) => { cursor += 1; return factory(); },
     useRef: (value) => {
@@ -59,6 +100,7 @@ async function writingLifecycleHarness() {
       if (name === "react") return react;
       if (name === "react/jsx-runtime") return { jsx, jsxs: jsx, Fragment: "fragment" };
       if (name.endsWith(".css")) return {};
+      if (name === "hanzi-writer" && actualHanziWriter) return actualHanziWriter;
       if (name === "hanzi-writer") return {
         create: (container, glyph, options) => {
           const writer = {
@@ -81,6 +123,11 @@ async function writingLifecycleHarness() {
     }),
     ResizeObserver: class {
       constructor(callback) { this.callback = callback; this.disconnected = false; observers.push(this); }
+      observe() {}
+      disconnect() { this.disconnected = true; }
+    },
+    MutationObserver: class {
+      constructor(callback) { this.callback = callback; this.disconnected = false; clipObservers.push(this); }
       observe() {}
       disconnect() { this.disconnected = true; }
     },
@@ -108,10 +155,13 @@ async function writingLifecycleHarness() {
     return null;
   };
   return {
-    render, writers, observers, requests, timers, target,
+    render, writers, observers, clipObservers, clipWrites, requests, timers, target, browserWindow,
+    get currentWriter() { return hooks[2].current; },
     resize(width, height) { bounds = { width, height }; observers.at(-1).callback(); },
     async load(index) {
-      requests[index].resolve({ ok: true, json: async () => ({ strokes: ["stroke"], medians: [[]] }) });
+      requests[index].resolve({ ok: true, json: async () => ({
+        strokes: ["M 0 0 L 100 0 L 100 100 L 0 100 Z"], medians: [[[0, 50], [100, 50]]],
+      }) });
       await new Promise((resolve) => setImmediate(resolve));
     },
     runTimers() { const callbacks = [...timers.values()]; timers.clear(); callbacks.forEach((callback) => callback()); },
@@ -119,6 +169,49 @@ async function writingLifecycleHarness() {
     unmount() { hooks.forEach((hook) => hook?.cleanup?.()); },
   };
 }
+
+test("Real Hanzi Writer SVG clips survive query navigation without recreating the writer", async () => {
+  const h = await writingLifecycleHarness(true);
+  h.render();
+  await h.load(0);
+  const writer = h.currentWriter;
+  assert.ok(writer);
+  // Execute the installed 3.7.3 SVG renderer: it really creates absolute VI URLs.
+  assert.ok(h.clipWrites.some((value) => value.includes("?uiLang=vi&lang=vi#mask-")));
+  const assertLocalClips = () => {
+    const masks = new Set(h.target.querySelectorAll("clipPath[id]").map((mask) => mask.id));
+    const paths = h.target.querySelectorAll("[clip-path]");
+    assert.equal(paths.length, 3);
+    for (const path of paths) {
+      const reference = path.getAttribute("clip-path");
+      const url = reference.match(/^url\("([^"]+)"\)$/u)?.[1];
+      assert.ok(url);
+      const resolved = new URL(url, h.browserWindow.location.href);
+      assert.ok(masks.has(resolved.hash.slice(1)));
+      resolved.hash = "";
+      assert.equal(resolved.href, h.browserWindow.location.href);
+    }
+    assert.equal(h.target.querySelectorAll("svg").length, 1);
+  };
+  assertLocalClips();
+  for (const locale of ["en", "vi", "en", "vi"]) {
+    h.browserWindow.location.href = `https://learner.test/preview/vocabulary?uiLang=${locale}&lang=${locale}`;
+    h.render("知", locale);
+    assert.equal(h.currentWriter, writer);
+    assertLocalClips();
+  }
+  h.resize(390, 190);
+  assert.equal(h.currentWriter, writer);
+  assertLocalClips();
+  h.runTimers(); // animation starts with valid masks, and does not replace them
+  assertLocalClips();
+  h.render("道", "en");
+  await h.load(1);
+  assert.notEqual(h.currentWriter, writer);
+  assertLocalClips();
+  h.unmount();
+  assert.ok(h.clipObservers.every((observer) => observer.disconnected));
+});
 
 test("Writing preserves one instance through pending loads, language switches, animation and resize", async () => {
   const h = await writingLifecycleHarness();
