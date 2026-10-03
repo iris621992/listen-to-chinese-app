@@ -52,8 +52,32 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
     if (failed || !sourceUrl || !targetRef.current) return;
 
     const target = targetRef.current;
+    const pad = target.parentElement;
+    if (!pad) return;
     let active = true;
+    const loadController = new AbortController();
+    let writer: ReturnType<typeof HanziWriter.create> | null = null;
     let lastDimensions = "";
+
+    // Hanzi Writer 3.7.3 prefixes SVG clips with location.href. A client-side
+    // locale/query change invalidates those URLs and exposes the wide animation
+    // medians. Bind only masks owned by this pad to stable local fragments.
+    const bindLocalStrokeClips = () => {
+      if (!active) return;
+      const maskIds = new Set(
+        Array.from(target.querySelectorAll("clipPath[id]"), (mask) => mask.id),
+      );
+      for (const path of target.querySelectorAll("[clip-path]")) {
+        const maskId = path.getAttribute("clip-path")?.match(/#([^"'()\s]+)["']?\)$/u)?.[1];
+        if (maskId && maskIds.has(maskId)) {
+          path.setAttribute("clip-path", `url("#${maskId}")`);
+        }
+      }
+    };
+    // The library's load-success callback precedes its SVG mount. Observe child
+    // insertion so initial and resized renderers are rebound before painting.
+    const clipObserver = new MutationObserver(bindLocalStrokeClips);
+    clipObserver.observe(target, { childList: true, subtree: true });
 
     const clearAutoplayTimer = () => {
       if (autoplayTimerRef.current !== null) {
@@ -62,25 +86,34 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
       }
     };
 
-    const renderWriter = () => {
+    const renderOrResizeWriter = () => {
       if (!active) return;
-      const bounds = target.getBoundingClientRect();
-      const width = Math.floor(bounds.width);
-      const height = Math.floor(bounds.height);
+      // The grid child's automatic minimum can retain the old SVG dimensions
+      // when the pad shrinks. Use the CSS-sized pad's interior, not its child,
+      // so the SVG does not determine the next size it is asked to render.
+      const width = pad.clientWidth;
+      const height = pad.clientHeight;
       const dimensions = `${width}:${height}`;
       if (width < 1 || height < 1 || dimensions === lastDimensions) return;
       lastDimensions = dimensions;
+      const padding = Math.round(Math.min(width, height) * GLYPH_PADDING_RATIO);
+
+      // Layout and language changes keep the current writer and animation state.
+      if (writer) {
+        writer.updateDimensions({ width, height, padding });
+        bindLocalStrokeClips();
+        return;
+      }
+
       clearAutoplayTimer();
       target.replaceChildren();
       writerRef.current = null;
       setLoading(true);
 
-      const shortEdge = Math.min(width, height);
-      let writer: ReturnType<typeof HanziWriter.create> | null = null;
       writer = HanziWriter.create(target, glyph, {
         width,
         height,
-        padding: Math.round(shortEdge * GLYPH_PADDING_RATIO),
+        padding,
         showOutline: true,
         showCharacter: prefersReducedMotion,
         strokeColor: "#2f4b3a",
@@ -94,7 +127,7 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
             return;
           }
 
-          fetch(sourceUrl, { cache: "force-cache" })
+          fetch(sourceUrl, { cache: "force-cache", signal: loadController.signal })
             .then((response) => {
               if (!response.ok) throw new Error("writing-data-unavailable");
               return response.json();
@@ -117,13 +150,14 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
             });
         },
         onLoadCharDataSuccess: () => {
-          if (!active) return;
-          writerRef.current = writer;
+          if (!active || !writer) return;
+          const loadedWriter = writer;
+          writerRef.current = loadedWriter;
           setLoading(false);
           clearAutoplayTimer();
           autoplayTimerRef.current = setTimeout(() => {
-            if (!active) return;
-            void writer?.animateCharacter();
+            if (!active || writerRef.current !== loadedWriter) return;
+            void loadedWriter.animateCharacter();
             autoplayTimerRef.current = null;
           }, AUTOPLAY_DELAY_MS);
         },
@@ -137,15 +171,18 @@ export default function CharacterWritingPreview({ glyph, writing, labels }: Prop
       });
     };
 
-    renderWriter();
-    const resizeObserver = new ResizeObserver(renderWriter);
-    resizeObserver.observe(target);
+    renderOrResizeWriter();
+    const resizeObserver = new ResizeObserver(renderOrResizeWriter);
+    resizeObserver.observe(pad);
 
     return () => {
       active = false;
+      loadController.abort();
       clearAutoplayTimer();
       resizeObserver.disconnect();
-      writerRef.current = null;
+      clipObserver.disconnect();
+      if (writerRef.current === writer) writerRef.current = null;
+      writer = null;
       target.replaceChildren();
     };
   }, [failed, glyph, reloadNonce, sourceUrl]);
