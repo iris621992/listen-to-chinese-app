@@ -163,13 +163,13 @@ test("active learner UI labels phonetic data with generic semantic APIs", async 
   assert.match(labels, /النطق/);
 });
 
-test("learner shell preserves approved Home / Video / Knowledge / Practice IA and canonical Knowledge Search", async () => {
+test("learner shell preserves approved Home / Knowledge / Practice IA and canonical Knowledge Search", async () => {
   const header = await readFile("components/Header.tsx", "utf8");
   const knowledge = await readFile("app/knowledge/page.tsx", "utf8");
 
   assert.match(header, /const PRIMARY_DESTINATIONS = \[/);
   assert.match(header, /\{ key: "home", path: "\/" \}/);
-  assert.match(header, /\{ key: "video", path: "\/resources" \}/);
+  assert.doesNotMatch(header, /\{ key: "video", path: "\/resources" \}/);
   assert.match(header, /\{ key: "knowledge", path: "\/knowledge" \}/);
   assert.match(header, /\{ key: "practice", path: "\/practice" \}/);
   assert.doesNotMatch(header, /key: "library"|library:\s*"Library"|library:\s*"Thư viện"/);
@@ -235,7 +235,7 @@ test("architecture direction gate is part of every production build", async () =
   );
 });
 
-test("Home v3.2 port keeps approved section order, canonical destinations, and VI/EN copy direction", async () => {
+test("Home positioning keeps approved section order, canonical destinations, and VI/EN copy direction", async () => {
   const home = await readFile("app/page.tsx", "utf8");
   const homeCopy = await readFile("lib/homeCopy.ts", "utf8");
   const styles = await readFile("app/home-fidelity.css", "utf8");
@@ -245,16 +245,16 @@ test("Home v3.2 port keeps approved section order, canonical destinations, and V
   assert.match(home, /preservedLearnerContextQuery\(query\)/);
   assert.doesNotMatch(home, /getLessonDiscoveryPage|LessonCard|parseProficiencyContext/);
 
-  const orderedSections = ["hero", "knowledge", "video", "practice", "how", "positioning", "account", "final", "footer"];
+  const orderedSections = ["hero", "knowledge", "practice", "positioning", "account", "final", "footer"];
   let previousIndex = -1;
   for (const section of orderedSections) {
     const marker = `data-home-section="${section}"`;
     const index = home.indexOf(marker);
-    assert.ok(index > previousIndex, `${section} must follow the approved Home v3.2 order`);
+    assert.ok(index > previousIndex, `${section} must follow the approved reconciled Home order`);
     previousIndex = index;
   }
 
-  assert.match(home, /href="\/resources"/);
+  assert.doesNotMatch(home, /href="\/resources"/);
   assert.match(home, /href="\/knowledge"/);
   assert.match(home, /href="\/practice"/);
   assert.doesNotMatch(home, /href="\/knowledge\/vocabulary"/);
@@ -265,12 +265,13 @@ test("Home v3.2 port keeps approved section order, canonical destinations, and V
   assert.doesNotMatch(homeCopy, /\bHSK\b/);
 
   assert.match(homeCopy, /export type HomeLocaleCode = "en" \| "vi"/);
-  assert.match(homeCopy, /Hiểu tiếng Trung rõ hơn\. Dùng tự nhiên hơn\./);
-  assert.match(homeCopy, /Không có một lộ trình bắt buộc\./);
-  assert.match(homeCopy, /Understand Chinese more clearly\. Use it more naturally\./);
+  assert.match(homeCopy, /THƯ VIỆN TIẾNG TRUNG/);
+  assert.match(homeCopy, /Hiểu rõ\. Dùng đúng\. Nhớ lâu\./);
+  assert.match(homeCopy, /CHINESE LEARNING LIBRARY/);
+  assert.match(homeCopy, /Understand better\. Use it well\. Remember longer\./);
   assert.doesNotMatch(homeCopy, /Thư viện → Tài nguyên|Library → Resource/);
   assert.doesNotMatch(homeCopy, /miniLibrary|ctaLibrary|listeningTitle|readingTitle/);
-  assert.match(homeCopy, /video:\s*"Video"/);
+  assert.doesNotMatch(homeCopy, /video:\s*"Video"|VIDEO · 视频|ctaVideo|miniVideo/);
   assert.match(styles, /\.home-knowledge-card\{[^}]*display:flex;flex-direction:column/s);
   assert.match(styles, /\.home-text-link\{[^}]*margin-top:auto/s);
   assert.doesNotMatch(styles, /\.home-text-link\{[^}]*position:absolute/s);
