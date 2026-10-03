@@ -1,6 +1,7 @@
 import { getLearnerLocale } from "@/lib/learnerLocaleRegistry";
 
 const VOCABULARY_PUBLIC_ID_PATTERN = /^vocab_[a-f0-9]{64}$/u;
+const K1I_PROJECTION_CONTRACT = "K1I_VOCABULARY_LOCALIZED_LEARNER_EXAMPLES_PUBLIC_PROJECTION_V1";
 const K1E_PROJECTION_CONTRACT = "K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1";
 
 type JsonObject = Record<string, unknown>;
@@ -103,14 +104,25 @@ export async function loadVocabularyCharacterDelivery(
   try {
     const { createServerSupabaseClient } = await import("@/lib/supabase/server");
     const supabase = createServerSupabaseClient();
-    const { data, error } = await supabase.rpc("get_public_vocabulary_entry_v4", {
+    const args = {
       p_public_entry_id: publicId,
       p_locale_code: learnerLocale.code,
       p_fallback_locale_code: learnerLocale.fallbackLocaleCode ?? "en",
-    });
+    };
+    const v9 = await supabase.rpc("get_public_vocabulary_entry_v9", args);
+    let data = v9.data;
+    let error = v9.error;
+
+    if (error && (error.code === "PGRST202" || error.code === "42883")) {
+      const v4 = await supabase.rpc("get_public_vocabulary_entry_v4", args);
+      data = v4.data;
+      error = v4.error;
+    }
+
     if (error) return { status: "UNAVAILABLE" };
     const payload = asObject(data);
-    if (stringValue(payload?.projection_contract) !== K1E_PROJECTION_CONTRACT) {
+    const contract = stringValue(payload?.projection_contract);
+    if (contract !== K1I_PROJECTION_CONTRACT && contract !== K1E_PROJECTION_CONTRACT) {
       return { status: "UNAVAILABLE" };
     }
     const characters = asArray(payload?.characters)
