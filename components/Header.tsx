@@ -22,7 +22,6 @@ import styles from "./Header.module.css";
 
 type HeaderLabels = {
   home: string;
-  video: string;
   knowledge: string;
   practice: string;
   language: string;
@@ -36,37 +35,34 @@ type HeaderLabels = {
 const HEADER_LABELS: Record<string, HeaderLabels> = {
   en: {
     home: "Home",
-    video: "Video",
     knowledge: "Knowledge",
     practice: "Practice",
     language: "Language",
     menu: "Menu",
     closeMenu: "Close menu",
-    brandTagline: "Learn Chinese to understand and use it",
+    brandTagline: "Chinese learning library",
     signIn: "Sign in",
     signInUnavailable: "Account sign-in is not connected in this learner build yet.",
   },
   vi: {
     home: "Trang chủ",
-    video: "Video",
     knowledge: "Kiến thức",
     practice: "Luyện tập",
     language: "Ngôn ngữ",
     menu: "Menu",
     closeMenu: "Đóng menu",
-    brandTagline: "Học tiếng Trung để hiểu và dùng được",
+    brandTagline: "Thư viện tiếng Trung",
     signIn: "Đăng nhập",
     signInUnavailable: "Đăng nhập tài khoản chưa được kết nối trong bản learner hiện tại.",
   },
   ar: {
     home: "الرئيسية",
-    video: "الفيديو",
     knowledge: "المعرفة",
     practice: "التدريب",
     language: "اللغة",
     menu: "القائمة",
     closeMenu: "إغلاق القائمة",
-    brandTagline: "تعلّم الصينية لفهمها واستخدامها",
+    brandTagline: "مكتبة لتعلّم الصينية",
     signIn: "تسجيل الدخول",
     signInUnavailable: "تسجيل الدخول للحساب غير متصل بعد في هذه النسخة.",
   },
@@ -80,7 +76,6 @@ const visibleInterfaceLocales = enabledInterfaceLocales.filter((locale) => local
 
 const PRIMARY_DESTINATIONS = [
   { key: "home", path: "/" },
-  { key: "video", path: "/resources" },
   { key: "knowledge", path: "/knowledge" },
   { key: "practice", path: "/practice" },
 ] as const;
@@ -107,9 +102,6 @@ function contextHref(path: string, params: string) {
 
 function isActiveDestination(pathname: string, destinationPath: string) {
   if (destinationPath === "/") return pathname === "/";
-  if (destinationPath === "/resources") {
-    return pathname === "/resources" || pathname.startsWith("/lessons/");
-  }
   return pathname === destinationPath || pathname.startsWith(`${destinationPath}/`);
 }
 
