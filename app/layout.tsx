@@ -4,8 +4,8 @@ import "./globals.css";
 import "./home-fidelity.css";
 
 export const metadata: Metadata = {
-  title: "YunChinese | Knowledge, Video & Practice",
-  description: "A Chinese-learning platform that connects deep learner knowledge, contextual video, and focused practice.",
+  title: "YunChinese | Chinese Knowledge & Practice",
+  description: "A Chinese learning library with clear explanations, connected knowledge, and focused practice.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
