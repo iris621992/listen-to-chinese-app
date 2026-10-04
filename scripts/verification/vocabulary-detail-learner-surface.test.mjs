@@ -319,6 +319,8 @@ test("Vocabulary detail keeps the server/client label boundary runtime-safe", as
   assert.doesNotMatch(labels, /^"use client";/);
   assert.match(labels, /export const vocabularyDetailLabelsFor/);
   assert.match(labels, /export const knowledgeLanguageUserLabel/);
+  assert.match(labels, /translationEquivalent: "Translations"/u);
+  assert.match(labels, /translationEquivalent: "Cách dịch"/u);
   assert.match(pageRoute, /import VocabularyDetailView from "\.\/VocabularyDetailView";/);
   assert.match(pageRoute, /import \{ vocabularyDetailLabelsFor \} from "\.\/VocabularyDetailLabels";/);
   assert.doesNotMatch(pageRoute, /VocabularyDetailView,\s*\{\s*vocabularyDetailLabelsFor\s*\}/);
