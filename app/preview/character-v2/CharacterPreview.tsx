@@ -37,7 +37,7 @@ export default function CharacterPreview({locale}:{locale:Locale}){
      </section>
      <section id="use" className={styles.card}><p className={styles.eyebrow}>{c.use}</p><h2>{locale==="vi"?"Từ và quan hệ":"Words & relationships"}</h2><div className={styles.safePending}>{c.pendingRelations}</div></section>
     </div>
-    <aside id="write" className={styles.side}><section className={styles.card}><p className={styles.eyebrow}>{c.write}</p><h2>{c.writing}</h2>{p.writing.state==="present"?<><div className={styles.practice}>{f.glyph}</div><dl><div><dt>{c.strokeOrder}</dt><dd>{p.writing.strokeOrder}</dd></div><div><dt>{c.standard}</dt><dd><StateValue state={p.writing.standard} locale={locale}/></dd></div><div><dt>{c.guidance}</dt><dd><StateValue state={p.writing.guidance} locale={locale}/></dd></div><div><dt>{c.technical}</dt><dd><StateValue state={p.writing.assets} locale={locale}/></dd></div></dl></>:<StateValue state={p.writing.state} locale={locale}/>}</section></aside>
+    <aside id="write" className={styles.side}><section className={styles.card}><p className={styles.eyebrow}>{c.write}</p><h2>{c.writing}</h2>{p.writing.state==="present"?<><div className={styles.practice}>{f.glyph}</div><dl><div><dt>{c.strokeOrder}</dt><dd>{p.writing.strokeOrder}</dd></div><div><dt>{c.standard}</dt><dd><StateValue state={p.writing.standard!} locale={locale}/></dd></div><div><dt>{c.guidance}</dt><dd><StateValue state={p.writing.guidance!} locale={locale}/></dd></div><div><dt>{c.technical}</dt><dd><StateValue state={p.writing.assets!} locale={locale}/></dd></div></dl></>:<StateValue state={p.writing.state} locale={locale}/>}</section></aside>
    </div>
   </div>
  </main>
