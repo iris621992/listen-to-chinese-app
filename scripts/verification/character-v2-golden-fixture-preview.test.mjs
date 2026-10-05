@@ -1,6 +1,10 @@
-import assert from "node:assert/strict";import{readFileSync}from"node:fs";import test from"node:test";
-const fixture=readFileSync("app/preview/character-v2/fixtures.ts","utf8"),view=readFileSync("app/preview/character-v2/CharacterPreview.tsx","utf8"),css=readFileSync("app/preview/character-v2/CharacterPreview.module.css","utf8");
-test("fixture preserves Character v2 identity/form/readings",()=>{assert.match(fixture,/key: "char\.chang"/);assert.match(fixture,/glyph:"长"[\s\S]*role:"primary"/);assert.match(fixture,/glyph:"長"[\s\S]*role:"recognition_reference"/);assert.match(fixture,/pinyin:"cháng",\\s*hanViet:"trường"/);assert.match(fixture,/pinyin:"zhǎng",\\s*hanViet:"trưởng"/)});
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+const fixture=readFileSync("app/preview/character-v2/fixtures.ts","utf8");
+const view=readFileSync("app/preview/character-v2/CharacterPreview.tsx","utf8");
+const css=readFileSync("app/preview/character-v2/CharacterPreview.module.css","utf8");
+test("fixture preserves Character v2 identity/form/readings",()=>{assert.match(fixture,/key: "char\.chang"/);assert.match(fixture,/glyph:"长"[\s\S]*role:"primary"/);assert.match(fixture,/glyph:"長"[\s\S]*role:"recognition_reference"/);assert.ok(fixture.includes('pinyin:"cháng", hanViet:"trường"'));assert.ok(fixture.includes('pinyin:"zhǎng", hanViet:"trưởng"'))});
 test("Traditional fixture stays pending without Simplified fallback",()=>{assert.match(fixture,/traditional:\{ radical:\{state:"pending"[\s\S]*writing:\{state:"pending"/);assert.doesNotMatch(fixture,/glyph:"長"[\s\S]{0,180}strokeCount|glyph:"長"[\s\S]{0,180}strokeOrder/)});
 test("qing layers remain independent and evidence-bound",()=>{assert.match(fixture,/formula:"⿰ 氵 \+ 青"/);assert.match(fixture,/notation:"IDS",expression:"⿰氵青"/);assert.match(fixture,/occurrence:"occ\.qing\.shui"[\s\S]*analysis:"semantic_support"[\s\S]*evidence:"ev\.qing\.component\.shui"/);assert.match(fixture,/occurrence:"occ\.qing\.qing"[\s\S]*analysis:"phonetic_support"[\s\S]*evidence:"ev\.qing\.component\.qing"/);assert.doesNotMatch(fixture,/请|情|晴/)});
 test("applicability and writing distinctions stay explicit",()=>{assert.match(fixture,/decomposition:\{state:"n_a"/);assert.match(fixture,/standard:"pending"[\s\S]*strokeOrder:"3154"[\s\S]*guidance:"n_a"[\s\S]*assets:"pending"/);assert.match(fixture,/strokeOrder:"44111212511"/)});
