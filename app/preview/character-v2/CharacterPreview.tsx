@@ -15,7 +15,9 @@ export default function CharacterPreview({locale}:{locale:Locale}){
  const [reading,setReading]=useState(0);
  const [form,setForm]=useState(0);
  const c=copy[locale]; const item=characterFixtures[fixture]; const r=item.readings[Math.min(reading,item.readings.length-1)]; const f=item.forms[Math.min(form,item.forms.length-1)]; const p=item.profiles[f.key as keyof typeof item.profiles] as PreviewProfile;
- const selectFixture=(x:"chang"|"qing")=>{setFixture(x);setReading(0);setForm(0)};\n const structureLabel=(code?:string)=>code==="left_right"?c.left_right:code==="single"?c.single:undefined;\n const positionLabel=(position:string)=>position==="left"?c.left:position==="right"?c.right:position;
+ const selectFixture=(x:"chang"|"qing")=>{setFixture(x);setReading(0);setForm(0)};
+ const structureLabel=(code?:string)=>code==="left_right"?c.left_right:code==="single"?c.single:undefined;
+ const positionLabel=(position:string)=>position==="left"?c.left:position==="right"?c.right:position;
  return <main className={styles.page} lang={locale}>
   <div className={styles.shell}>
    <div className={styles.preview}><strong>{c.preview}</strong><span>{c.notice}</span></div>
