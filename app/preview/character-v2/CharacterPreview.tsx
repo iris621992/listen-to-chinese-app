@@ -20,7 +20,7 @@ export default function CharacterPreview({locale}:{locale:Locale}){
   <div className={styles.shell}>
    <div className={styles.preview}><strong>{c.preview}</strong><span>{c.notice}</span></div>
    <div className={styles.toolbar}><div><span>{c.fixture}</span><div className={styles.switcher}><button onClick={()=>selectFixture("chang")} aria-pressed={fixture==="chang"}>长 / 長</button><button onClick={()=>selectFixture("qing")} aria-pressed={fixture==="qing"}>清</button></div></div><div className={styles.locale}><a href="?uiLang=vi">VI</a><a href="?uiLang=en">EN</a></div></div>
-   <nav className={styles.sticky} aria-label="Character sections">{[["recognize",c.recognize],["understand",c.understand],["connect",c.connect],["use",c.use],["write",c.write]].map(([id,label])=><a key={id} href={"#"+id}>{label}</a>)}</nav>
+   <nav className={styles.sticky} aria-label="Character sections">{[["recognize",c.recognize],["understand",c.understand],["connect",c.connect],["write",c.write]].map(([id,label])=><a key={id} href={"#"+id}>{label}</a>)}</nav>
    <section id="recognize" className={styles.hero}>
     <div className={styles.glyph}>{f.glyph}</div><div className={styles.heroCopy}><div className={styles.badges}>{f.scripts.map(s=><span key={s}>{s==="simplified"?c.primary:s==="traditional"?c.traditional:s}</span>)}</div><h1>{f.glyph}</h1>
      <div className={styles.readings}>{item.readings.map((x,i)=><button key={x.key} aria-pressed={i===reading} onClick={()=>setReading(i)}><strong>{x.pinyin}</strong><small>{c.hanviet}: {x.hanViet}</small></button>)}</div>
