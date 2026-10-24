@@ -11,11 +11,16 @@ export type VocabularyDetailLabels = {
   meaning: string;
   usage: string;
   usageNote: string;
+  nuanceContext: string;
   memoryTip: string;
   constructions: string;
   collocations: string;
   classifiers: string;
   example: string;
+  synonyms: string;
+  nearSynonyms: string;
+  antonyms: string;
+  relatedWords: string;
   quickDistinction: string;
   commonMistakes: string;
   relatedKnowledge: string;
@@ -28,6 +33,9 @@ export type VocabularyDetailLabels = {
   strokes: string;
   hanViet: string;
   traditional: string;
+  simplified: string;
+  writtenForm: string;
+  proficiency: string;
   translationEquivalent: string;
   writingOpen: string;
   writingReplay: string;
@@ -52,13 +60,18 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     senses: "senses",
     meaning: "Meaning",
     usage: "Usage",
-    usageNote: "Usage note",
+    usageNote: "Usage",
+    nuanceContext: "Nuance & context",
     memoryTip: "Memory tip",
-    constructions: "Structures",
+    constructions: "Usage patterns",
     collocations: "Common combinations",
     classifiers: "Measure words",
-    example: "Example",
-    quickDistinction: "Quick distinction",
+    example: "Examples",
+    synonyms: "Synonyms",
+    nearSynonyms: "Near-synonyms",
+    antonyms: "Antonyms",
+    relatedWords: "Related words",
+    quickDistinction: "Word comparison",
     commonMistakes: "Common mistakes",
     relatedKnowledge: "Related knowledge",
     practice: "Practice",
@@ -70,6 +83,9 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     strokes: "Strokes",
     hanViet: "Sino-Vietnamese",
     traditional: "Traditional",
+    simplified: "Simplified",
+    writtenForm: "Written form",
+    proficiency: "HSK",
     translationEquivalent: "Translations",
     writingOpen: "View writing",
     writingReplay: "Replay",
@@ -91,14 +107,19 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     senses: "nghĩa",
     meaning: "Hiểu nghĩa này",
     usage: "Cách dùng",
-    usageNote: "Phạm vi sử dụng",
+    usageNote: "Cách dùng",
+    nuanceContext: "Sắc thái & ngữ cảnh",
     memoryTip: "Gợi ý ghi nhớ",
     constructions: "Cấu trúc",
-    collocations: "Kết hợp tự nhiên",
+    collocations: "Kết hợp từ",
     classifiers: "Lượng từ",
     example: "Ví dụ",
-    quickDistinction: "Phân biệt nhanh",
-    commonMistakes: "Lỗi dễ mắc",
+    synonyms: "Từ đồng nghĩa",
+    nearSynonyms: "Từ gần nghĩa",
+    antonyms: "Từ trái nghĩa",
+    relatedWords: "Từ liên quan",
+    quickDistinction: "Phân biệt từ",
+    commonMistakes: "Lỗi thường gặp",
     relatedKnowledge: "Kiến thức liên quan",
     practice: "Luyện tập",
     usageContext: "Cách dùng & ngữ cảnh",
@@ -109,6 +130,9 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     strokes: "Số nét",
     hanViet: "Hán Việt",
     traditional: "Phồn thể",
+    simplified: "Giản thể",
+    writtenForm: "Dạng chữ",
+    proficiency: "HSK",
     translationEquivalent: "Cách dịch",
     writingOpen: "Xem cách viết",
     writingReplay: "Viết lại",
@@ -131,12 +155,17 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     meaning: "المعنى",
     usage: "الاستعمال",
     usageNote: "نطاق الاستعمال",
+    nuanceContext: "السياق والدلالة",
     memoryTip: "تلميح للتذكر",
     constructions: "التراكيب",
     collocations: "تراكيب طبيعية",
     classifiers: "كلمات القياس",
-    example: "مثال",
-    quickDistinction: "تمييز سريع",
+    example: "أمثلة",
+    synonyms: "مرادفات",
+    nearSynonyms: "كلمات متقاربة المعنى",
+    antonyms: "أضداد",
+    relatedWords: "كلمات مرتبطة",
+    quickDistinction: "مقارنة الكلمات",
     commonMistakes: "أخطاء شائعة",
     relatedKnowledge: "معرفة مرتبطة",
     practice: "تدريب",
@@ -148,6 +177,9 @@ const LABELS: Record<string, VocabularyDetailLabels> = {
     strokes: "عدد الخطوط",
     hanViet: "القراءة الصينية الفيتنامية",
     traditional: "الصيغة التقليدية",
+    simplified: "الصيغة المبسطة",
+    writtenForm: "صيغة مكتوبة",
+    proficiency: "HSK",
     translationEquivalent: "مكافئات الترجمة",
     writingOpen: "عرض طريقة الكتابة",
     writingReplay: "إعادة",
