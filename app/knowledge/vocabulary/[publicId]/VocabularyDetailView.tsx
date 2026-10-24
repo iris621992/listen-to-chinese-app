@@ -73,6 +73,15 @@ const proficiencyLabel = (
   ? `${fallbackLabel}${levelCode}`
   : `${systemCode} ${levelCode}`;
 
+const distinctProficiency = (
+  rows: Array<{ levelSystemCode: string; levelCode: string }>,
+) => rows.filter((row, index, allRows) => (
+  allRows.findIndex((candidate) => (
+    candidate.levelSystemCode === row.levelSystemCode
+    && candidate.levelCode === row.levelCode
+  )) === index
+));
+
 const groupByPartOfSpeech = (items: VocabularyReadingItem[]): PosGroup[] => {
   const groups: PosGroup[] = [];
   const groupsByCode = new Map<string, PosGroup>();
@@ -136,6 +145,12 @@ export default function VocabularyDetailView({
   const primaryForm = detail.forms.find((form) => form.isPrimary) ?? detail.forms[0];
   const secondaryForms = detail.forms.filter((form) => form.publicId !== primaryForm.publicId);
   const allReadingItems = detail.pronunciations.flatMap((item) => item.readingItems);
+  const allProficiency = distinctProficiency([
+    ...detail.proficiency,
+    ...detail.pronunciations.flatMap((pronunciation) => pronunciation.proficiency),
+    ...allReadingItems.flatMap((item) => item.proficiency),
+  ]);
+  const headerProficiency = allProficiency.length === 1 ? allProficiency : [];
   const singleSummary = allReadingItems.length === 1
     ? vocabularySenseHeading(allReadingItems[0])
     : null;
@@ -216,15 +231,7 @@ export default function VocabularyDetailView({
                   pronunciation={primaryPronunciation.pronunciation}
                   hanViet={showHanViet ? detail.hanViet?.text ?? null : null}
                   secondaryForms={secondaryForms}
-                  proficiency={[
-                    ...detail.proficiency,
-                    ...primaryPronunciation.proficiency,
-                  ].filter((row, index, rows) => (
-                    rows.findIndex((candidate) => (
-                      candidate.levelSystemCode === row.levelSystemCode
-                      && candidate.levelCode === row.levelCode
-                    )) === index
-                  ))}
+                  proficiency={headerProficiency}
                   labels={{
                     hanViet: labels.hanViet,
                     traditional: labels.traditional,
