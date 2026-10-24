@@ -36,6 +36,7 @@ const POS_LABELS: Record<string, Record<string, string>> = {
   noun: { en: "Noun", vi: "Danh từ", ar: "اسم" },
   verb: { en: "Verb", vi: "Động từ", ar: "فعل" },
   adjective: { en: "Adjective", vi: "Tính từ", ar: "صفة" },
+  surname: { en: "Surname", vi: "Họ", ar: "اسم عائلة" },
   adverb: { en: "Adverb", vi: "Phó từ", ar: "حال" },
   pronoun: { en: "Pronoun", vi: "Đại từ", ar: "ضمير" },
   preposition: { en: "Preposition", vi: "Giới từ", ar: "حرف جر" },
@@ -63,6 +64,23 @@ const localizedCodeLabel = (
 
 const posLabel = (code: string | null, localeCode: string) =>
   code ? POS_LABELS[code]?.[localeCode] ?? POS_LABELS[code]?.en ?? null : null;
+
+const proficiencyLabel = (
+  systemCode: string,
+  levelCode: string,
+  fallbackLabel: string,
+) => systemCode === "gf0025_2021"
+  ? `${fallbackLabel}${levelCode}`
+  : `${systemCode} ${levelCode}`;
+
+const distinctProficiency = (
+  rows: Array<{ levelSystemCode: string; levelCode: string }>,
+) => rows.filter((row, index, allRows) => (
+  allRows.findIndex((candidate) => (
+    candidate.levelSystemCode === row.levelSystemCode
+    && candidate.levelCode === row.levelCode
+  )) === index
+));
 
 const groupByPartOfSpeech = (items: VocabularyReadingItem[]): PosGroup[] => {
   const groups: PosGroup[] = [];
@@ -127,6 +145,12 @@ export default function VocabularyDetailView({
   const primaryForm = detail.forms.find((form) => form.isPrimary) ?? detail.forms[0];
   const secondaryForms = detail.forms.filter((form) => form.publicId !== primaryForm.publicId);
   const allReadingItems = detail.pronunciations.flatMap((item) => item.readingItems);
+  const allProficiency = distinctProficiency([
+    ...detail.proficiency,
+    ...detail.pronunciations.flatMap((pronunciation) => pronunciation.proficiency),
+    ...allReadingItems.flatMap((item) => item.proficiency),
+  ]);
+  const headerProficiency = allProficiency.length === 1 ? allProficiency : [];
   const singleSummary = allReadingItems.length === 1
     ? vocabularySenseHeading(allReadingItems[0])
     : null;
@@ -150,7 +174,7 @@ export default function VocabularyDetailView({
       }))
     : hasPosNavigation
       ? allPosCodes.map((code) => ({
-          label: posLabel(code, interfaceLocaleCode) ?? code,
+          label: posLabel(code, interfaceLocaleCode) ?? labels.partOfSpeech,
           href: primaryPosAnchors.get(code)!,
         }))
       : [];
@@ -206,10 +230,14 @@ export default function VocabularyDetailView({
                 <VocabularyPronunciationMeta
                   pronunciation={primaryPronunciation.pronunciation}
                   hanViet={showHanViet ? detail.hanViet?.text ?? null : null}
-                  traditionalForms={secondaryForms.map((form) => form.text)}
+                  secondaryForms={secondaryForms}
+                  proficiency={headerProficiency}
                   labels={{
                     hanViet: labels.hanViet,
                     traditional: labels.traditional,
+                    simplified: labels.simplified,
+                    writtenForm: labels.writtenForm,
+                    proficiency: labels.proficiency,
                   }}
                 />
               ) : null}
@@ -297,6 +325,18 @@ export default function VocabularyDetailView({
                         <div className={styles.readingHeading}>
                           <span>{labels.pronunciation}</span>
                           <strong>{pronunciation.pronunciation}</strong>
+                          {pronunciation.proficiency.map((row) => (
+                            <small key={row.levelSystemCode + row.levelCode}>
+                              {proficiencyLabel(
+                                row.levelSystemCode,
+                                row.levelCode,
+                                labels.proficiency,
+                              )}
+                            </small>
+                          ))}
+                          {pronunciation.usage?.context ? (
+                            <small>{pronunciation.usage.context}</small>
+                          ) : null}
                         </div>
                       ) : null}
 
@@ -329,14 +369,6 @@ export default function VocabularyDetailView({
                                     interfaceLocaleCode,
                                     REGION_LABELS,
                                   );
-                                  const hasLearningProfile = Boolean(
-                                    item.usageNote
-                                    || item.memoryTip
-                                    || item.usageContext
-                                    || item.socialContext
-                                    || item.pragmaticExplanation,
-                                  );
-
                                   return (
                                     <article
                                       key={item.publicId}
@@ -354,62 +386,42 @@ export default function VocabularyDetailView({
                                           {item.fullExplanation ? (
                                             <p className={styles.meaningExplanation}>{item.fullExplanation}</p>
                                           ) : null}
-                                          {itemRegion ? (
+                                          {(itemRegion || item.proficiency.length > 0) ? (
                                             <div className={styles.tags}>
-                                              <span className={styles.tag}>{itemRegion}</span>
+                                              {itemRegion ? <span className={styles.tag}>{itemRegion}</span> : null}
+                                              {item.proficiency.map((row) => (
+                                                <span
+                                                  key={row.levelSystemCode + row.levelCode}
+                                                  className={styles.tag}
+                                                >
+                                                  {proficiencyLabel(
+                                                    row.levelSystemCode,
+                                                    row.levelCode,
+                                                    labels.proficiency,
+                                                  )}
+                                                </span>
+                                              ))}
                                             </div>
                                           ) : null}
                                         </div>
                                       </div>
 
-                                      {hasLearningProfile ? (
-                                        <div className={styles.senseProfile}>
-                                          {item.usageNote ? (
-                                            <section className={styles.usageBlock}>
-                                              <h4>{labels.usageNote}</h4>
-                                              <p>{item.usageNote}</p>
-                                            </section>
-                                          ) : null}
-                                          {(item.usageContext || item.socialContext || item.pragmaticExplanation) ? (
-                                            <div className={styles.metaGrid}>
-                                              {item.usageContext ? (
-                                                <div className={styles.metaItem}>
-                                                  <b>{labels.usageContext}</b>
-                                                  <span>{item.usageContext}</span>
-                                                </div>
-                                              ) : null}
-                                              {item.socialContext ? (
-                                                <div className={styles.metaItem}>
-                                                  <b>{labels.socialContext}</b>
-                                                  <span>{item.socialContext}</span>
-                                                </div>
-                                              ) : null}
-                                              {item.pragmaticExplanation ? (
-                                                <div className={styles.metaItem}>
-                                                  <b>{labels.pragmatics}</b>
-                                                  <span>{item.pragmaticExplanation}</span>
-                                                </div>
-                                              ) : null}
-                                            </div>
-                                          ) : null}
-                                          {item.memoryTip ? (
-                                            <section className={styles.memoryBlock}>
-                                              <h4>{labels.memoryTip}</h4>
-                                              <p>{item.memoryTip}</p>
-                                            </section>
-                                          ) : null}
-                                        </div>
-                                      ) : null}
-
                                       <VocabularyRichSupport
                                         item={item}
                                         sourceExpression={detail.displayForm}
                                         labels={{
+                                          usage: labels.usageNote,
+                                          nuanceContext: labels.nuanceContext,
+                                          memoryTip: labels.memoryTip,
                                           constructions: labels.constructions,
                                           collocations: labels.collocations,
                                           classifiers: labels.classifiers,
                                           example: labels.example,
                                           translationEquivalent: labels.translationEquivalent,
+                                          synonyms: labels.synonyms,
+                                          nearSynonyms: labels.nearSynonyms,
+                                          antonyms: labels.antonyms,
+                                          relatedWords: labels.relatedWords,
                                           quickDistinction: labels.quickDistinction,
                                           commonMistakes: labels.commonMistakes,
                                           relatedKnowledge: labels.relatedKnowledge,

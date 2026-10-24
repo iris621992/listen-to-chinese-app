@@ -88,6 +88,10 @@ test("Vocabulary Draft Preview parser accepts Draft identity without weakening p
   assert.match(draftParser, /knowledge_links/);
   assert.match(draftParser, /practice_links/);
   assert.match(draftParser, /usage_context/);
+  assert.match(draftParser, /lexical_relations/);
+  assert.match(draftParser, /related_words/);
+  assert.match(draftParser, /proficiency/);
+  assert.match(draftParser, /learner_explanation/);
   assert.match(draftParser, /admin_review_extensions/);
   assert.match(draftParser, /parseVocabularyDraftPreviewCharacters/);
   assert.match(draftParser, /parentPublicId/);
@@ -103,15 +107,20 @@ test("Vocabulary final approved learner modules stay on the shared renderer", as
     read("lib/vocabularyDetail.ts"),
   ]);
 
-  assert.match(rich, /data-vocabulary-module="constructions"/);
+  assert.match(rich, /data-vocabulary-module="usage-patterns"/);
   assert.match(rich, /data-vocabulary-module="common-mistakes"/);
-  assert.match(rich, /data-vocabulary-module="quick-distinction"/);
-  assert.match(rich, /data-vocabulary-module="relations"/);
+  assert.match(rich, /data-vocabulary-module="word-comparison"/);
+  assert.match(rich, /data-vocabulary-module="related-words"/);
+  assert.match(rich, /relationType="synonym"/);
+  assert.match(rich, /relationType="near_synonym"/);
+  assert.match(rich, /relationType="antonym"/);
   assert.match(rich, /item\.examples\.length/);
   assert.match(rich, /item\.collocations\.length/);
   assert.match(rich, /item\.classifiers\.length/);
 
+  assert.match(loader, /get_public_vocabulary_entry_v10/);
   assert.match(loader, /get_public_vocabulary_entry_v9/);
+  assert.match(loader, /K1J_VOCABULARY_CURRENT_V5_LEARNER_PARITY_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /get_public_vocabulary_entry_v8/);
   assert.match(loader, /get_public_vocabulary_entry_v7/);
   assert.match(loader, /get_public_vocabulary_entry_v6/);

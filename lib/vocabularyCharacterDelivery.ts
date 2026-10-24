@@ -38,6 +38,67 @@ export type VocabularyCharacterDeliveryResult =
   | { status: "FOUND"; characters: VocabularyCharacterOccurrence[] }
   | { status: "UNAVAILABLE" };
 
+
+type VocabularyCharacterFallbackInput = {
+  publicId: string;
+  displayForm: string;
+  hanViet: { text: string } | null;
+  forms: Array<{
+    publicId: string;
+    text: string;
+    isPrimary: boolean;
+    scriptProfileCode: string | null;
+    scriptVariantCode: string | null;
+  }>;
+  pronunciations: Array<{
+    pronunciation: string;
+    isDefault: boolean;
+  }>;
+};
+
+const HAN_CHARACTER_PATTERN = /^\p{Script=Han}$/u;
+const LOCKED_WRITING_REPOSITORY = "chanind/hanzi-writer-data";
+const LOCKED_WRITING_COMMIT = "68d10a4b21150cae5e1ebbd223eed289cf32d90c";
+const LOCKED_WRITING_LICENSE = "Arphic Public License";
+
+export function buildVocabularyCharacterFallback(
+  detail: VocabularyCharacterFallbackInput,
+): VocabularyCharacterOccurrence[] {
+  const primaryForm = detail.forms.find((form) => form.isPrimary) ?? detail.forms[0];
+  if (!primaryForm || !HAN_CHARACTER_PATTERN.test(primaryForm.text)) return [];
+
+  const pronunciation =
+    detail.pronunciations.find((item) => item.isDefault)
+    ?? detail.pronunciations[0];
+
+  return [{
+    writtenFormPublicId: primaryForm.publicId,
+    writtenForm: primaryForm.text,
+    isPrimaryForm: true,
+    scriptProfileCode: primaryForm.scriptProfileCode,
+    scriptVariantCode: primaryForm.scriptVariantCode,
+    position: 1,
+    lexicalContextPronunciation: pronunciation?.pronunciation ?? null,
+    character: {
+      publicId: `fallback:${detail.publicId}:1`,
+      glyph: primaryForm.text,
+      standaloneReading: null,
+      hanViet: detail.hanViet?.text ?? null,
+      radical: null,
+      strokeCount: null,
+      structureCode: null,
+      structureFormula: null,
+      componentNote: null,
+      writing: {
+        sourceRepository: LOCKED_WRITING_REPOSITORY,
+        sourceCommit: LOCKED_WRITING_COMMIT,
+        sourcePath: `data/${primaryForm.text}.json`,
+        licenseCode: LOCKED_WRITING_LICENSE,
+      },
+    },
+  }];
+}
+
 const asObject = (value: unknown): JsonObject | null =>
   value && typeof value === "object" && !Array.isArray(value)
     ? (value as JsonObject)

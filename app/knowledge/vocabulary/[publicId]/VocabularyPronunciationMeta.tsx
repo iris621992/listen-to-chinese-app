@@ -1,22 +1,44 @@
+import type {
+  VocabularyForm,
+  VocabularyProficiency,
+} from "@/lib/vocabularyDetail";
 import styles from "./VocabularyPronunciationMeta.module.css";
 
 type Props = {
   pronunciation: string;
   hanViet: string | null;
-  traditionalForms: string[];
+  secondaryForms: VocabularyForm[];
+  proficiency: VocabularyProficiency[];
   labels: {
     hanViet: string;
     traditional: string;
+    simplified: string;
+    writtenForm: string;
+    proficiency: string;
   };
 };
+
+function formLabel(form: VocabularyForm, labels: Props["labels"]) {
+  if (form.scriptVariantCode === "traditional") return labels.traditional;
+  if (form.scriptVariantCode === "simplified") return labels.simplified;
+  return labels.writtenForm;
+}
+
+function proficiencyLabel(row: VocabularyProficiency, labels: Props["labels"]) {
+  if (row.levelSystemCode === "gf0025_2021") return `${labels.proficiency} ${row.levelCode}`;
+  return `${row.levelSystemCode} ${row.levelCode}`;
+}
 
 export default function VocabularyPronunciationMeta({
   pronunciation,
   hanViet,
-  traditionalForms,
+  secondaryForms,
+  proficiency,
   labels,
 }: Props) {
-  const hasSecondaryMeta = Boolean(hanViet || traditionalForms.length > 0);
+  const hasSecondaryMeta = Boolean(
+    hanViet || secondaryForms.length > 0 || proficiency.length > 0,
+  );
 
   return (
     <div className={styles.pronMeta}>
@@ -26,6 +48,13 @@ export default function VocabularyPronunciationMeta({
 
       {hasSecondaryMeta ? (
         <div className={styles.secondaryLine}>
+          {secondaryForms.map((form) => (
+            <span key={form.publicId} className={styles.secondaryItem}>
+              <span className={styles.secondaryLabel}>{formLabel(form, labels)}</span>
+              <strong className={styles.traditional}>{form.text}</strong>
+            </span>
+          ))}
+
           {hanViet ? (
             <span className={styles.secondaryItem}>
               <span className={styles.secondaryLabel}>{labels.hanViet}</span>
@@ -33,20 +62,14 @@ export default function VocabularyPronunciationMeta({
             </span>
           ) : null}
 
-          {hanViet && traditionalForms.length > 0 ? (
-            <span className={styles.dot} aria-hidden="true">·</span>
-          ) : null}
-
-          {traditionalForms.length > 0 ? (
-            <span className={styles.secondaryItem}>
-              <span className={styles.secondaryLabel}>{labels.traditional}</span>
-              <span className={styles.traditionalForms}>
-                {traditionalForms.map((form, index) => (
-                  <strong key={index} className={styles.traditional}>{form}</strong>
-                ))}
-              </span>
+          {proficiency.map((row) => (
+            <span
+              key={row.levelSystemCode + row.levelCode}
+              className={styles.secondaryItem}
+            >
+              <strong>{proficiencyLabel(row, labels)}</strong>
             </span>
-          ) : null}
+          ))}
         </div>
       ) : null}
     </div>
