@@ -710,10 +710,12 @@ test("GF0025 proficiency renders compact HSK label without a space", async () =>
 
 test("Vocabulary learner translations never render internal restriction prose", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
-  assert.match(rich, /const usageCopy = item\.usage\?\.context/);
-  assert.match(rich, /const translationSummary = item\.translationEquivalents\.length > 0[\s\S]*item\.usageNote/);
-  assert.match(rich, /<p>\{usageCopy\}<\/p>/);
-  assert.match(rich, /\{translationSummary \? <p>\{translationSummary\}<\/p> : null\}/);
+  assert.ok(rich.includes("const authoredUsageCopy = distinctLearnerProse("));
+  assert.ok(rich.includes("item.usage?.context"));
+  assert.ok(rich.includes("item.fullExplanation"));
+  assert.ok(rich.includes("const translationSummary = item.translationEquivalents.length > 0"));
+  assert.ok(rich.includes("item.usageNote"));
+  assert.ok(rich.includes("LearnerProse"));
   assert.doesNotMatch(rich, /translation\.contextRestriction/);
   assert.doesNotMatch(rich, /translation\.mismatchNote/);
 });
