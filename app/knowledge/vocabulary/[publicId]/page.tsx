@@ -6,7 +6,7 @@ import {
   resolveKnowledgeLanguage,
 } from "@/lib/knowledgeLanguage";
 import { preservedLearnerContextQuery } from "@/lib/proficiencyContext";
-import { loadVocabularyCharacterDelivery } from "@/lib/vocabularyCharacterDelivery";
+import { buildVocabularyCharacterFallback, loadVocabularyCharacterDelivery } from "@/lib/vocabularyCharacterDelivery";
 import { loadVocabularyDetail } from "@/lib/vocabularyDetail";
 import VocabularyDetailView from "./VocabularyDetailView";
 import { vocabularyDetailLabelsFor } from "./VocabularyDetailLabels";
@@ -59,10 +59,15 @@ export default async function VocabularyDetailPage({ params, searchParams }: Pro
     );
   }
 
+  const projectedCharacters =
+    characterResult.status === "FOUND" && characterResult.characters.length > 0
+      ? characterResult.characters
+      : buildVocabularyCharacterFallback(result.detail);
+
   return (
     <VocabularyDetailView
       detail={result.detail}
-      characters={characterResult.status === "FOUND" ? characterResult.characters : []}
+      characters={projectedCharacters}
       interfaceLocaleCode={interfaceLocale.code}
       interfaceDirection={interfaceLocale.direction}
       knowledgeLanguage={knowledgeLanguage}
