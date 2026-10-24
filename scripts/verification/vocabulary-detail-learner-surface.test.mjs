@@ -438,7 +438,7 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(page, /VocabularyPronunciationMeta/);
   assert.match(page, /hanViet=\{showHanViet \? detail\.hanViet\?\.text \?\? null : null\}/);
   assert.match(page, /secondaryForms=\{secondaryForms\}/);
-  assert.match(page, /proficiency=\{\[/);
+  assert.match(page, /proficiency=\{headerProficiency\}/);
   assert.match(page, /translationEquivalent:\s*labels\.translationEquivalent/);
   assert.doesNotMatch(page, /extractHanCharacters/);
   assert.doesNotMatch(page, /Script=Han/);
