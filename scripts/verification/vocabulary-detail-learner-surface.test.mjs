@@ -321,6 +321,15 @@ test("Vocabulary detail keeps the server/client label boundary runtime-safe", as
   assert.match(labels, /export const knowledgeLanguageUserLabel/);
   assert.match(labels, /translationEquivalent: "Translations"/u);
   assert.match(labels, /translationEquivalent: "Cách dịch"/u);
+  assert.match(labels, /usageNote: "Usage"/u);
+  assert.match(labels, /usageNote: "Cách dùng"/u);
+  assert.match(labels, /constructions: "Usage patterns"/u);
+  assert.match(labels, /quickDistinction: "Word comparison"/u);
+  assert.match(labels, /collocations: "Kết hợp từ"/u);
+  assert.match(labels, /quickDistinction: "Phân biệt từ"/u);
+  assert.match(labels, /commonMistakes: "Lỗi thường gặp"/u);
+  assert.match(labels, /nearSynonyms: "Từ gần nghĩa"/u);
+  assert.match(labels, /relatedWords: "Từ liên quan"/u);
   assert.match(pageRoute, /import VocabularyDetailView from "\.\/VocabularyDetailView";/);
   assert.match(pageRoute, /import \{ vocabularyDetailLabelsFor \} from "\.\/VocabularyDetailLabels";/);
   assert.doesNotMatch(pageRoute, /VocabularyDetailView,\s*\{\s*vocabularyDetailLabelsFor\s*\}/);
@@ -351,6 +360,7 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   ]);
   const page = `${pageRoute}\n${view}\n${labels}`;
 
+  assert.match(loader, /get_public_vocabulary_entry_v10/);
   assert.match(loader, /get_public_vocabulary_entry_v9/);
   assert.match(loader, /get_public_vocabulary_entry_v8/);
   assert.match(loader, /get_public_vocabulary_entry_v7/);
@@ -360,14 +370,16 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(loader, /get_public_vocabulary_entry_v3/);
   assert.match(loader, /get_public_vocabulary_entry_v2/);
   assert.match(loader, /isMissingRpc/);
+  assert.match(loader, /K1J_VOCABULARY_CURRENT_V5_LEARNER_PARITY_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1I_VOCABULARY_LOCALIZED_LEARNER_EXAMPLES_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1H_VOCABULARY_CONSTRUCTION_SCOPED_EXAMPLES_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1F_VOCABULARY_LOCALIZED_DETAIL_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1E_VOCABULARY_CHARACTER_AUDIO_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1D_VOCABULARY_RICH_SUPPORT_PUBLIC_PROJECTION_V1/);
   assert.match(loader, /K1C_VOCABULARY_TE_PUBLIC_PROJECTION_V1/);
-  assert.match(loader, /hanViet:\s*contract === K1I_PROJECTION_CONTRACT[\s\S]*K1H_PROJECTION_CONTRACT[\s\S]*K1G_PROJECTION_CONTRACT[\s\S]*K1F_PROJECTION_CONTRACT/);
-  assert.match(loader, /\? parseHanViet\(entry\.han_viet\)/);
+  assert.match(loader, /hanViet:\s*contract === K1J_PROJECTION_CONTRACT/);
+  assert.match(loader, /forms\.find\(\(form\) => form\.isPrimary\)\?\.hanViet/);
+  assert.match(loader, /parseHanViet\(entry\.han_viet\)/);
   assert.match(loader, /learnerMeaning:\s*stringValue\(row\.learner_meaning\)/);
   assert.match(loader, /translation_equivalents/);
   assert.match(loader, /collocations/);
@@ -385,6 +397,12 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(loader, /applicable_form_public_ids/);
   assert.match(loader, /context_restriction/);
   assert.match(loader, /preference_status/);
+  assert.match(loader, /lexical_relations/);
+  assert.match(loader, /related_words/);
+  assert.match(loader, /parseProficiency/);
+  assert.match(loader, /parseScopedUsage/);
+  assert.match(loader, /learner_explanation/);
+  assert.doesNotMatch(loader, /entryKey:|readingItemKey:|confidence:|evidence:|readiness:|targetState:/);
   assert.doesNotMatch(loader, /Ỷ TỬ|搬椅子|一把椅子/);
 
   assert.match(characterLoader, /get_public_vocabulary_entry_v4/);
@@ -419,7 +437,8 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.doesNotMatch(page, /form\.text !== primaryForm\.text/);
   assert.match(page, /VocabularyPronunciationMeta/);
   assert.match(page, /hanViet=\{showHanViet \? detail\.hanViet\?\.text \?\? null : null\}/);
-  assert.match(page, /traditionalForms=\{secondaryForms\.map/);
+  assert.match(page, /secondaryForms=\{secondaryForms\}/);
+  assert.match(page, /proficiency=\{\[/);
   assert.match(page, /translationEquivalent:\s*labels\.translationEquivalent/);
   assert.doesNotMatch(page, /extractHanCharacters/);
   assert.doesNotMatch(page, /Script=Han/);
@@ -427,8 +446,7 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(page, /VocabularyRichSupport/);
   assert.match(page, /VocabularyCharacterRail/);
   assert.match(page, /classifiers:\s*labels\.classifiers/);
-  assert.match(page, /item\.usageNote/);
-  assert.match(page, /item\.memoryTip/);
+  assert.match(page, /item\.proficiency\.map/);
   assert.match(page, /item\.itemType === "usage"/);
   assert.match(page, /styles\.subsense/);
   assert.match(page, /classifiers:\s*"Lượng từ"/);
@@ -439,10 +457,12 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.doesNotMatch(page, /Ỷ TỬ|搬椅子|一把椅子/);
 
   assert.match(pronunciationMeta, /hanViet:\s*string \| null/);
-  assert.match(pronunciationMeta, /traditionalForms:\s*string\[\]/);
+  assert.match(pronunciationMeta, /secondaryForms:\s*VocabularyForm\[\]/);
+  assert.match(pronunciationMeta, /proficiency:\s*VocabularyProficiency\[\]/);
   assert.match(pronunciationMeta, /labels:\s*\{/);
   assert.match(pronunciationMeta, /styles\.secondaryLine/);
-  assert.match(pronunciationMeta, /styles\.dot/);
+  assert.match(pronunciationMeta, /form\.scriptVariantCode === "traditional"/);
+  assert.match(pronunciationMeta, /form\.scriptVariantCode === "simplified"/);
   assert.match(pronunciationMeta, /styles\.hanViet/);
   assert.match(pronunciationMeta, /styles\.traditional/);
   assert.doesNotMatch(pronunciationMeta, /Ỷ TỬ|活动|椅子/);
@@ -510,9 +530,17 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(rich, /classifier\.learnerNote/);
   assert.match(rich, /collocation\.learnerMeaning/);
   assert.match(rich, /styles\.collocationMeaning/);
-  assert.ok(rich.indexOf("item.examples.length > 0") < rich.indexOf("item.constructions.length > 0"));
-  assert.ok(rich.indexOf("item.constructions.length > 0") < rich.indexOf("item.collocations.length > 0"));
+  assert.ok(rich.indexOf("item.translationEquivalents.length > 0") < rich.indexOf("nuanceRows.length > 0"));
+  assert.ok(rich.indexOf("nuanceRows.length > 0") < rich.indexOf("item.collocations.length > 0"));
   assert.ok(rich.indexOf("item.collocations.length > 0") < rich.indexOf("item.classifiers.length > 0"));
+  assert.ok(rich.indexOf("item.classifiers.length > 0") < rich.indexOf("item.constructions.length > 0"));
+  assert.ok(rich.indexOf("item.constructions.length > 0") < rich.indexOf("item.examples.length > 0"));
+  assert.ok(rich.indexOf('relationType="synonym"') < rich.indexOf('relationType="near_synonym"'));
+  assert.ok(rich.indexOf('relationType="near_synonym"') < rich.indexOf('relationType="antonym"'));
+  assert.ok(rich.indexOf('data-vocabulary-module="related-words"') < rich.indexOf('data-vocabulary-module="word-comparison"'));
+  assert.ok(rich.indexOf('data-vocabulary-module="common-mistakes"') < rich.indexOf('data-vocabulary-module="memory-tip"'));
+  assert.ok(rich.indexOf('data-vocabulary-module="memory-tip"') < rich.indexOf('data-vocabulary-module="related-knowledge"'));
+  assert.ok(rich.indexOf('data-vocabulary-module="related-knowledge"') < rich.indexOf('data-vocabulary-module="practice"'));
   assert.match(rich, /item\.examples\.length > 0/);
   assert.match(rich, /useState/);
   assert.match(rich, /item\.examples\.slice\(0, 2\)/);
@@ -524,7 +552,18 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(rich, /labels\.showMore/);
   assert.match(rich, /labels\.collapse/);
   assert.match(rich, /item\.translationEquivalents\.length > 0/);
-  assert.match(rich, /data-vocabulary-module="translation-equivalents"/);
+  assert.match(rich, /data-vocabulary-module="translations"/);
+  assert.match(rich, /data-vocabulary-module="usage"/);
+  assert.match(rich, /data-vocabulary-module="nuance-context"/);
+  assert.match(rich, /data-vocabulary-module="common-combinations"/);
+  assert.match(rich, /data-vocabulary-module="measure-words"/);
+  assert.match(rich, /data-vocabulary-module="usage-patterns"/);
+  assert.match(rich, /data-vocabulary-module="examples"/);
+  assert.match(rich, /data-vocabulary-module="related-words"/);
+  assert.match(rich, /data-vocabulary-module="word-comparison"/);
+  assert.match(rich, /data-vocabulary-module="memory-tip"/);
+  assert.match(rich, /data-vocabulary-module="related-knowledge"/);
+  assert.match(rich, /data-vocabulary-module="practice"/);
   assert.match(rich, /item\.quickDistinctions\.length > 0/);
   assert.match(rich, /distinction\.learnerExplanation/);
   assert.match(rich, /return null/);
@@ -609,6 +648,7 @@ test("Quick Distinction contrast examples preserve optional learner translations
   assert.match(loader, /correct_translation/);
   assert.match(loader, /source_translation/);
   assert.match(loader, /target_translation/);
+  assert.match(loader, /get_public_vocabulary_entry_v10/);
   assert.match(loader, /get_public_vocabulary_entry_v9/);
   assert.match(rich, /example\.sourcePinyin/);
   assert.match(rich, /example\.targetPinyin/);
@@ -658,4 +698,67 @@ test("Vocabulary sense headings use shortLabel as the sole learner display autho
     ],
   };
   assert.equal(vocabularySenseHeading(nounRi), "sự hiểu biết; nhận thức");
+});
+
+
+test("GF0025 proficiency renders compact HSK label without a space", async () => {
+  const view = await read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx");
+  assert.match(view, /systemCode === "gf0025_2021"[\s\S]*\? `\$\{fallbackLabel\}\$\{levelCode\}`/u);
+  assert.doesNotMatch(view, /\? `\$\{fallbackLabel\} \$\{levelCode\}`/u);
+});
+
+
+test("Vocabulary learner translations never render internal restriction prose", async () => {
+  const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
+  assert.match(rich, /const usageCopy = item\.usage\?\.context/);
+  assert.match(rich, /const translationSummary = item\.translationEquivalents\.length > 0[\s\S]*item\.usageNote/);
+  assert.match(rich, /<p>\{usageCopy\}<\/p>/);
+  assert.match(rich, /\{translationSummary \? <p>\{translationSummary\}<\/p> : null\}/);
+  assert.doesNotMatch(rich, /translation\.contextRestriction/);
+  assert.doesNotMatch(rich, /translation\.mismatchNote/);
+});
+
+test("Vocabulary learner page falls back to the exact single Han character when K1E is empty", async () => {
+  const [characterLoader, page] = await Promise.all([
+    read("lib/vocabularyCharacterDelivery.ts"),
+    read("app/knowledge/vocabulary/[publicId]/page.tsx"),
+  ]);
+  assert.match(characterLoader, /buildVocabularyCharacterFallback/);
+  assert.ok(characterLoader.includes("const HAN_CHARACTER_PATTERN = /^\\p{Script=Han}$/u;"));
+  assert.match(characterLoader, /detail\.forms\.find\(\(form\) => form\.isPrimary\)/);
+  assert.match(characterLoader, /lexicalContextPronunciation: pronunciation\?\.pronunciation \?\? null/);
+  assert.match(characterLoader, /hanViet: detail\.hanViet\?\.text \?\? null/);
+  assert.match(characterLoader, /radical: null/);
+  assert.match(characterLoader, /strokeCount: null/);
+  assert.match(characterLoader, /structureFormula: null/);
+  assert.match(characterLoader, /chanind\/hanzi-writer-data/);
+  assert.match(page, /characterResult\.status === "FOUND" && characterResult\.characters\.length > 0/);
+  assert.match(page, /buildVocabularyCharacterFallback\(result\.detail\)/);
+});
+
+
+test("Vocabulary learner POS labels never expose raw surname code", async () => {
+  const view = await read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx");
+  assert.match(view, /surname:\s*\{ en: "Surname", vi: "Họ"/);
+  assert.match(view, /const learnerPosLabel = posLabel\(/);
+  assert.match(view, /<span className=\{styles\.posLabel\}>\{learnerPosLabel\}<\/span>/);
+  assert.doesNotMatch(view, /<span[^>]*>\{group\.posCode\}<\/span>/);
+});
+
+test("Vocabulary learner translations never render internal restriction or mismatch prose", async () => {
+  const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
+  assert.match(rich, /item\.translationEquivalents\.map/);
+  assert.match(rich, /<strong>\{translation\.expression\}<\/strong>/);
+  assert.doesNotMatch(rich, /translation\.contextRestriction/);
+  assert.doesNotMatch(rich, /translation\.mismatchNote/);
+});
+
+test("Vocabulary construction explanations render multi-idea text as separate paragraphs", async () => {
+  const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
+  assert.match(rich, /function splitLearnerExplanationParagraphs\(text: string\): string\[\]/);
+  assert.match(rich, /character === "。"/);
+  assert.match(rich, /character === "；"/);
+  assert.match(rich, /character === "\\n"/);
+  assert.match(rich, /splitLearnerExplanationParagraphs\(construction\.explanation\)\.map/);
+  assert.doesNotMatch(rich, /construction\.explanation \? <p>\{construction\.explanation\}<\/p> : null/);
 });
