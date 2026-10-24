@@ -762,3 +762,33 @@ test("Vocabulary construction explanations render multi-idea text as separate pa
   assert.match(rich, /splitLearnerExplanationParagraphs\(construction\.explanation\)\.map/);
   assert.doesNotMatch(rich, /construction\.explanation \? <p>\{construction\.explanation\}<\/p> : null/);
 });
+
+
+test("Vocabulary header promotes proficiency only when the whole entry has one distinct mapping", async () => {
+  const view = await read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx");
+  assert.match(view, /const allProficiency = distinctProficiency\\(\\[/);
+  assert.match(view, /allReadingItems\\.flatMap\\(\\(item\\) => item\\.proficiency\\)/);
+  assert.match(view, /const headerProficiency = allProficiency\\.length === 1 \\? allProficiency : \\[\\]/);
+  assert.match(view, /proficiency=\\{headerProficiency\\}/);
+  assert.match(view, /item\\.proficiency\\.map/);
+});
+
+test("Vocabulary learner prose keeps module ownership and suppresses exact duplicate copy", async () => {
+  const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
+  assert.match(rich, /function distinctLearnerProse\\(/);
+  assert.match(rich, /item\\.usage\\?\\.context,[\\s\\S]*item\\.fullExplanation/);
+  assert.match(rich, /item\\.translationEquivalents\\.length === 0[\\s\\S]*item\\.usageNote/);
+  assert.match(rich, /item\\.usageContext,[\\s\\S]*item\\.socialContext,[\\s\\S]*item\\.pragmaticExplanation/);
+  assert.match(rich, /item\\.fullExplanation,[\\s\\S]*usageCopy,[\\s\\S]*translationSummary,[\\s\\S]*\\.\\.\\.rows/);
+});
+
+test("Vocabulary learner-facing prose shares sentence-aware paragraph rendering", async () => {
+  const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
+  assert.match(rich, /function splitLearnerProseParagraphs\\(text: string\\): string\\[\\]/);
+  assert.match(rich, /function LearnerProse\\(/);
+  assert.match(rich, /translation-guidance/);
+  assert.match(rich, /memory-tip/);
+  assert.match(rich, /construction\\.publicId.*explanation/s);
+  assert.match(rich, /character === "；"/);
+  assert.match(rich, /character === "\\\\n"/);
+});
