@@ -1,6 +1,10 @@
 import type { VocabularyCharacterOccurrence } from "@/lib/vocabularyCharacterDelivery";
 import type {
   VocabularyClassifier,
+  VocabularyLexicalRelation,
+  VocabularyProficiency,
+  VocabularyRelatedWord,
+  VocabularyScopedUsage,
   VocabularyCollocation,
   VocabularyCommonMistake,
   VocabularyConstruction,
@@ -38,6 +42,57 @@ const stringArray = (value: unknown): string[] =>
   asArray(value)
     .map(stringValue)
     .filter((item): item is string => item !== null);
+
+function parseScopedUsage(value: unknown): VocabularyScopedUsage | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const scope = stringValue(row.scope);
+  const context = stringValue(row.context);
+  const contentLocale = stringValue(row.content_locale);
+  const regions = stringArray(row.regions);
+  const registerCodes = stringArray(row.register_codes);
+  const pragmaticCodes = stringArray(row.pragmatic_codes);
+  if (!scope && !context && regions.length === 0 && registerCodes.length === 0 && pragmaticCodes.length === 0) return null;
+  return { scope, context, contentLocale, regions, registerCodes, pragmaticCodes };
+}
+
+function parseProficiency(value: unknown): VocabularyProficiency[] {
+  return asArray(value)
+    .map(asObject)
+    .filter((row): row is JsonObject => row !== null)
+    .map((row) => ({
+      levelSystemCode: stringValue(row.level_system_code),
+      levelCode: stringValue(row.level_code),
+    }))
+    .filter((row): row is VocabularyProficiency => Boolean(row.levelSystemCode && row.levelCode));
+}
+
+function parseRelationTarget(value: unknown) {
+  const row = asObject(value);
+  if (!row) return null;
+  const displayForm = stringValue(row.display_form);
+  const pronunciation = stringValue(row.pronunciation);
+  const shortLabel = stringValue(row.short_label);
+  const contentLocale = stringValue(row.content_locale);
+  return displayForm && pronunciation && shortLabel && contentLocale
+    ? { displayForm, pronunciation, shortLabel, contentLocale }
+    : null;
+}
+
+function parseLexicalRelation(value: unknown): VocabularyLexicalRelation | null {
+  const row = asObject(value);
+  if (!row) return null;
+  const relationType = stringValue(row.relation_type);
+  const target = parseRelationTarget(row.target);
+  if (!target || (relationType !== "synonym" && relationType !== "near_synonym" && relationType !== "antonym")) return null;
+  return { relationType, target };
+}
+
+function parseRelatedWord(value: unknown): VocabularyRelatedWord | null {
+  const row = asObject(value);
+  const target = row ? parseRelationTarget(row.target) : null;
+  return target ? { target } : null;
+}
 
 function parseTranslationEquivalent(
   value: unknown,
@@ -80,6 +135,13 @@ function parseCollocation(
     collocationType,
     learnerMeaning: stringValue(row.learner_meaning),
     contentLocale: stringValue(row.content_locale),
+    examples: asArray(row.examples)
+      .map((item, index) => parseExample(
+        item,
+        readingItemPublicId,
+        `${fallbackId}:example:${index}`,
+      ))
+      .filter((item): item is VocabularyExample => item !== null),
   };
 }
 
@@ -120,6 +182,7 @@ function parseExample(
     pinyinText: stringValue(row.pinyin_text),
     translationText: stringValue(row.translation_text),
     contentLocale: stringValue(row.content_locale),
+    learnerExplanation: stringValue(row.learner_explanation),
   };
 }
 
@@ -235,19 +298,13 @@ function parseKnowledgeLink(
 ): VocabularyKnowledgeLink | null {
   const row = asObject(value);
   if (!row) return null;
-  const kind = stringValue(row.kind);
-  const scopeKey = stringValue(row.scope_key);
   const targetLabel = stringValue(row.target_label);
-  if (!kind || !scopeKey || !targetLabel) return null;
+  if (!targetLabel) return null;
   return {
     publicId: stringValue(row.public_id) ?? stringValue(row.id) ?? fallbackId,
     readingItemPublicId,
-    kind,
-    scopeKey,
     targetLabel,
     targetSubtitle: stringValue(row.target_subtitle),
-    targetType: stringValue(row.target_type),
-    targetState: stringValue(row.target_state),
   };
 }
 
@@ -258,21 +315,21 @@ function parsePracticeLink(
 ): VocabularyPracticeLink | null {
   const row = asObject(value);
   if (!row) return null;
-  const scopeKey = stringValue(row.scope_key);
   const targetLabel = stringValue(row.target_label);
-  if (!scopeKey || !targetLabel) return null;
+  if (!targetLabel) return null;
   return {
     publicId: stringValue(row.public_id) ?? stringValue(row.id) ?? fallbackId,
     readingItemPublicId,
-    scopeKey,
     targetLabel,
     targetSubtitle: stringValue(row.target_subtitle),
-    targetType: stringValue(row.target_type),
-    targetState: stringValue(row.target_state),
   };
 }
 
 type DraftReadingExtensions = {
+  usage: VocabularyScopedUsage | null;
+  proficiency: VocabularyProficiency[];
+  lexicalRelations: VocabularyLexicalRelation[];
+  relatedWords: VocabularyRelatedWord[];
   usageContext: string | null;
   socialContext: string | null;
   pragmaticExplanation: string | null;
@@ -284,6 +341,10 @@ type DraftReadingExtensions = {
 };
 
 const emptyDraftReadingExtensions = (): DraftReadingExtensions => ({
+  usage: null,
+  proficiency: [],
+  lexicalRelations: [],
+  relatedWords: [],
   usageContext: null,
   socialContext: null,
   pragmaticExplanation: null,
@@ -303,6 +364,14 @@ function parseDraftReadingExtensions(
   if (!row) return emptyDraftReadingExtensions();
 
   return {
+    usage: parseScopedUsage(row.usage),
+    proficiency: parseProficiency(row.proficiency),
+    lexicalRelations: asArray(row.lexical_relations)
+      .map(parseLexicalRelation)
+      .filter((item): item is VocabularyLexicalRelation => item !== null),
+    relatedWords: asArray(row.related_words)
+      .map(parseRelatedWord)
+      .filter((item): item is VocabularyRelatedWord => item !== null),
     usageContext: stringValue(row.usage_context),
     socialContext: stringValue(row.social_context),
     pragmaticExplanation: stringValue(row.pragmatic_explanation),
@@ -441,6 +510,10 @@ function parseReadingItem(
     usageContext: extensions.usageContext,
     socialContext: extensions.socialContext,
     pragmaticExplanation: extensions.pragmaticExplanation,
+    usage: extensions.usage,
+    proficiency: extensions.proficiency,
+    lexicalRelations: extensions.lexicalRelations,
+    relatedWords: extensions.relatedWords,
     translationEquivalents,
     collocations,
     classifiers,
@@ -473,6 +546,8 @@ function parsePronunciation(
     readingStatus: stringValue(row.reading_status),
     isDefault: booleanValue(row.is_default),
     applicableFormPublicIds: stringArray(row.applicable_form_public_ids),
+    usage: parseScopedUsage(row.usage),
+    proficiency: parseProficiency(row.proficiency),
     readingItems: asArray(row.reading_items)
       .map((item, index) =>
         parseReadingItem(
@@ -501,6 +576,13 @@ function parseForm(value: unknown, index: number): VocabularyForm | null {
     isPrimary: booleanValue(row.is_primary),
     scriptProfileCode: stringValue(row.script_profile_code),
     scriptVariantCode: stringValue(row.script_variant_code),
+    usage: parseScopedUsage(row.usage),
+    hanViet: (() => {
+      const hv = asObject(row.han_viet);
+      const text = hv ? stringValue(hv.text) : null;
+      const contentLocale = hv ? stringValue(hv.content_locale) : null;
+      return text && contentLocale ? { text, contentLocale } : null;
+    })(),
   };
 }
 
@@ -613,6 +695,8 @@ export function parseVocabularyDraftPreviewPayload(
     regionProfileCode: stringValue(entry.region_profile_code),
     requestedLocale,
     fallbackLocale,
+    usage: parseScopedUsage(entry.usage),
+    proficiency: parseProficiency(entry.proficiency),
     hanViet:
       hanVietText && hanVietLocale
         ? { text: hanVietText, contentLocale: hanVietLocale }
