@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "node:test";
+const fixture=readFileSync("app/preview/character-v2/fixtures.ts","utf8");
+const view=readFileSync("app/preview/character-v2/CharacterPreview.tsx","utf8");
+const css=readFileSync("app/preview/character-v2/CharacterPreview.module.css","utf8");
+test("fixture preserves Character v2 identity/form/readings",()=>{assert.match(fixture,/key: "char\.chang"/);assert.match(fixture,/glyph:"长"[\s\S]*role:"primary"/);assert.match(fixture,/glyph:"長"[\s\S]*role:"recognition_reference"/);assert.ok(fixture.includes('pinyin:"cháng", hanViet:"trường"'));assert.ok(fixture.includes('pinyin:"zhǎng", hanViet:"trưởng"'))});
+test("Traditional fixture stays pending without Simplified fallback",()=>{assert.match(fixture,/traditional:\{ radical:\{state:"pending"[\s\S]*writing:\{state:"pending"/);assert.doesNotMatch(fixture,/glyph:"長"[\s\S]{0,180}strokeCount|glyph:"長"[\s\S]{0,180}strokeOrder/)});
+test("qing layers remain independent and evidence-bound",()=>{assert.match(fixture,/formula:"⿰ 氵 \+ 青"/);assert.match(fixture,/notation:"IDS",expression:"⿰氵青"/);assert.match(fixture,/occurrence:"occ\.qing\.shui"[\s\S]*analysis:"semantic_support"[\s\S]*evidence:"ev\.qing\.component\.shui"/);assert.match(fixture,/occurrence:"occ\.qing\.qing"[\s\S]*analysis:"phonetic_support"[\s\S]*evidence:"ev\.qing\.component\.qing"/);assert.doesNotMatch(fixture,/请|情|晴/)});
+test("applicability and writing distinctions stay explicit",()=>{assert.match(fixture,/decomposition:\{state:"n_a"/);assert.match(fixture,/standard:"pending"[\s\S]*strokeOrder:"3154"[\s\S]*guidance:"n_a"[\s\S]*assets:"pending"/);assert.match(fixture,/strokeOrder:"44111212511"/)});
+test("learner flow localizes canonical structure without rendering internal metadata",()=>{for(const id of["recognize","understand","connect","write"])assert.match(view,new RegExp('id="'+id+'"'));assert.doesNotMatch(view,/pendingRelations|source_ref|authority_role|locator/);assert.doesNotMatch(view,/<small>\{x\.position\}|<small>\{x\.occurrence\}/);assert.match(view,/Cấu trúc trái–phải/);assert.match(view,/Bên trái/);assert.match(view,/Bên phải/);assert.doesNotMatch(view,/\{p\.structure\.label\}/);assert.doesNotMatch(view,/\{p\.decomposition\.notation\}/)});
+test("responsive preview covers tablet/mobile landscape and touch targets",()=>{assert.match(css,/min-height:44px/);assert.match(css,/max-width:900px/);assert.match(css,/max-width:700px/);assert.match(css,/orientation:landscape/);assert.match(css,/max-width:460px/)});
