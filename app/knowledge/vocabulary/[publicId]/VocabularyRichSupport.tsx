@@ -59,7 +59,7 @@ function RelationTarget({ target }: { target: VocabularyRelationTarget }) {
 }
 
 
-function splitLearnerExplanationParagraphs(text: string): string[] {
+function splitLearnerProseParagraphs(text: string): string[] {
   const normalized = text.replace(/\r\n?/g, "\n").trim();
   if (!normalized) return [];
 
@@ -105,6 +105,34 @@ function splitLearnerExplanationParagraphs(text: string): string[] {
   return paragraphs.length > 0 ? paragraphs : [normalized];
 }
 
+function normalizedLearnerProse(value: string | null | undefined): string | null {
+  const normalized = value?.replace(/\\s+/gu, " ").trim();
+  return normalized || null;
+}
+
+function distinctLearnerProse(
+  candidate: string | null | undefined,
+  ...existingValues: Array<string | null | undefined>
+): string | null {
+  const normalized = normalizedLearnerProse(candidate);
+  if (!candidate || !normalized) return null;
+  return existingValues.some((value) => normalizedLearnerProse(value) === normalized)
+    ? null
+    : candidate;
+}
+
+function LearnerProse({
+  text,
+  keyPrefix,
+}: {
+  text: string;
+  keyPrefix: string;
+}) {
+  return splitLearnerProseParagraphs(text).map((paragraph, index) => (
+    <p key={`${keyPrefix}-${index}`}>{paragraph}</p>
+  ));
+}
+
 function RelationGroup({
   relations,
   relationType,
@@ -139,15 +167,38 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
     ? item.collocations
     : item.collocations.slice(0, 4);
 
-  const usageCopy = item.usage?.context;
+  const authoredUsageCopy = distinctLearnerProse(
+    item.usage?.context,
+    item.fullExplanation,
+  );
+  const usageCopy = authoredUsageCopy
+    ?? (
+      item.translationEquivalents.length === 0
+        ? distinctLearnerProse(item.usageNote, item.fullExplanation)
+        : null
+    );
   const translationSummary = item.translationEquivalents.length > 0
-    ? item.usageNote
+    ? distinctLearnerProse(
+        item.usageNote,
+        item.fullExplanation,
+        usageCopy,
+      )
     : null;
   const nuanceRows = [
     item.usageContext,
     item.socialContext,
     item.pragmaticExplanation,
-  ].filter((value): value is string => Boolean(value));
+  ].reduce<string[]>((rows, candidate) => {
+    const distinct = distinctLearnerProse(
+      candidate,
+      item.fullExplanation,
+      usageCopy,
+      translationSummary,
+      ...rows,
+    );
+    if (distinct) rows.push(distinct);
+    return rows;
+  }, []);
 
   const hasRichSupport = Boolean(
     usageCopy
@@ -174,7 +225,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
       {usageCopy ? (
         <section className={styles.supportBlock} data-vocabulary-module="usage">
           <h4>{labels.usage}</h4>
-          <p>{usageCopy}</p>
+          <LearnerProse text={usageCopy} keyPrefix={`${item.publicId}-usage`} />
         </section>
       ) : null}
 
@@ -184,7 +235,12 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
             <span>{labels.translationEquivalent}</span>
             <span className={styles.translationCount}>{item.translationEquivalents.length}</span>
           </summary>
-          {translationSummary ? <p>{translationSummary}</p> : null}
+          {translationSummary ? (
+            <LearnerProse
+              text={translationSummary}
+              keyPrefix={`${item.publicId}-translation-guidance`}
+            />
+          ) : null}
           <div className={styles.translationList}>
             {item.translationEquivalents.map((translation) => (
               <div key={translation.publicId} className={styles.translationItem}>
@@ -198,7 +254,13 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
       {nuanceRows.length > 0 ? (
         <section className={styles.supportBlock} data-vocabulary-module="nuance-context">
           <h4>{labels.nuanceContext}</h4>
-          {nuanceRows.map((row, index) => <p key={index}>{row}</p>)}
+          {nuanceRows.map((row, index) => (
+            <LearnerProse
+              key={`${item.publicId}-nuance-${index}`}
+              text={row}
+              keyPrefix={`${item.publicId}-nuance-${index}`}
+            />
+          ))}
         </section>
       ) : null}
 
@@ -256,11 +318,12 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
             {item.constructions.map((construction) => (
               <div key={construction.publicId} className={styles.constructionItem}>
                 <strong className={styles.constructionPattern}>{construction.patternText}</strong>
-                {construction.explanation
-                  ? splitLearnerExplanationParagraphs(construction.explanation).map((paragraph, index) => (
-                      <p key={`${construction.publicId}-explanation-${index}`}>{paragraph}</p>
-                    ))
-                  : null}
+                {construction.explanation ? (
+                  <LearnerProse
+                    text={construction.explanation}
+                    keyPrefix={`${construction.publicId}-explanation`}
+                  />
+                ) : null}
                 {construction.examples.length > 0 ? (
                   <div className={styles.constructionExamples}>
                     {construction.examples.map((example) => (
@@ -399,7 +462,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
       {item.memoryTip ? (
         <section className={styles.supportBlock} data-vocabulary-module="memory-tip">
           <h4>{labels.memoryTip}</h4>
-          <p>{item.memoryTip}</p>
+          <LearnerProse text={item.memoryTip} keyPrefix={`${item.publicId}-memory-tip`} />
         </section>
       ) : null}
 
