@@ -849,6 +849,15 @@ function isMissingRpc(error: unknown, rpcName: string): boolean {
   return code === "PGRST202" || code === "42883" || message.includes(rpcName);
 }
 
+function isMissingPreferredRpc(error: unknown, rpcName: string): boolean {
+  const row = asObject(error);
+  if (!row) return false;
+  const code = stringValue(row.code);
+  if (code) return code === "PGRST202" || code === "42883";
+  const message = stringValue(row.message) ?? "";
+  return message.includes(rpcName);
+}
+
 export async function loadVocabularyDetail(
   publicId: string,
   localeInput?: string | null | KnowledgeContentLocaleRequest,
@@ -872,7 +881,7 @@ export async function loadVocabularyDetail(
     let error = v12.error;
     let fallbackChainEnabled = false;
 
-    if (error && isMissingRpc(error, "get_public_vocabulary_entry_v12")) {
+    if (error && isMissingPreferredRpc(error, "get_public_vocabulary_entry_v12")) {
       fallbackChainEnabled = true;
       const v10 = await supabase.rpc("get_public_vocabulary_entry_v10", args);
       data = v10.data;
