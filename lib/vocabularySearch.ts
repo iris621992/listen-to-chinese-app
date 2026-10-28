@@ -84,6 +84,8 @@ export async function loadVocabularySearch(
       p_fallback_locale_code: learnerLocale.fallbackLocaleCode ?? "en",
       p_limit: RESULT_LIMIT,
       p_offset: 0,
+      p_search_scope: "all",
+      p_search_locale_codes: ["en", "vi"],
     });
 
     if (error) return { status: "DATABASE_ERROR", query, items: [] };
