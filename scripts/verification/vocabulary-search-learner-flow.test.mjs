@@ -18,8 +18,8 @@ test("Knowledge Search is canonical at /knowledge and uses the public Vocabulary
   assert.match(adapter, /K1B_VOCABULARY_PUBLIC_PROJECTION_V1/u);
   assert.match(adapter, /p_query:\s*query/u);
   assert.match(adapter, /p_limit:\s*RESULT_LIMIT/u);
-  assert.match(adapter, /p_search_scope:\s*searchBy/u);
-  assert.match(adapter, /p_search_locale_codes:\s*searchBy/u);
+  assert.match(adapter, /p_search_scope:\s*searchBy === "vi"/u);
+  assert.match(adapter, /p_search_locale_codes:\s*searchBy === "vi"/u);
   assert.match(adapter, /p_locale_code:\s*learnerLocale\.code/u);
   assert.doesNotMatch(adapter, /p_search_locale_codes:\s*\[learnerLocale\.code\]/u);
   assert.doesNotMatch(adapter, /p_search_locale_codes:\s*enabledInterfaceLocaleCodes/u);
