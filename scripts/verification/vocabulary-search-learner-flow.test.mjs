@@ -18,6 +18,11 @@ test("Knowledge Search is canonical at /knowledge and uses the public Vocabulary
   assert.match(adapter, /K1B_VOCABULARY_PUBLIC_PROJECTION_V1/u);
   assert.match(adapter, /p_query:\s*query/u);
   assert.match(adapter, /p_limit:\s*RESULT_LIMIT/u);
+  assert.match(adapter, /p_search_scope:\s*"all"/u);
+  assert.match(adapter, /p_search_locale_codes:\s*\["en",\s*"vi"\]/u);
+  assert.match(adapter, /p_locale_code:\s*learnerLocale\.code/u);
+  assert.doesNotMatch(adapter, /p_search_locale_codes:\s*\[learnerLocale\.code\]/u);
+  assert.doesNotMatch(adapter, /p_search_locale_codes:\s*enabledInterfaceLocaleCodes/u);
   assert.doesNotMatch(adapter, /\.from\(/u, "Search must use the learner-safe RPC rather than direct table reads.");
 
   assert.match(knowledgePage, /loadVocabularySearch\(rawQuery/u);
