@@ -19,6 +19,15 @@ type FamilyLabels = {
   idioms: string;
 };
 
+type SearchScopeLabels = {
+  groupLabel: string;
+  all: string;
+  written: string;
+  pinyin: string;
+  vi: string;
+  en: string;
+};
+
 type Props = {
   query?: string;
   action?: string;
@@ -29,6 +38,8 @@ type Props = {
   className?: string;
   familyLabels?: FamilyLabels;
   initialFamilies?: string[];
+  searchScopeLabels?: SearchScopeLabels;
+  initialSearchBy?: string;
 };
 
 function SearchIcon() {
@@ -50,6 +61,8 @@ export default function VocabularySearchForm({
   className,
   familyLabels,
   initialFamilies = [],
+  searchScopeLabels,
+  initialSearchBy = "all",
 }: Props) {
   return (
     <form action={action} method="get" role="search" aria-label={ariaLabel} className={className}>
@@ -72,8 +85,24 @@ export default function VocabularySearchForm({
         </label>
         <button type="submit">{submitLabel}</button>
       </div>
-      {familyLabels ? (
-        <KnowledgeFamilySelector labels={familyLabels} initialFamilies={initialFamilies} />
+      {familyLabels || searchScopeLabels ? (
+        <div data-search-controls>
+          {familyLabels ? (
+            <KnowledgeFamilySelector labels={familyLabels} initialFamilies={initialFamilies} />
+          ) : null}
+          {searchScopeLabels ? (
+            <label data-search-scope>
+              <span data-control-label>{searchScopeLabels.groupLabel}</span>
+              <select name="searchBy" defaultValue={initialSearchBy} aria-label={searchScopeLabels.groupLabel}>
+                <option value="all">{searchScopeLabels.all}</option>
+                <option value="written">{searchScopeLabels.written}</option>
+                <option value="pinyin">{searchScopeLabels.pinyin}</option>
+                <option value="vi">{searchScopeLabels.vi}</option>
+                <option value="en">{searchScopeLabels.en}</option>
+              </select>
+            </label>
+          ) : null}
+        </div>
       ) : null}
     </form>
   );
