@@ -279,6 +279,9 @@
   flex-direction: column;
   align-items: stretch;
   gap: 2px;
+  max-height: min(300px, 40dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   border: 1px solid var(--yc-line);
   border-radius: 13px;
   background: var(--yc-white);
@@ -291,7 +294,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 40px;
+  min-height: 44px;
   flex: 0 0 auto;
   border: 0;
   border-radius: 8px;
@@ -306,7 +309,14 @@
 .searchForm [data-family-all]:hover,
 .searchForm [data-family-option]:hover { background: #f8f5ee; }
 .searchForm [data-family-all][aria-pressed="true"] { background: var(--yc-sage-wash); font-weight: 800; }
-.searchForm [data-family-option] input { accent-color: var(--yc-sage); }
+.searchForm [data-family-option] input[type="checkbox"] {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  min-height: 18px;
+  margin: 0;
+  accent-color: var(--yc-sage);
+}
 
 .searchHelp {
   display: flex;
@@ -912,6 +922,11 @@
   .searchForm [data-search-scope] { flex-basis: 175px; }
   .searchForm [data-family-trigger],
   .searchForm [data-search-scope] select { height: 36px; }
+  .searchForm [data-family-menu] {
+    top: auto;
+    bottom: calc(100% + 5px);
+    max-height: min(200px, 47dvh);
+  }
   .searchHelp {
     display: none;
   }
