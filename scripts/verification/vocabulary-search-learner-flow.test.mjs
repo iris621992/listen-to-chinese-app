@@ -118,3 +118,18 @@ test("Bounded Knowledge Search control behavior preserves channel, locale, and U
   assert.match(css, /@media \(max-width: 520px\)/u);
   assert.match(css, /orientation: landscape/u);
 });
+
+
+test("Family menu checkbox remains compact despite global 44px input minimum", async () => {
+  const [globalCss, css] = await Promise.all([
+    read("app/globals.css"),
+    read("app/knowledge/vocabulary/VocabularySearch.module.css"),
+  ]);
+  assert.match(globalCss, /textarea \{ min-height: 44px; \}/u);
+  assert.match(css, /\.searchForm \[data-family-option\] input\[type="checkbox"\] \{/u);
+  assert.match(css, /min-height: 18px;/u);
+  assert.match(css, /height: 18px;/u);
+  assert.match(css, /max-height: min\(300px, 40dvh\)/u);
+  assert.match(css, /overflow-y: auto;/u);
+  assert.match(css, /max-height: min\(200px, 47dvh\)/u);
+});
