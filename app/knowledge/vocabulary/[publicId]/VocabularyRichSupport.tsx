@@ -162,10 +162,10 @@ function RelationGroup({
 export default function VocabularyRichSupport({ item, sourceExpression, labels }: Props) {
   const [examplesExpanded, setExamplesExpanded] = useState(false);
   const [collocationsExpanded, setCollocationsExpanded] = useState(false);
-  const visibleExamples = examplesExpanded ? item.examples : item.examples.slice(0, 2);
+  const visibleExamples = examplesExpanded ? item.examples : item.examples.slice(0, 3);
   const visibleCollocations = collocationsExpanded
     ? item.collocations
-    : item.collocations.slice(0, 4);
+    : item.collocations.slice(0, 6);
 
   const authoredUsageCopy = distinctLearnerProse(
     item.usage?.context,
@@ -230,11 +230,8 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
       ) : null}
 
       {item.translationEquivalents.length > 0 ? (
-        <details className={styles.translationDetails} data-vocabulary-module="translations">
-          <summary>
-            <span>{labels.translationEquivalent}</span>
-            <span className={styles.translationCount}>{item.translationEquivalents.length}</span>
-          </summary>
+        <section className={styles.translationDetails} data-vocabulary-module="translations">
+          <h4>{labels.translationEquivalent}</h4>
           {translationSummary ? (
             <LearnerProse
               text={translationSummary}
@@ -248,7 +245,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
               </div>
             ))}
           </div>
-        </details>
+        </section>
       ) : null}
 
       {nuanceRows.length > 0 ? (
@@ -284,7 +281,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
               </div>
             ))}
           </div>
-          {item.collocations.length > 4 ? (
+          {item.collocations.length > 6 ? (
             <button
               type="button"
               className={styles.expandButton}
@@ -345,7 +342,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
               <LearnerExample key={example.publicId} example={example} />
             ))}
           </div>
-          {item.examples.length > 2 ? (
+          {item.examples.length > 3 ? (
             <button
               type="button"
               className={styles.expandButton}
@@ -391,7 +388,10 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                 );
               }
               return (
-                <article key={distinction.publicId} className={styles.structuredDistinction}>
+                <details key={distinction.publicId} className={styles.structuredDistinction}>
+                  <summary className={styles.distinctionSummary}>
+                    <span>{sourceExpression}</span><span aria-hidden="true"> ↔ </span><span>{distinction.targetExpression}</span>
+                  </summary>
                   {distinction.learnerExplanation ? (
                     <p className={styles.distinctionIntro}>{distinction.learnerExplanation}</p>
                   ) : null}
@@ -423,7 +423,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                       </div>
                     </section>
                   </div>
-                </article>
+                </details>
               );
             })}
           </div>
