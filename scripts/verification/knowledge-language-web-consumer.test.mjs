@@ -30,7 +30,7 @@ test("Knowledge language state is canonical and independent from interface local
 
   assert.match(searchPage, /knowledgeLang\?: string/u);
   assert.match(searchPage, /knowledgeLang: query\?\.knowledgeLang/u);
-  assert.match(searchPage, /loadVocabularySearch\(rawQuery, interfaceLocale\.code\)/u);
+  assert.match(searchPage, /loadVocabularySearch\(rawQuery, interfaceLocale\.code, searchBy\)/u);
   assert.match(searchForm, /knowledgeLang\?: string/u);
   assert.match(detailSearch, /"knowledgeLang"/u);
 });

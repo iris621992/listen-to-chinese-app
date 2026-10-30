@@ -62,9 +62,15 @@ function parseSearchItem(value: unknown): VocabularySearchItem | null {
   };
 }
 
+export type SearchBy = "all" | "written" | "pinyin" | "vi" | "en";
+export function normalizeSearchBy(value: string | null | undefined): SearchBy {
+  return value === "written" || value === "pinyin" || value === "vi" || value === "en" ? value : "all";
+}
+
 export async function loadVocabularySearch(
   rawQuery: string | null | undefined,
   learnerLocaleCode?: string | null,
+  searchBy: SearchBy = "all",
 ): Promise<VocabularySearchResult> {
   const query = rawQuery?.trim() ?? "";
   if (!query) return { status: "EMPTY", query: "", items: [] };
@@ -84,6 +90,8 @@ export async function loadVocabularySearch(
       p_fallback_locale_code: learnerLocale.fallbackLocaleCode ?? "en",
       p_limit: RESULT_LIMIT,
       p_offset: 0,
+      p_search_scope: searchBy === "vi" || searchBy === "en" ? "learner" : searchBy,
+      p_search_locale_codes: searchBy === "vi" ? ["vi"] : searchBy === "en" ? ["en"] : ["en", "vi"],
     });
 
     if (error) return { status: "DATABASE_ERROR", query, items: [] };

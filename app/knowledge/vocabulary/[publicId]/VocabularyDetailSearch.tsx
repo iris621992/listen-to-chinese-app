@@ -10,6 +10,7 @@ type Labels = {
   search: string;
   placeholder: string;
   backToResults: string;
+  searchScope: { groupLabel: string; all: string; written: string; pinyin: string; vi: string; en: string };
   families: {
     groupLabel: string;
     all: string;
@@ -27,18 +28,21 @@ const LABELS: Record<string, Labels> = {
     search: "Search",
     placeholder: "Enter Hanzi, pinyin, or meaning…",
     backToResults: "Back to search results",
+    searchScope: {"groupLabel":"Search in","all":"All","written":"Hanzi","pinyin":"Pinyin","vi":"Vietnamese","en":"English"},
     families: { groupLabel: "Knowledge families", all: "All", vocabulary: "Vocabulary", characters: "Characters", grammar: "Grammar", more: "More", comparisons: "Comparisons", idioms: "Idioms" },
   },
   vi: {
     search: "Tìm",
     placeholder: "Nhập chữ Hán, pinyin hoặc ý nghĩa…",
     backToResults: "Quay lại kết quả tìm kiếm",
+    searchScope: {"groupLabel":"Phạm vi tìm kiếm","all":"Tất cả","written":"Chữ Hán","pinyin":"Pinyin","vi":"Tiếng Việt","en":"Tiếng Anh"},
     families: { groupLabel: "Loại kiến thức", all: "Tất cả", vocabulary: "Từ vựng", characters: "Hán tự", grammar: "Ngữ pháp", more: "Thêm", comparisons: "So sánh", idioms: "Thành ngữ" },
   },
   ar: {
     search: "بحث",
     placeholder: "أدخل حروفًا صينية أو Pinyin أو معنى…",
     backToResults: "العودة إلى نتائج البحث",
+    searchScope: {"groupLabel":"Search scope","all":"All","written":"Hanzi","pinyin":"Pinyin","vi":"Vietnamese","en":"English"},
     families: { groupLabel: "عائلات المعرفة", all: "الكل", vocabulary: "المفردات", characters: "الحروف", grammar: "القواعد", more: "المزيد", comparisons: "المقارنات", idioms: "التعابير" },
   },
 };
@@ -51,6 +55,7 @@ export default function VocabularyDetailSearch() {
   const labels = LABELS[localeCode] ?? LABELS.en;
   const query = params.get("q")?.trim() ?? "";
   const families = params.getAll("family");
+  const searchBy = params.get("searchBy") ?? "all";
 
   const context = Object.fromEntries(
     CONTEXT_KEYS.flatMap((key) => {
@@ -68,6 +73,7 @@ export default function VocabularyDetailSearch() {
             query: {
               ...context,
               q: query,
+              ...(searchBy !== "all" ? { searchBy } : {}),
               ...(families.length > 0 ? { family: families } : {}),
             },
           }}
@@ -85,6 +91,8 @@ export default function VocabularyDetailSearch() {
         className={`${searchStyles.searchPanel} ${searchStyles.searchForm} ${styles.compactForm}`}
         familyLabels={labels.families}
         initialFamilies={families}
+        searchScopeLabels={labels.searchScope}
+        initialSearchBy={searchBy}
       />
     </div>
   );
