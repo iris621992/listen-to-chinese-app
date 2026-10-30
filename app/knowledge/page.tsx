@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { resolveInterfaceLocale } from "@/lib/interfaceLocaleRegistry";
 import { preservedLearnerContextQuery } from "@/lib/proficiencyContext";
-import { loadVocabularySearch } from "@/lib/vocabularySearch";
+import { loadVocabularySearch, normalizeSearchBy } from "@/lib/vocabularySearch";
 import VocabularySearchForm from "./vocabulary/VocabularySearchForm";
 import styles from "./vocabulary/VocabularySearch.module.css";
 
@@ -15,6 +15,7 @@ type Props = {
     levelSystem?: string;
     level?: string;
     family?: string | string[];
+    searchBy?: string;
   }>;
 };
 
@@ -49,6 +50,7 @@ type Labels = {
   partialNote: string;
   railTitle: string;
   railItems: Array<[string, string]>;
+  searchScope: { groupLabel: string; all: string; written: string; pinyin: string; vi: string; en: string };
   families: {
     groupLabel: string;
     all: string;
@@ -101,6 +103,7 @@ const LABELS: Record<string, Labels> = {
       ["Go deep after", "Sense detail, examples, classifiers, collocations, and other depth stay on the detail page."],
       ["Omit what is missing", "A family without real published results is not filled with fabricated placeholders."],
     ],
+    searchScope: { groupLabel: "Search in", all: "All", written: "Hanzi", pinyin: "Pinyin", vi: "Vietnamese", en: "English" },
     families: { groupLabel: "Knowledge families", all: "All", vocabulary: "Vocabulary", characters: "Characters", grammar: "Grammar", more: "More", comparisons: "Comparisons", idioms: "Idioms" },
   },
   vi: {
@@ -142,6 +145,7 @@ const LABELS: Record<string, Labels> = {
       ["Đi sâu sau", "Chi tiết nghĩa, ví dụ, lượng từ, cụm từ thường dùng và các thông tin sâu hơn nằm ở trang chi tiết."],
       ["Thiếu thì bỏ qua", "Loại kiến thức chưa có kết quả thật sẽ không được lấp bằng nội dung giả."],
     ],
+    searchScope: { groupLabel: "Phạm vi tìm kiếm", all: "Tất cả", written: "Chữ Hán", pinyin: "Pinyin", vi: "Tiếng Việt", en: "Tiếng Anh" },
     families: { groupLabel: "Loại kiến thức", all: "Tất cả", vocabulary: "Từ vựng", characters: "Hán tự", grammar: "Ngữ pháp", more: "Thêm", comparisons: "So sánh", idioms: "Thành ngữ" },
   },
   ar: {
@@ -183,6 +187,7 @@ const LABELS: Record<string, Labels> = {
       ["تعمّق لاحقًا", "تبقى التفاصيل والأمثلة والمعلومات الموسعة في صفحة التفاصيل."],
       ["احذف المفقود", "لا تُملأ العائلات غير المتاحة بنتائج مصطنعة."],
     ],
+    searchScope: { groupLabel: "نطاق البحث", all: "الكل", written: "الحروف الصينية", pinyin: "Pinyin", vi: "الفيتنامية", en: "الإنجليزية" },
     families: { groupLabel: "عائلات المعرفة", all: "الكل", vocabulary: "المفردات", characters: "الحروف", grammar: "القواعد", more: "المزيد", comparisons: "المقارنات", idioms: "التعابير" },
   },
 };
@@ -274,19 +279,15 @@ export default async function KnowledgeSearchPage({ searchParams }: Props) {
     level: query?.level,
   });
   const selectedFamilies = normalizeFamilies(query?.family);
+  const searchBy = normalizeSearchBy(query?.searchBy);
   const vocabularySelected = selectedFamilies.length === 0 || selectedFamilies.includes("vocabulary");
   const unsupportedSelected = selectedFamilies.some((family) => family !== "vocabulary");
   const rawQuery = query?.q?.trim() ?? "";
   const result = vocabularySelected
-    ? await loadVocabularySearch(rawQuery, interfaceLocale.code)
+    ? await loadVocabularySearch(rawQuery, interfaceLocale.code, searchBy)
     : null;
   const searchQuery = result?.query ?? rawQuery;
-  const queryExamples = [
-    "椅子",
-    interfaceLocale.code === "vi" ? "ghế" : "chair",
-    "还",
-    "觉得 认为",
-  ];
+
 
   return (
     <main className={styles.page} dir={interfaceLocale.direction}>
@@ -327,21 +328,10 @@ export default async function KnowledgeSearchPage({ searchParams }: Props) {
             className={styles.searchForm}
             familyLabels={labels.families}
             initialFamilies={selectedFamilies}
+            searchScopeLabels={labels.searchScope}
+            initialSearchBy={searchBy}
           />
-          <div className={styles.searchHelp}>
-            <span>{labels.tryLabel}</span>
-            <div className={styles.queryExamples}>
-              {queryExamples.map((example) => (
-                <Link
-                  key={example}
-                  href={stateHref(learnerContextQuery, example, selectedFamilies)}
-                  className={styles.queryChip}
-                >
-                  {example}
-                </Link>
-              ))}
-            </div>
-          </div>
+
         </section>
 
         <section className={styles.results} aria-live="polite">
@@ -397,6 +387,7 @@ export default async function KnowledgeSearchPage({ searchParams }: Props) {
                             query: {
                               ...learnerContextQuery,
                               q: searchQuery,
+                              ...(searchBy !== "all" ? { searchBy } : {}),
                               ...(selectedFamilies.length > 0 ? { family: selectedFamilies } : {}),
                             },
                           }}
