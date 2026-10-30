@@ -150,7 +150,7 @@ export default function VocabularyDetailView({
     ...detail.pronunciations.flatMap((pronunciation) => pronunciation.proficiency),
     ...allReadingItems.flatMap((item) => item.proficiency),
   ]);
-  const headerProficiency = allProficiency.length === 1 ? allProficiency : [];
+  const headerProficiency = allProficiency;
   const singleSummary = allReadingItems.length === 1
     ? vocabularySenseHeading(allReadingItems[0])
     : null;
@@ -195,7 +195,7 @@ export default function VocabularyDetailView({
   };
 
   return (
-    <main className={styles.page} dir={interfaceDirection}>
+    <main className={styles.page} dir={interfaceDirection} data-demo-v837="true">
       <nav className={styles.breadcrumb} aria-label="Breadcrumb">
         <Link href={{ pathname: "/knowledge", query: learnerContextQuery }}>
           {labels.knowledge}
@@ -241,6 +241,10 @@ export default function VocabularyDetailView({
                   }}
                 />
               ) : null}
+              <div className={styles.headerPosChips}>{allPosCodes.map((code) => {
+                const label = posLabel(code, interfaceLocaleCode);
+                return label ? <span key={code} className={styles.headerPosChip}>{label}</span> : null;
+              })}</div>
 
               {hasReadingNavigation ? (
                 <div className={styles.readingSelector} aria-label={labels.readings}>
@@ -374,6 +378,7 @@ export default function VocabularyDetailView({
                                       key={item.publicId}
                                       className={`${styles.sense} ${(item.isSubsense || item.parentPublicId) ? styles.subsense : ""}`}
                                     >
+                                      <div className={styles.senseIntro}>
                                       <div className={styles.senseHead}>
                                         <span className={styles.senseNum}>{itemIndex + 1}</span>
                                         <div className={styles.senseMain}>
@@ -404,6 +409,14 @@ export default function VocabularyDetailView({
                                             </div>
                                           ) : null}
                                         </div>
+                                      </div>
+                                      {item.examples[0] ? (
+                                        <div className={styles.representativeExample}>
+                                          <strong>{item.examples[0].chineseText}</strong>
+                                          {item.examples[0].pinyinText ? <small>{item.examples[0].pinyinText}</small> : null}
+                                          {item.examples[0].translationText ? <span>{item.examples[0].translationText}</span> : null}
+                                        </div>
+                                      ) : null}
                                       </div>
 
                                       <VocabularyRichSupport

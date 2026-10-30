@@ -523,3 +523,38 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Demo v8.3.7 visual hierarchy; preserve content and locale from authored projection. */
+.supportStack { margin: 0; }
+.supportBlock, .classifierBlock, .distinctionBlock, .mistakeBlock, .translationDetails { padding: 16px 0 19px; border-top: 1px solid #eee9df; }
+.supportBlock > h4, .classifierBlock > h4, .distinctionBlock > h4, .mistakeBlock > h4, .translationDetails > h4 { color: #4f5a53; font-size: 17px; font-weight: 700; margin: 0 0 9px; }
+.supportBlock[data-vocabulary-module="usage"] > p { background: #edf4f8; color: #345a70; border: 1px solid #dce8ef; border-radius: 10px; padding: 13px 16px; }
+.supportBlock[data-vocabulary-module="nuance-context"] > p { background: #faf8f2; border: 1px solid #ece6d9; border-radius: 9px; padding: 11px 13px; }
+.translationList { background: transparent; border-radius: 0; border-top: 1px solid #ebe6dc; border-bottom: 1px solid #ebe6dc; padding: 0; margin-top: 0; gap: 0; }
+.translationItem { padding: 9px 4px; grid-template-columns: minmax(90px,auto) minmax(0,1fr); gap: 12px; align-items: baseline; }
+.translationItem strong { color: #2f4c3d; font-size: 17px; }
+.translationItem + .translationItem { border-top: 1px solid #ebe6dc; padding-top: 9px; }
+.collocationList { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
+.collocationItem { min-height: 85px; border: 1px solid #e2eadf; border-radius: 9px; padding: 10px 11px; background: #edf4eb; }
+.collocationExpression { color: #264938; font-size: 17px; font-weight: 700; }
+.constructionPattern { color: #554a65; font-size: 19px; }
+.constructionExamples, .exampleList { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; }
+.exampleItem { background: linear-gradient(135deg,#f1f6ee,#edf3eb); border-radius: 9px; }
+.exampleChinese { color: #244638; font-weight: 700; }
+.relationList { gap: 0; border-block: 1px solid #ebe6dc; }
+.relationItem { display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline; padding: 9px 3px; }
+.relationItem + .relationItem { border-top: 1px solid #ebe6dc; }
+.relationItem strong { color: #2f4c3d; font-size: 17px; }
+.structuredDistinction { display: block; padding: 10px 0; border-top: 1px solid #ebe6dc; }
+.distinctionSummary { display: flex; align-items: center; gap: 10px; list-style: none; cursor: pointer; color: #2f4c3d; font-size: 18px; font-weight: 700; }
+.distinctionSummary::-webkit-details-marker { display: none; }
+.distinctionSummary span:nth-child(2) { color: #a4653f; }
+.distinctionIntro { margin: 8px 0; padding: 9px 11px; border-radius: 8px; background: #edf4f8; }
+.distinctionCompareGrid { gap: 0; }
+.distinctionCard { border: 1px solid #e0dbd1; background: #edf4eb; border-radius: 8px 0 0 8px; padding: 10px 12px; }
+.distinctionCard + .distinctionCard { border-radius: 0 8px 8px 0; border-inline-start: 0; background: #fbf1e8; }
+.mistakeContrast span { background: #fbefeb; }
+.mistakeContrast strong { background: #eef5eb; }
+@container (max-width: 620px) { .collocationList { grid-template-columns: repeat(2,minmax(0,1fr)); } .constructionExamples, .exampleList { grid-template-columns: 1fr; } .translationItem { grid-template-columns: 75px minmax(0,1fr); } }
+@container (max-width: 460px) { .collocationList { grid-template-columns: 1fr; } .distinctionCard, .distinctionCard + .distinctionCard { border: 1px solid #e0dbd1; border-radius: 8px; } .distinctionCard + .distinctionCard { margin-top: 8px; } }

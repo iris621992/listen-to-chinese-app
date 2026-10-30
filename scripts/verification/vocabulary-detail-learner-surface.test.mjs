@@ -543,8 +543,8 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.ok(rich.indexOf('data-vocabulary-module="related-knowledge"') < rich.indexOf('data-vocabulary-module="practice"'));
   assert.match(rich, /item\.examples\.length > 0/);
   assert.match(rich, /useState/);
-  assert.match(rich, /item\.examples\.slice\(0, 2\)/);
-  assert.match(rich, /item\.collocations\.slice\(0, 4\)/);
+  assert.match(rich, /item\.examples\.slice\(0, 3\)/);
+  assert.match(rich, /item\.collocations\.slice\(0, 6\)/);
   assert.match(rich, /construction\.examples\.length > 0/);
   assert.match(rich, /construction\.examples\.map/);
   assert.match(rich, /aria-expanded=\{examplesExpanded\}/);
@@ -767,11 +767,11 @@ test("Vocabulary construction explanations render multi-idea text as separate pa
 });
 
 
-test("Vocabulary header promotes proficiency only when the whole entry has one distinct mapping", async () => {
+test("Vocabulary header shows authored proficiency tags without inventing levels", async () => {
   const view = await read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx");
   assert.ok(view.includes("const allProficiency = distinctProficiency(["));
   assert.ok(view.includes("allReadingItems.flatMap((item) => item.proficiency)"));
-  assert.ok(view.includes("const headerProficiency = allProficiency.length === 1 ? allProficiency : [];"));
+  assert.ok(view.includes("const headerProficiency = allProficiency;"));
   assert.ok(view.includes("proficiency={headerProficiency}"));
   assert.ok(view.includes("item.proficiency.map"));
 });
