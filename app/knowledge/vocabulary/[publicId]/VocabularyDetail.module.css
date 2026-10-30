@@ -831,3 +831,31 @@
     color: #38523b;
   }
 }
+
+
+/* Approved demo v8.3.7, limited to learner vocabulary detail. */
+.page[data-demo-v837="true"] .entryHeader { padding: 8px 0 11px; border: 0; border-radius: 0; background: transparent; box-shadow: none; align-items: flex-start; }
+.page[data-demo-v837="true"] .headword { font-size: 48px; color: #2f4c3d; font-weight: 560; }
+.page[data-demo-v837="true"] .headerPosChips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 9px; }
+.page[data-demo-v837="true"] .headerPosChip { display: inline-flex; align-items: center; min-height: 29px; padding: 0 11px; border: 1px solid #cdd8c8; border-radius: 99px; color: #3d5d49; background: #f4f8f1; font-size: 13px; font-weight: 750; }
+.page[data-demo-v837="true"] .sectionNav { position: sticky; top: 5.5rem; z-index: 31; height: 44px; margin-top: 4px; padding: 0 8px; gap: 17px; align-items: center; border-radius: 0; border: 0; border-bottom: 1px solid #ddd6c8; background: rgba(255,254,251,.985); box-shadow: 0 4px 12px rgba(68,56,42,.03); }
+.page[data-demo-v837="true"] .sectionNav a { min-height: 44px; font-size: 14px; }
+.page[data-demo-v837="true"] .posSection { scroll-margin-top: 9.25rem; }
+.page[data-demo-v837="true"] .entryBody { margin-top: 0; padding: 14px 0 22px; border: 0; box-shadow: none; border-radius: 0; background: transparent; }
+.page[data-demo-v837="true"] .sectionTitle, .page[data-demo-v837="true"] .posSectionHead { position: absolute; height: 1px; width: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.page[data-demo-v837="true"] .posSection + .posSection { border-top: 0; padding-top: 15px; }
+.page[data-demo-v837="true"] .sense { border-top: 0; padding: 10px 0 22px; }
+.page[data-demo-v837="true"] .sense + .sense { border-top: 1px solid #ebe6dc; padding-top: 22px; }
+.page[data-demo-v837="true"] .senseIntro { display: grid; grid-template-columns: minmax(0,1fr) 38%; gap: 17px; align-items: start; border: 1px solid #ebe6dc; border-radius: 12px; background: #fff; padding: 14px 15px; }
+.page[data-demo-v837="true"] .senseHead { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 12px; }
+.page[data-demo-v837="true"] .senseNum { width: 31px; height: 31px; flex: initial; background: #556b53; color: #fff; font-size: 14px; }
+.page[data-demo-v837="true"] .meaning { font-size: 24px; font-weight: 800; color: #0d513e; }
+.page[data-demo-v837="true"] .meaningExplanation { margin-top: 5px; font-size: 15px; color: #4e5751; }
+.page[data-demo-v837="true"] .representativeExample { min-width: 0; display: grid; align-content: start; gap: 2px; padding: 11px 13px; border-radius: 9px; background: linear-gradient(135deg,#f1f6ee,#edf3eb); }
+.page[data-demo-v837="true"] .representativeExample strong { color: #244638; font-size: 17px; font-weight: 700; }
+.page[data-demo-v837="true"] .representativeExample small { color: #a4653f; font-size: 13px; }
+.page[data-demo-v837="true"] .representativeExample span { color: #505851; font-size: 14px; }
+.page[data-demo-v837="true"] .subsense { margin-inline-start: 0; }
+@media (max-width: 820px) { .page[data-demo-v837="true"] .senseIntro { grid-template-columns: 1fr; } }
+@media (max-width: 620px) { .page[data-demo-v837="true"] .entryHeader { padding: 7px 0 10px; } .page[data-demo-v837="true"] .headword { font-size: 42px; } .page[data-demo-v837="true"] .sectionNav { top: 4.625rem; } .page[data-demo-v837="true"] .posSection { scroll-margin-top: 8rem; } .page[data-demo-v837="true"] .senseIntro { padding: 12px; } }
+@media (max-width: 900px) and (max-height: 520px) and (orientation: landscape) { .page[data-demo-v837="true"] .sectionNav { position: static; } }
