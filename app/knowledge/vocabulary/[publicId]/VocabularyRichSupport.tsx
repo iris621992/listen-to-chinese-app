@@ -257,16 +257,6 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
             {item.translationEquivalents.map((translation) => (
               <div key={translation.publicId} className={styles.translationItem}>
                 <strong>{translation.expression}</strong>
-                {translation.contextRestriction ? (
-                  <span className={styles.translationContext}>
-                    <LearnerInline text={translation.contextRestriction} />
-                  </span>
-                ) : null}
-                {translation.mismatchNote ? (
-                  <small className={styles.translationMismatch}>
-                    <LearnerInline text={translation.mismatchNote} />
-                  </small>
-                ) : null}
               </div>
             ))}
           </div>
