@@ -709,16 +709,13 @@ test("GF0025 proficiency renders compact HSK label without a space", async () =>
 });
 
 
-test("Vocabulary translation guidance keeps reviewed learner copy but excludes unreviewed editorial fields", async () => {
+test("Translation Equivalent preserves learner context and mismatch notes", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
-  assert.ok(rich.includes("const authoredUsageCopy = distinctLearnerProse("));
-  assert.ok(rich.includes("item.usage?.context"));
-  assert.ok(rich.includes("item.fullExplanation"));
-  assert.ok(rich.includes("const translationSummary = item.translationEquivalents.length > 0"));
-  assert.ok(rich.includes("item.usageNote"));
-  assert.match(rich, /<strong>\{translation\.expression\}<\/strong>/u);
-  assert.doesNotMatch(rich, /translation\.contextRestriction/u);
-  assert.doesNotMatch(rich, /translation\.mismatchNote/u);
+  assert.ok(rich.includes("translation.contextRestriction"));
+  assert.ok(rich.includes("translation.mismatchNote"));
+  assert.ok(rich.includes("<LearnerInline text={translation.contextRestriction} />"));
+  assert.ok(rich.includes("<LearnerInline text={translation.mismatchNote} />"));
+  assert.doesNotMatch(rich, /translation\.equivalenceProfile|translation\.preferenceStatus/u);
 });
 
 test("Vocabulary learner page falls back to the exact single Han character when K1E is empty", async () => {
@@ -748,25 +745,23 @@ test("Vocabulary learner POS labels never expose raw surname code", async () => 
   assert.doesNotMatch(view, /<span[^>]*>\{group\.posCode\}<\/span>/);
 });
 
-test("Vocabulary translation equivalents do not leak internal EN editor notes on VI learner surfaces", async () => {
+test("Translation Equivalent guidance stays aligned with its expression", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
-  assert.match(rich, /item\.translationEquivalents\.map/u);
-  assert.match(rich, /<strong>\{translation\.expression\}<\/strong>/u);
-  assert.doesNotMatch(rich, /translation\.contextRestriction/u);
-  assert.doesNotMatch(rich, /translation\.mismatchNote/u);
+  const css = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css");
+  const detail = await read("lib/vocabularyDetail.ts");
+  assert.ok(rich.includes("item.translationEquivalents.map"));
+  assert.ok(css.includes(".translationContext"));
+  assert.ok(css.includes(".translationMismatch"));
+  assert.ok(detail.includes("translation.localeCode === exactContentLocaleCode"));
 });
 
-test("Vocabulary construction explanations render multi-idea text as separate paragraphs", async () => {
+test("Vocabulary prose only splits where the author placed a blank line", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
   assert.ok(rich.includes("function splitLearnerProseParagraphs(text: string): string[]"));
-  assert.ok(rich.includes('character === "。"'));
-  assert.ok(rich.includes('character === "；"'));
-  assert.ok(rich.includes('character === "\\n"'));
-  assert.ok(rich.includes("construction.explanation"));
-  assert.ok(rich.includes("LearnerProse"));
-  assert.doesNotMatch(rich, /construction\.explanation \? <p>\{construction\.explanation\}<\/p> : null/);
+  assert.ok(rich.includes("function LearnerProse("));
+  assert.doesNotMatch(rich, /const closesIdea/);
+  assert.doesNotMatch(rich, /character === "；"|character === "。"/);
 });
-
 
 test("Vocabulary header shows authored proficiency tags without inventing levels", async () => {
   const view = await read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx");
@@ -790,13 +785,11 @@ test("Vocabulary learner prose keeps module ownership and suppresses exact dupli
   assert.ok(rich.includes("item.pragmaticExplanation"));
 });
 
-test("Vocabulary learner-facing prose shares sentence-aware paragraph rendering", async () => {
+test("Vocabulary authored prose retains paragraph boundaries in all module surfaces", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
-  assert.ok(rich.includes("function splitLearnerProseParagraphs(text: string): string[]"));
-  assert.ok(rich.includes("function LearnerProse("));
+  assert.ok(rich.includes("function splitLearnerProseParagraphs("));
   assert.ok(rich.includes("translation-guidance"));
   assert.ok(rich.includes("memory-tip"));
   assert.ok(rich.includes("construction.explanation"));
-  assert.ok(rich.includes('character === "；"'));
-  assert.ok(rich.includes('character === "\\n"'));
+  assert.doesNotMatch(rich, /const closesIdea/);
 });
