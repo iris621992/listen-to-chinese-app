@@ -127,7 +127,7 @@ export function LearnerInline({ text }: { text: string }) {
   let cursor = 0;
   let emphasisIndex = 0;
   for (const match of text.matchAll(/\*\*([^*\n]+)\*\*/gu)) {
-    const at = match.index;
+    const at = match.index ?? cursor;
     if (at > cursor) content.push(text.slice(cursor, at));
     content.push(<strong key={emphasisIndex++}>{match[1]}</strong>);
     cursor = at + match[0].length;
