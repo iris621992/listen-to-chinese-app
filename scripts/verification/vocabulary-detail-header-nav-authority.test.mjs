@@ -68,6 +68,6 @@ test("Demo v8.3.7 preserves in-page POS anchors and authored example content", a
   assert.match(view, /<LearnerInline text=\{item\.fullExplanation\} \/>/u);
   assert.match(rich, /export function LearnerInline/u);
   assert.match(rich, /text\.matchAll\(/u);
-  assert.match(rich, /<LearnerInline text=\{distinction\.sourceUseWhen\} \/>/u);
+  assert.match(rich, /<LearnerInline text=\{distinction\.sourceUseWhen!\} \/>/u);
   assert.match(rich, /<LearnerInline text=\{collocation\.learnerMeaning\} \/>/u);
 });
