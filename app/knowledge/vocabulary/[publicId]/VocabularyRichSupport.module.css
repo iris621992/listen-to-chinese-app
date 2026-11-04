@@ -153,6 +153,7 @@
   line-height: 1.6;
 }
 .translationMismatch {
+  grid-column: 2;
   min-width: 0;
   color: #6a716a;
   font-size: 12.5px;
