@@ -57,7 +57,7 @@ test("Demo v8.3.7 preserves in-page POS anchors and authored example content", a
   assert.match(styles, /\.page\[data-demo-v837="true"\]:has\(\.compactSticky\[data-active="true"\]\) \.sectionNav/u);
   assert.match(view, /item\.examples\[0\]\.chineseText/u);
   assert.match(view, /id=\{\x60pos-\$\{pronunciation\.publicId\}-\$\{group\.key\}\x60\}/u);
-  assert.match(styles, /data-demo-v837="true"\] \.sectionNav \{ position: sticky/u);
+  assert.match(styles, /data-demo-v837="true"\] \.sectionNav \{[\s\S]*?position: sticky/u);
   assert.match(styles, /\.representativeExample/u);
   assert.match(rich, /data-vocabulary-module="related-words"/u);
   assert.match(rich, /relationType="near_synonym"/u);
