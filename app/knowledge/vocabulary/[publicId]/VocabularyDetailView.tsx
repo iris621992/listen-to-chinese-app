@@ -11,6 +11,7 @@ import type {
 import { vocabularySenseHeading } from "@/lib/vocabularySenseHeading";
 import KnowledgeLanguageToggle from "./KnowledgeLanguageToggle";
 import VocabularyCharacterRail from "./VocabularyCharacterRail";
+import VocabularyPronunciationMeta from "./VocabularyPronunciationMeta";
 import VocabularyRichSupport, { LearnerInline } from "./VocabularyRichSupport";
 import VocabularyStickyNav from "./VocabularyStickyNav";
 import {
@@ -243,21 +244,22 @@ export default function VocabularyDetailView({
                   ) : null;
                 })}
               </div>
-              {(secondaryForms.length > 0 || (showHanViet && detail.hanViet?.text)) ? (
+              {(secondaryForms.length > 0 || (showHanViet && detail.hanViet?.text)) && primaryPronunciation ? (
                 <div className={styles.headerSubmeta}>
-                  {secondaryForms.map((form) => (
-                    <span key={form.publicId}>
-                      {form.scriptVariantCode === "traditional"
-                        ? labels.traditional
-                        : form.scriptVariantCode === "simplified"
-                          ? labels.simplified
-                          : labels.writtenForm}:
-                      <strong className={styles.secondaryWrittenForm}> {form.text}</strong>
-                    </span>
-                  ))}
-                  {showHanViet && detail.hanViet?.text ? (
-                    <span>{labels.hanViet}: <strong>{detail.hanViet.text}</strong></span>
-                  ) : null}
+                  <VocabularyPronunciationMeta
+                    pronunciation={primaryPronunciation.pronunciation}
+                    secondaryOnly
+                    hanViet={showHanViet ? detail.hanViet?.text ?? null : null}
+                    secondaryForms={secondaryForms}
+                    proficiency={[]}
+                    labels={{
+                      hanViet: labels.hanViet,
+                      traditional: labels.traditional,
+                      simplified: labels.simplified,
+                      writtenForm: labels.writtenForm,
+                      proficiency: labels.proficiency,
+                    }}
+                  />
                 </div>
               ) : null}
 
