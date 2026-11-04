@@ -773,7 +773,8 @@ test("Vocabulary header shows authored proficiency tags without inventing levels
   assert.ok(view.includes("const allProficiency = distinctProficiency(["));
   assert.ok(view.includes("allReadingItems.flatMap((item) => item.proficiency)"));
   assert.ok(view.includes("const headerProficiency = allProficiency;"));
-  assert.ok(view.includes("headerProficiency.map((row) =>"));\n  assert.ok(view.includes("row.levelSystemCode === \"gf0025_2021\""));
+  assert.ok(view.includes("headerProficiency.map((row) =>"));
+  assert.ok(view.includes("row.levelSystemCode === \"gf0025_2021\""));
   assert.ok(view.includes("item.proficiency.map"));
 });
 
