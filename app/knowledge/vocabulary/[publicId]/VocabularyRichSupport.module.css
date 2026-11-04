@@ -140,6 +140,19 @@
   border-top: 1px dashed #e7e2d8;
 }
 
+.translationContext {
+  min-width: 0;
+  color: #576159;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.translationMismatch {
+  grid-column: 1 / -1;
+  min-width: 0;
+  color: #576159;
+  font-size: 13px;
+  line-height: 1.6;
+}
 .translationItem strong {
   color: #37453a;
   font-size: 14px;
@@ -532,7 +545,7 @@
 .supportBlock[data-vocabulary-module="usage"] > p { background: #edf4f8; color: #345a70; border: 1px solid #dce8ef; border-radius: 10px; padding: 13px 16px; }
 .supportBlock[data-vocabulary-module="nuance-context"] > p { background: #faf8f2; border: 1px solid #ece6d9; border-radius: 9px; padding: 11px 13px; }
 .translationList { background: transparent; border-radius: 0; border-top: 1px solid #ebe6dc; border-bottom: 1px solid #ebe6dc; padding: 0; margin-top: 0; gap: 0; }
-.translationItem { padding: 9px 4px; grid-template-columns: minmax(90px,auto) minmax(0,1fr); gap: 12px; align-items: baseline; }
+.translationItem { padding: 9px 4px; grid-template-columns: minmax(160px,auto) minmax(0,1fr); gap: 12px; align-items: baseline; }
 .translationItem strong { color: #2f4c3d; font-size: 17px; }
 .translationItem + .translationItem { border-top: 1px solid #ebe6dc; padding-top: 9px; }
 .collocationList { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 8px; }
@@ -556,5 +569,5 @@
 .distinctionCard + .distinctionCard { border-radius: 0 8px 8px 0; border-inline-start: 0; background: #fbf1e8; }
 .mistakeContrast span { background: #fbefeb; }
 .mistakeContrast strong { background: #eef5eb; }
-@container (max-width: 620px) { .collocationList { grid-template-columns: repeat(2,minmax(0,1fr)); } .constructionExamples, .exampleList { grid-template-columns: 1fr; } .translationItem { grid-template-columns: 75px minmax(0,1fr); } }
+@container (max-width: 620px) { .collocationList { grid-template-columns: repeat(2,minmax(0,1fr)); } .constructionExamples, .exampleList { grid-template-columns: 1fr; } .translationItem { grid-template-columns: minmax(0, 1fr); gap: 4px; } .translationMismatch { grid-column: 1; } }
 @container (max-width: 460px) { .collocationList { grid-template-columns: 1fr; } .distinctionCard, .distinctionCard + .distinctionCard { border: 1px solid #e0dbd1; border-radius: 8px; } .distinctionCard + .distinctionCard { margin-top: 8px; } }
