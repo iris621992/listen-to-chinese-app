@@ -709,18 +709,16 @@ test("GF0025 proficiency renders compact HSK label without a space", async () =>
 });
 
 
-test("Vocabulary learner translation guidance preserves authored scope without leaking internal codes", async () => {
+test("Vocabulary translation guidance keeps reviewed learner copy but excludes unreviewed editorial fields", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
   assert.ok(rich.includes("const authoredUsageCopy = distinctLearnerProse("));
   assert.ok(rich.includes("item.usage?.context"));
   assert.ok(rich.includes("item.fullExplanation"));
   assert.ok(rich.includes("const translationSummary = item.translationEquivalents.length > 0"));
   assert.ok(rich.includes("item.usageNote"));
-  assert.match(rich, /translation\.contextRestriction \? \(/u);
-  assert.match(rich, /translation\.mismatchNote \? \(/u);
-  assert.match(rich, /<LearnerInline text=\{translation\.contextRestriction\} \/>/u);
-  assert.match(rich, /<LearnerInline text=\{translation\.mismatchNote\} \/>/u);
-  assert.doesNotMatch(rich, /translation\.equivalenceProfile|translation\.preferenceStatus|translation\.directionality/u);
+  assert.match(rich, /<strong>\{translation\.expression\}<\/strong>/u);
+  assert.doesNotMatch(rich, /translation\.contextRestriction/u);
+  assert.doesNotMatch(rich, /translation\.mismatchNote/u);
 });
 
 test("Vocabulary learner page falls back to the exact single Han character when K1E is empty", async () => {
@@ -750,15 +748,12 @@ test("Vocabulary learner POS labels never expose raw surname code", async () => 
   assert.doesNotMatch(view, /<span[^>]*>\{group\.posCode\}<\/span>/);
 });
 
-test("Vocabulary learner translations retain VI/EN authored context and mismatch notes as optional learner copy", async () => {
+test("Vocabulary translation equivalents do not leak internal EN editor notes on VI learner surfaces", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
-  const style = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css");
   assert.match(rich, /item\.translationEquivalents\.map/u);
   assert.match(rich, /<strong>\{translation\.expression\}<\/strong>/u);
-  assert.match(rich, /translation\.contextRestriction \? \(/u);
-  assert.match(rich, /translation\.mismatchNote \? \(/u);
-  assert.match(style, /\.translationContext/u);
-  assert.match(style, /\.translationMismatch/u);
+  assert.doesNotMatch(rich, /translation\.contextRestriction/u);
+  assert.doesNotMatch(rich, /translation\.mismatchNote/u);
 });
 
 test("Vocabulary construction explanations render multi-idea text as separate paragraphs", async () => {
