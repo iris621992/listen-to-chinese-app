@@ -60,49 +60,14 @@ function RelationTarget({ target }: { target: VocabularyRelationTarget }) {
 
 
 function splitLearnerProseParagraphs(text: string): string[] {
-  const normalized = text.replace(/\r\n?/g, "\n").trim();
-  if (!normalized) return [];
-
-  const paragraphs: string[] = [];
-  let buffer = "";
-
-  for (let index = 0; index < normalized.length; index += 1) {
-    const character = normalized[index];
-    const nextCharacter = normalized[index + 1];
-    buffer += character;
-
-    const closesIdea =
-      character === "。"
-      || character === "！"
-      || character === "？"
-      || character === "!"
-      || character === "?"
-      || character === "；"
-      || character === ";"
-      || character === "\n"
-      || (
-        character === "."
-        && (nextCharacter === undefined || /\s/u.test(nextCharacter))
-      );
-
-    if (!closesIdea) continue;
-
-    const paragraph = buffer.trim();
-    if (paragraph) paragraphs.push(paragraph);
-    buffer = "";
-
-    while (
-      index + 1 < normalized.length
-      && /[ \t]/u.test(normalized[index + 1])
-    ) {
-      index += 1;
-    }
-  }
-
-  const trailingParagraph = buffer.trim();
-  if (trailingParagraph) paragraphs.push(trailingParagraph);
-
-  return paragraphs.length > 0 ? paragraphs : [normalized];
+  // Knowledge-authored blank lines mark paragraph boundaries. Punctuation does not:
+  // splitting sentences would invent visual grouping not accepted by the Owner.
+  return text
+    .replace(/\r\n?/gu, "\n")
+    .trim()
+    .split(/\n[ \t]*\n+/gu)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 }
 
 function normalizedLearnerProse(value: string | null | undefined): string | null {
@@ -257,6 +222,17 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
             {item.translationEquivalents.map((translation) => (
               <div key={translation.publicId} className={styles.translationItem}>
                 <strong>{translation.expression}</strong>
+                {translation.contextRestriction ? (
+                  <span className={styles.translationContext}>
+                    <span aria-hidden="true">— </span>
+                    <LearnerInline text={translation.contextRestriction} />
+                  </span>
+                ) : null}
+                {translation.mismatchNote ? (
+                  <small className={styles.translationMismatch}>
+                    <LearnerInline text={translation.mismatchNote} />
+                  </small>
+                ) : null}
               </div>
             ))}
           </div>
