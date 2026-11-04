@@ -11,7 +11,6 @@ import type {
 import { vocabularySenseHeading } from "@/lib/vocabularySenseHeading";
 import KnowledgeLanguageToggle from "./KnowledgeLanguageToggle";
 import VocabularyCharacterRail from "./VocabularyCharacterRail";
-import VocabularyPronunciationMeta from "./VocabularyPronunciationMeta";
 import VocabularyRichSupport from "./VocabularyRichSupport";
 import VocabularyStickyNav from "./VocabularyStickyNav";
 import {
@@ -222,29 +221,45 @@ export default function VocabularyDetailView({
         >
           <header id="vocabulary-entry-header" className={styles.entryHeader}>
             <div className={styles.headwordWrap}>
-              <div className={styles.writtenLine}>
+              <div className={styles.identityRow}>
                 <h1 className={styles.headword}>{detail.displayForm}</h1>
+                {primaryPronunciation ? (
+                  <span className={styles.inlinePinyin}>{primaryPronunciation.pronunciation}</span>
+                ) : null}
+                {headerProficiency.map((row) => (
+                  <span
+                    key={row.levelSystemCode + row.levelCode}
+                    className={styles.headerHskChip}
+                  >
+                    {row.levelSystemCode === "gf0025_2021"
+                      ? `${labels.proficiency} ${row.levelCode}`
+                      : `${row.levelSystemCode} ${row.levelCode}`}
+                  </span>
+                ))}
+                {allPosCodes.map((code) => {
+                  const label = posLabel(code, interfaceLocaleCode);
+                  return label ? (
+                    <span key={code} className={styles.headerPosChip}>{label}</span>
+                  ) : null;
+                })}
               </div>
-
-              {primaryPronunciation ? (
-                <VocabularyPronunciationMeta
-                  pronunciation={primaryPronunciation.pronunciation}
-                  hanViet={showHanViet ? detail.hanViet?.text ?? null : null}
-                  secondaryForms={secondaryForms}
-                  proficiency={headerProficiency}
-                  labels={{
-                    hanViet: labels.hanViet,
-                    traditional: labels.traditional,
-                    simplified: labels.simplified,
-                    writtenForm: labels.writtenForm,
-                    proficiency: labels.proficiency,
-                  }}
-                />
+              {(secondaryForms.length > 0 || (showHanViet && detail.hanViet?.text)) ? (
+                <div className={styles.headerSubmeta}>
+                  {secondaryForms.map((form) => (
+                    <span key={form.publicId}>
+                      {form.scriptVariantCode === "traditional"
+                        ? labels.traditional
+                        : form.scriptVariantCode === "simplified"
+                          ? labels.simplified
+                          : labels.writtenForm}:
+                      <strong className={styles.secondaryWrittenForm}> {form.text}</strong>
+                    </span>
+                  ))}
+                  {showHanViet && detail.hanViet?.text ? (
+                    <span>{labels.hanViet}: <strong>{detail.hanViet.text}</strong></span>
+                  ) : null}
+                </div>
               ) : null}
-              <div className={styles.headerPosChips}>{allPosCodes.map((code) => {
-                const label = posLabel(code, interfaceLocaleCode);
-                return label ? <span key={code} className={styles.headerPosChip}>{label}</span> : null;
-              })}</div>
 
               {hasReadingNavigation ? (
                 <div className={styles.readingSelector} aria-label={labels.readings}>
