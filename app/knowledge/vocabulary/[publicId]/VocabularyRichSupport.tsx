@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type {
   VocabularyExample,
   VocabularyLexicalRelation,
@@ -123,15 +123,17 @@ function distinctLearnerProse(
 
 /** Render author-supplied Markdown emphasis as typography, without rewriting copy. */
 export function LearnerInline({ text }: { text: string }) {
-  return (
-    <>
-      {text.split(/(\*\*[^*\n]+\*\*)/gu).map((piece, index) =>
-        piece.startsWith("**") && piece.endsWith("**") && piece.length > 4
-          ? <strong key={index}>{piece.slice(2, -2)}</strong>
-          : piece
-      )}
-    </>
-  );
+  const content: ReactNode[] = [];
+  let cursor = 0;
+  let emphasisIndex = 0;
+  for (const match of text.matchAll(/\*\*([^*\n]+)\*\*/gu)) {
+    const at = match.index;
+    if (at > cursor) content.push(text.slice(cursor, at));
+    content.push(<strong key={emphasisIndex++}>{match[1]}</strong>);
+    cursor = at + match[0].length;
+  }
+  if (cursor < text.length) content.push(text.slice(cursor));
+  return <>{content}</>;
 }
 
 function LearnerProse({
