@@ -413,7 +413,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                   <div className={styles.distinctionCompareGrid}>
                     <section className={styles.distinctionCard}>
                       <strong className={styles.distinctionTerm}>{sourceExpression}</strong>
-                      <p className={styles.distinctionUse}><LearnerInline text={distinction.sourceUseWhen} /></p>
+                      <p className={styles.distinctionUse}><LearnerInline text={distinction.sourceUseWhen!} /></p>
                       <div className={styles.distinctionExamples}>
                         {distinction.contrastExamples.map((example, index) => (
                           <span key={distinction.publicId + "-source-" + index}>
@@ -426,7 +426,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                     </section>
                     <section className={styles.distinctionCard}>
                       <strong className={styles.distinctionTerm}>{distinction.targetExpression}</strong>
-                      <p className={styles.distinctionUse}><LearnerInline text={distinction.targetUseWhen} /></p>
+                      <p className={styles.distinctionUse}><LearnerInline text={distinction.targetUseWhen!} /></p>
                       <div className={styles.distinctionExamples}>
                         {distinction.contrastExamples.map((example, index) => (
                           <span key={distinction.publicId + "-target-" + index}>
