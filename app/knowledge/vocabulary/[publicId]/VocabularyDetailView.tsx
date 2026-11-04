@@ -11,7 +11,7 @@ import type {
 import { vocabularySenseHeading } from "@/lib/vocabularySenseHeading";
 import KnowledgeLanguageToggle from "./KnowledgeLanguageToggle";
 import VocabularyCharacterRail from "./VocabularyCharacterRail";
-import VocabularyRichSupport from "./VocabularyRichSupport";
+import VocabularyRichSupport, { LearnerInline } from "./VocabularyRichSupport";
 import VocabularyStickyNav from "./VocabularyStickyNav";
 import {
   knowledgeLanguageUserLabel,
@@ -404,7 +404,7 @@ export default function VocabularyDetailView({
                                             <h3 className={styles.meaning}>{meaningHeading}</h3>
                                           ) : null}
                                           {item.fullExplanation ? (
-                                            <p className={styles.meaningExplanation}>{item.fullExplanation}</p>
+                                            <p className={styles.meaningExplanation}><LearnerInline text={item.fullExplanation} /></p>
                                           ) : null}
                                           {(itemRegion || item.proficiency.length > 0) ? (
                                             <div className={styles.tags}>
