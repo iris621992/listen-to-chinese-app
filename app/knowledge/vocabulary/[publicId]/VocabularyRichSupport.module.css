@@ -146,19 +146,6 @@
   font-weight: 650;
 }
 
-.translationContext {
-  min-width: 0;
-  color: #5e655e;
-  font-size: 13px;
-  line-height: 1.6;
-}
-.translationMismatch {
-  grid-column: 2;
-  min-width: 0;
-  color: #6a716a;
-  font-size: 12.5px;
-  line-height: 1.6;
-}
 .translationItem p,
 .translationItem small {
   margin: 0;
