@@ -59,6 +59,9 @@ test("Demo v8.3.7 preserves in-page POS anchors and authored example content", a
   assert.match(view, /id=\{\x60pos-\$\{pronunciation\.publicId\}-\$\{group\.key\}\x60\}/u);
   assert.match(styles, /data-demo-v837="true"\] \.sectionNav \{[\s\S]*?position: sticky/u);
   assert.match(styles, /\.representativeExample/u);
+  assert.match(styles, /\.senseIntro:not\(:has\(\.representativeExample\)\)/u);
+  assert.match(styles, /\.senseIntro:not\(:has\(\.representativeExample\)\) \.meaningExplanation/u);
+  assert.match(view, /item\.examples\[0\] \? \(/u);
   assert.match(rich, /data-vocabulary-module="related-words"/u);
   assert.match(rich, /relationType="near_synonym"/u);
   assert.match(rich, /<section className=\{styles\.translationDetails\}/u);
