@@ -973,6 +973,14 @@
   background: #fff;
   padding: 14px 15px;
 }
+/* Only allocate the right-hand column when an authored example actually exists.
+   Surname/reference RIs without a representative example use the entire card. */
+.page[data-demo-v837="true"] .senseIntro:not(:has(.representativeExample)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.page[data-demo-v837="true"] .senseIntro:not(:has(.representativeExample)) .meaningExplanation {
+  max-width: none;
+}
 .page[data-demo-v837="true"] .senseHead {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
