@@ -59,8 +59,10 @@ test("Demo v8.3.7 preserves in-page POS anchors and authored example content", a
   assert.match(view, /id=\{\x60pos-\$\{pronunciation\.publicId\}-\$\{group\.key\}\x60\}/u);
   assert.match(styles, /data-demo-v837="true"\] \.sectionNav \{[\s\S]*?position: sticky/u);
   assert.match(styles, /\.representativeExample/u);
-  assert.match(styles, /\.senseIntro:not\(:has\(\.representativeExample\)\)/u);
-  assert.match(styles, /\.senseIntro:not\(:has\(\.representativeExample\)\) \.meaningExplanation/u);
+  assert.match(view, /data-has-representative-example=\{item\.examples\[0\] \? "true" : "false"\}/u);
+  assert.match(styles, /\.senseIntro\[data-has-representative-example="false"\]/u);
+  assert.match(styles, /\.senseIntro\[data-has-representative-example="false"\] \.meaningExplanation/u);
+  assert.doesNotMatch(styles, /\.senseIntro:not\(:has\(\.representativeExample\)\)/u);
   assert.match(view, /item\.examples\[0\] \? \(/u);
   assert.match(rich, /data-vocabulary-module="related-words"/u);
   assert.match(rich, /relationType="near_synonym"/u);
