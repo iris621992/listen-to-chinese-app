@@ -964,24 +964,13 @@
   border-top: 1px solid #ebe6dc;
 }
 .page[data-demo-v837="true"] .senseIntro {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 38%;
-  gap: 17px;
-  align-items: start;
+  display: block;
   border: 1px solid #ebe6dc;
   border-radius: 12px;
   background: #fff;
   padding: 14px 15px;
 }
-/* Only allocate the right-hand column when an authored example actually exists.
-   Surname/reference RIs without a representative example use the entire card. */
-.page[data-demo-v837="true"] .senseIntro[data-has-representative-example="false"] {
-  grid-template-columns: minmax(0, 1fr);
-}
-.page[data-demo-v837="true"] .senseIntro[data-has-representative-example="false"] .senseHead {
-  min-width: 0;
-}
-.page[data-demo-v837="true"] .senseIntro[data-has-representative-example="false"] .meaningExplanation {
+.page[data-demo-v837="true"] .senseIntro .meaningExplanation {
   max-width: none;
 }
 .page[data-demo-v837="true"] .senseHead {
@@ -1008,32 +997,9 @@
   color: #4e5751;
   font-size: 15px;
 }
-.page[data-demo-v837="true"] .representativeExample {
-  display: grid;
-  min-width: 0;
-  align-content: start;
-  gap: 2px;
-  border-radius: 9px;
-  background: linear-gradient(135deg, #f1f6ee, #edf3eb);
-  padding: 11px 13px;
-}
-.page[data-demo-v837="true"] .representativeExample strong {
-  color: #244638;
-  font-size: 17px;
-  font-weight: 700;
-}
-.page[data-demo-v837="true"] .representativeExample small {
-  color: #a4653f;
-  font-size: 13px;
-}
-.page[data-demo-v837="true"] .representativeExample span {
-  color: #505851;
-  font-size: 14px;
-}
 .page[data-demo-v837="true"] .subsense { margin-inline-start: 0; }
 
 @media (max-width: 820px) {
-  .page[data-demo-v837="true"] .senseIntro { grid-template-columns: 1fr; }
   .page[data-demo-v837="true"] .headerActions {
     min-width: 0;
     justify-content: flex-start;
