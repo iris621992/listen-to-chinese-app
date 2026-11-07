@@ -395,7 +395,7 @@ export default function VocabularyDetailView({
                                       key={item.publicId}
                                       className={`${styles.sense} ${(item.isSubsense || item.parentPublicId) ? styles.subsense : ""}`}
                                     >
-                                      <div className={styles.senseIntro}>
+                                      <div className={styles.senseIntro} data-has-representative-example={item.examples[0] ? "true" : "false"}>
                                       <div className={styles.senseHead}>
                                         <span className={styles.senseNum}>{itemIndex + 1}</span>
                                         <div className={styles.senseMain}>
