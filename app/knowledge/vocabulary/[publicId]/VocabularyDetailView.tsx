@@ -395,7 +395,7 @@ export default function VocabularyDetailView({
                                       key={item.publicId}
                                       className={`${styles.sense} ${(item.isSubsense || item.parentPublicId) ? styles.subsense : ""}`}
                                     >
-                                      <div className={styles.senseIntro} data-has-representative-example={item.examples[0] ? "true" : "false"}>
+                                      <div className={styles.senseIntro}>
                                       <div className={styles.senseHead}>
                                         <span className={styles.senseNum}>{itemIndex + 1}</span>
                                         <div className={styles.senseMain}>
@@ -427,13 +427,6 @@ export default function VocabularyDetailView({
                                           ) : null}
                                         </div>
                                       </div>
-                                      {item.examples[0] ? (
-                                        <div className={styles.representativeExample}>
-                                          <strong>{item.examples[0].chineseText}</strong>
-                                          {item.examples[0].pinyinText ? <small>{item.examples[0].pinyinText}</small> : null}
-                                          {item.examples[0].translationText ? <span>{item.examples[0].translationText}</span> : null}
-                                        </div>
-                                      ) : null}
                                       </div>
 
                                       <VocabularyRichSupport
