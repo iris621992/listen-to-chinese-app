@@ -975,10 +975,13 @@
 }
 /* Only allocate the right-hand column when an authored example actually exists.
    Surname/reference RIs without a representative example use the entire card. */
-.page[data-demo-v837="true"] .senseIntro:not(:has(.representativeExample)) {
+.page[data-demo-v837="true"] .senseIntro[data-has-representative-example="false"] {
   grid-template-columns: minmax(0, 1fr);
 }
-.page[data-demo-v837="true"] .senseIntro:not(:has(.representativeExample)) .meaningExplanation {
+.page[data-demo-v837="true"] .senseIntro[data-has-representative-example="false"] .senseHead {
+  min-width: 0;
+}
+.page[data-demo-v837="true"] .senseIntro[data-has-representative-example="false"] .meaningExplanation {
   max-width: none;
 }
 .page[data-demo-v837="true"] .senseHead {
