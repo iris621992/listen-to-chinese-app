@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import type {
   VocabularyExample,
   VocabularyLexicalRelation,
@@ -42,9 +42,9 @@ function LearnerExample({ example }: { example: VocabularyExample }) {
         <span className={styles.examplePinyin}>{example.pinyinText}</span>
       ) : null}
       {example.translationText ? (
-        <span className={styles.exampleTranslation}>{example.translationText}</span>
+        <span className={styles.exampleTranslation}><LearnerInline text={example.translationText} /></span>
       ) : null}
-      {example.learnerExplanation ? <small>{example.learnerExplanation}</small> : null}
+      {example.learnerExplanation ? <small><LearnerInline text={example.learnerExplanation} /></small> : null}
     </div>
   );
 }
@@ -60,49 +60,14 @@ function RelationTarget({ target }: { target: VocabularyRelationTarget }) {
 
 
 function splitLearnerProseParagraphs(text: string): string[] {
-  const normalized = text.replace(/\r\n?/g, "\n").trim();
-  if (!normalized) return [];
-
-  const paragraphs: string[] = [];
-  let buffer = "";
-
-  for (let index = 0; index < normalized.length; index += 1) {
-    const character = normalized[index];
-    const nextCharacter = normalized[index + 1];
-    buffer += character;
-
-    const closesIdea =
-      character === "。"
-      || character === "！"
-      || character === "？"
-      || character === "!"
-      || character === "?"
-      || character === "；"
-      || character === ";"
-      || character === "\n"
-      || (
-        character === "."
-        && (nextCharacter === undefined || /\s/u.test(nextCharacter))
-      );
-
-    if (!closesIdea) continue;
-
-    const paragraph = buffer.trim();
-    if (paragraph) paragraphs.push(paragraph);
-    buffer = "";
-
-    while (
-      index + 1 < normalized.length
-      && /[ \t]/u.test(normalized[index + 1])
-    ) {
-      index += 1;
-    }
-  }
-
-  const trailingParagraph = buffer.trim();
-  if (trailingParagraph) paragraphs.push(trailingParagraph);
-
-  return paragraphs.length > 0 ? paragraphs : [normalized];
+  // Knowledge-authored blank lines mark paragraph boundaries. Punctuation does not:
+  // splitting sentences would invent visual grouping not accepted by the Owner.
+  return text
+    .replace(/\r\n?/gu, "\n")
+    .trim()
+    .split(/\n[ \t]*\n+/gu)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
 }
 
 function normalizedLearnerProse(value: string | null | undefined): string | null {
@@ -121,6 +86,21 @@ function distinctLearnerProse(
     : candidate;
 }
 
+/** Render author-supplied Markdown emphasis as typography, without rewriting copy. */
+export function LearnerInline({ text }: { text: string }) {
+  const content: ReactNode[] = [];
+  let cursor = 0;
+  let emphasisIndex = 0;
+  for (const match of text.matchAll(/\*\*([^*\n]+)\*\*/gu)) {
+    const at = match.index ?? cursor;
+    if (at > cursor) content.push(text.slice(cursor, at));
+    content.push(<strong key={emphasisIndex++}>{match[1]}</strong>);
+    cursor = at + match[0].length;
+  }
+  if (cursor < text.length) content.push(text.slice(cursor));
+  return <>{content}</>;
+}
+
 function LearnerProse({
   text,
   keyPrefix,
@@ -129,7 +109,7 @@ function LearnerProse({
   keyPrefix: string;
 }) {
   return splitLearnerProseParagraphs(text).map((paragraph, index) => (
-    <p key={`${keyPrefix}-${index}`}>{paragraph}</p>
+    <p key={`${keyPrefix}-${index}`}><LearnerInline text={paragraph} /></p>
   ));
 }
 
@@ -162,10 +142,10 @@ function RelationGroup({
 export default function VocabularyRichSupport({ item, sourceExpression, labels }: Props) {
   const [examplesExpanded, setExamplesExpanded] = useState(false);
   const [collocationsExpanded, setCollocationsExpanded] = useState(false);
-  const visibleExamples = examplesExpanded ? item.examples : item.examples.slice(0, 2);
+  const visibleExamples = examplesExpanded ? item.examples : item.examples.slice(0, 3);
   const visibleCollocations = collocationsExpanded
     ? item.collocations
-    : item.collocations.slice(0, 4);
+    : item.collocations.slice(0, 6);
 
   const authoredUsageCopy = distinctLearnerProse(
     item.usage?.context,
@@ -230,11 +210,8 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
       ) : null}
 
       {item.translationEquivalents.length > 0 ? (
-        <details className={styles.translationDetails} data-vocabulary-module="translations">
-          <summary>
-            <span>{labels.translationEquivalent}</span>
-            <span className={styles.translationCount}>{item.translationEquivalents.length}</span>
-          </summary>
+        <section className={styles.translationDetails} data-vocabulary-module="translations">
+          <h4>{labels.translationEquivalent}</h4>
           {translationSummary ? (
             <LearnerProse
               text={translationSummary}
@@ -245,10 +222,21 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
             {item.translationEquivalents.map((translation) => (
               <div key={translation.publicId} className={styles.translationItem}>
                 <strong>{translation.expression}</strong>
+                {translation.contextRestriction ? (
+                  <span className={styles.translationContext}>
+                    <span aria-hidden="true">— </span>
+                    <LearnerInline text={translation.contextRestriction} />
+                  </span>
+                ) : null}
+                {translation.mismatchNote ? (
+                  <small className={styles.translationMismatch}>
+                    <LearnerInline text={translation.mismatchNote} />
+                  </small>
+                ) : null}
               </div>
             ))}
           </div>
-        </details>
+        </section>
       ) : null}
 
       {nuanceRows.length > 0 ? (
@@ -272,7 +260,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
               <div key={collocation.publicId} className={styles.collocationItem}>
                 <b className={styles.collocationExpression}>{collocation.expression}</b>
                 {collocation.learnerMeaning ? (
-                  <span className={styles.collocationMeaning}>{collocation.learnerMeaning}</span>
+                  <span className={styles.collocationMeaning}><LearnerInline text={collocation.learnerMeaning} /></span>
                 ) : null}
                 {collocation.examples.length > 0 ? (
                   <div className={styles.constructionExamples}>
@@ -284,7 +272,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
               </div>
             ))}
           </div>
-          {item.collocations.length > 4 ? (
+          {item.collocations.length > 6 ? (
             <button
               type="button"
               className={styles.expandButton}
@@ -304,7 +292,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
             {item.classifiers.map((classifier) => (
               <div key={classifier.publicId} className={styles.classifierItem}>
                 <strong>{classifier.expression}</strong>
-                {classifier.learnerNote ? <p>{classifier.learnerNote}</p> : null}
+                {classifier.learnerNote ? <p><LearnerInline text={classifier.learnerNote} /></p> : null}
               </div>
             ))}
           </div>
@@ -345,7 +333,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
               <LearnerExample key={example.publicId} example={example} />
             ))}
           </div>
-          {item.examples.length > 2 ? (
+          {item.examples.length > 3 ? (
             <button
               type="button"
               className={styles.expandButton}
@@ -386,19 +374,22 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                 return (
                   <div key={distinction.publicId} className={styles.distinctionItem}>
                     <strong>{distinction.targetExpression}</strong>
-                    {distinction.learnerExplanation ? <p>{distinction.learnerExplanation}</p> : null}
+                    {distinction.learnerExplanation ? <p><LearnerInline text={distinction.learnerExplanation} /></p> : null}
                   </div>
                 );
               }
               return (
-                <article key={distinction.publicId} className={styles.structuredDistinction}>
+                <details key={distinction.publicId} className={styles.structuredDistinction}>
+                  <summary className={styles.distinctionSummary}>
+                    <span>{sourceExpression}</span><span aria-hidden="true"> ↔ </span><span>{distinction.targetExpression}</span>
+                  </summary>
                   {distinction.learnerExplanation ? (
-                    <p className={styles.distinctionIntro}>{distinction.learnerExplanation}</p>
+                    <p className={styles.distinctionIntro}><LearnerInline text={distinction.learnerExplanation} /></p>
                   ) : null}
                   <div className={styles.distinctionCompareGrid}>
                     <section className={styles.distinctionCard}>
                       <strong className={styles.distinctionTerm}>{sourceExpression}</strong>
-                      <p className={styles.distinctionUse}>{distinction.sourceUseWhen}</p>
+                      <p className={styles.distinctionUse}><LearnerInline text={distinction.sourceUseWhen!} /></p>
                       <div className={styles.distinctionExamples}>
                         {distinction.contrastExamples.map((example, index) => (
                           <span key={distinction.publicId + "-source-" + index}>
@@ -411,7 +402,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                     </section>
                     <section className={styles.distinctionCard}>
                       <strong className={styles.distinctionTerm}>{distinction.targetExpression}</strong>
-                      <p className={styles.distinctionUse}>{distinction.targetUseWhen}</p>
+                      <p className={styles.distinctionUse}><LearnerInline text={distinction.targetUseWhen!} /></p>
                       <div className={styles.distinctionExamples}>
                         {distinction.contrastExamples.map((example, index) => (
                           <span key={distinction.publicId + "-target-" + index}>
@@ -423,7 +414,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                       </div>
                     </section>
                   </div>
-                </article>
+                </details>
               );
             })}
           </div>
@@ -452,7 +443,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                     </strong>
                   ) : null}
                 </div>
-                {mistake.learnerExplanation ? <p>{mistake.learnerExplanation}</p> : null}
+                {mistake.learnerExplanation ? <p><LearnerInline text={mistake.learnerExplanation} /></p> : null}
               </article>
             ))}
           </div>

@@ -12,7 +12,7 @@ import { vocabularySenseHeading } from "@/lib/vocabularySenseHeading";
 import KnowledgeLanguageToggle from "./KnowledgeLanguageToggle";
 import VocabularyCharacterRail from "./VocabularyCharacterRail";
 import VocabularyPronunciationMeta from "./VocabularyPronunciationMeta";
-import VocabularyRichSupport from "./VocabularyRichSupport";
+import VocabularyRichSupport, { LearnerInline } from "./VocabularyRichSupport";
 import VocabularyStickyNav from "./VocabularyStickyNav";
 import {
   knowledgeLanguageUserLabel,
@@ -150,7 +150,7 @@ export default function VocabularyDetailView({
     ...detail.pronunciations.flatMap((pronunciation) => pronunciation.proficiency),
     ...allReadingItems.flatMap((item) => item.proficiency),
   ]);
-  const headerProficiency = allProficiency.length === 1 ? allProficiency : [];
+  const headerProficiency = allProficiency;
   const singleSummary = allReadingItems.length === 1
     ? vocabularySenseHeading(allReadingItems[0])
     : null;
@@ -195,7 +195,7 @@ export default function VocabularyDetailView({
   };
 
   return (
-    <main className={styles.page} dir={interfaceDirection}>
+    <main className={styles.page} dir={interfaceDirection} data-demo-v837="true">
       <nav className={styles.breadcrumb} aria-label="Breadcrumb">
         <Link href={{ pathname: "/knowledge", query: learnerContextQuery }}>
           {labels.knowledge}
@@ -222,24 +222,45 @@ export default function VocabularyDetailView({
         >
           <header id="vocabulary-entry-header" className={styles.entryHeader}>
             <div className={styles.headwordWrap}>
-              <div className={styles.writtenLine}>
+              <div className={styles.identityRow}>
                 <h1 className={styles.headword}>{detail.displayForm}</h1>
+                {primaryPronunciation ? (
+                  <span className={styles.inlinePinyin}>{primaryPronunciation.pronunciation}</span>
+                ) : null}
+                {headerProficiency.map((row) => (
+                  <span
+                    key={row.levelSystemCode + row.levelCode}
+                    className={styles.headerHskChip}
+                  >
+                    {row.levelSystemCode === "gf0025_2021"
+                      ? `${labels.proficiency} ${row.levelCode}`
+                      : `${row.levelSystemCode} ${row.levelCode}`}
+                  </span>
+                ))}
+                {allPosCodes.map((code) => {
+                  const label = posLabel(code, interfaceLocaleCode);
+                  return label ? (
+                    <span key={code} className={styles.headerPosChip}>{label}</span>
+                  ) : null;
+                })}
               </div>
-
-              {primaryPronunciation ? (
-                <VocabularyPronunciationMeta
-                  pronunciation={primaryPronunciation.pronunciation}
-                  hanViet={showHanViet ? detail.hanViet?.text ?? null : null}
-                  secondaryForms={secondaryForms}
-                  proficiency={headerProficiency}
-                  labels={{
-                    hanViet: labels.hanViet,
-                    traditional: labels.traditional,
-                    simplified: labels.simplified,
-                    writtenForm: labels.writtenForm,
-                    proficiency: labels.proficiency,
-                  }}
-                />
+              {(secondaryForms.length > 0 || (showHanViet && detail.hanViet?.text)) && primaryPronunciation ? (
+                <div className={styles.headerSubmeta}>
+                  <VocabularyPronunciationMeta
+                    pronunciation={primaryPronunciation.pronunciation}
+                    secondaryOnly
+                    hanViet={showHanViet ? detail.hanViet?.text ?? null : null}
+                    secondaryForms={secondaryForms}
+                    proficiency={[]}
+                    labels={{
+                      hanViet: labels.hanViet,
+                      traditional: labels.traditional,
+                      simplified: labels.simplified,
+                      writtenForm: labels.writtenForm,
+                      proficiency: labels.proficiency,
+                    }}
+                  />
+                </div>
               ) : null}
 
               {hasReadingNavigation ? (
@@ -374,6 +395,7 @@ export default function VocabularyDetailView({
                                       key={item.publicId}
                                       className={`${styles.sense} ${(item.isSubsense || item.parentPublicId) ? styles.subsense : ""}`}
                                     >
+                                      <div className={styles.senseIntro}>
                                       <div className={styles.senseHead}>
                                         <span className={styles.senseNum}>{itemIndex + 1}</span>
                                         <div className={styles.senseMain}>
@@ -384,7 +406,7 @@ export default function VocabularyDetailView({
                                             <h3 className={styles.meaning}>{meaningHeading}</h3>
                                           ) : null}
                                           {item.fullExplanation ? (
-                                            <p className={styles.meaningExplanation}>{item.fullExplanation}</p>
+                                            <p className={styles.meaningExplanation}><LearnerInline text={item.fullExplanation} /></p>
                                           ) : null}
                                           {(itemRegion || item.proficiency.length > 0) ? (
                                             <div className={styles.tags}>
@@ -404,6 +426,7 @@ export default function VocabularyDetailView({
                                             </div>
                                           ) : null}
                                         </div>
+                                      </div>
                                       </div>
 
                                       <VocabularyRichSupport
