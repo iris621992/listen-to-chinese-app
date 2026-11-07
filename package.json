@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run test:vocabulary-search && npm run test:knowledge-language && npm run test:home-port && npm run test:architecture-direction && next build && npm run test:vocabulary-detail",
+    "build": "npm run test:vocabulary-search && npm run test:knowledge-language && npm run test:home-port && npm run test:architecture-direction && next build && npm run test:vocabulary-detail && npm run test:character-detail",
     "start": "next start",
     "lint": "eslint .",
     "test:architecture-direction": "node --test scripts/verification/architecture-direction.test.mjs",
@@ -25,7 +25,8 @@
     "measure:dfp0:fixtures": "node scripts/dfp/mspec-1/measure-fixtures.mjs",
     "measure:dfp0:browser": "node scripts/dfp/mspec-1/browser-runner.mjs",
     "measure:dfp6:release": "node --experimental-vm-modules scripts/dfp/dfp6/release-observability.mjs",
-    "test:sbca2": "node --test scripts/verification/sbca2-public-invariants.test.mjs"
+    "test:sbca2": "node --test scripts/verification/sbca2-public-invariants.test.mjs",
+    "test:character-detail": "node --test scripts/verification/character-detail-learner-delivery.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.108.2",
