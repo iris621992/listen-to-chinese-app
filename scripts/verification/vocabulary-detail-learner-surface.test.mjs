@@ -473,6 +473,12 @@ test("Vocabulary detail preserves K1B-K1F depth and authoritative Character deli
   assert.match(pronunciationMetaStyles, /\.hanViet/);
   assert.match(pronunciationMetaStyles, /font-size:\s*14\.5px/);
   assert.match(pronunciationMetaStyles, /\.traditional/);
+  // The alternate Traditional glyph is larger without changing the headword,
+  // Hán Việt, or labels. The smaller-screen size stays proportional.
+  assert.match(pronunciationMeta, /data-script-variant=\{form\.scriptVariantCode \?\? undefined\}/);
+  assert.ok(pronunciationMetaStyles.includes('.secondaryItem[data-script-variant="traditional"] .traditional'));
+  assert.match(pronunciationMetaStyles, /font-size:\s*16px/);
+  assert.match(pronunciationMetaStyles, /font-size:\s*15px/);
 
   assert.match(characterRail, /^"use client";/);
   assert.match(characterRail, /useState/);
