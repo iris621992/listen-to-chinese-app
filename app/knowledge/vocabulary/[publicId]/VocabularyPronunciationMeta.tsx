@@ -53,7 +53,7 @@ export default function VocabularyPronunciationMeta({
       {hasSecondaryMeta ? (
         <div className={styles.secondaryLine}>
           {secondaryForms.map((form) => (
-            <span key={form.publicId} className={styles.secondaryItem}>
+            <span key={form.publicId} className={styles.secondaryItem} data-script-variant={form.scriptVariantCode ?? undefined}>
               <span className={styles.secondaryLabel}>{formLabel(form, labels)}</span>
               <strong className={styles.traditional}>{form.text}</strong>
             </span>
