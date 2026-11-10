@@ -778,17 +778,43 @@ test("Vocabulary learner prose keeps module ownership and suppresses exact dupli
   assert.ok(rich.includes("function distinctLearnerProse("));
   assert.ok(rich.includes("item.usage?.context"));
   assert.ok(rich.includes("item.fullExplanation"));
-  assert.ok(rich.includes("item.translationEquivalents.length === 0"));
+  assert.ok(rich.includes("const usageRows = ["));
+  assert.ok(rich.includes("item.usageNote"));
+  assert.ok(rich.includes("...usageRows"));
+  assert.doesNotMatch(rich, /translationSummary|usageCopy/);
+  assert.doesNotMatch(rich, /item\.translationEquivalents\.length === 0/);
   assert.ok(rich.includes("item.usageNote"));
   assert.ok(rich.includes("item.usageContext"));
   assert.ok(rich.includes("item.socialContext"));
   assert.ok(rich.includes("item.pragmaticExplanation"));
 });
 
+test("Vocabulary Usage note stays in Usage in every locale; Translation Equivalents never inherit it", async () => {
+  const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
+  const usageStart = rich.indexOf("const usageRows = [");
+  const usageEnd = rich.indexOf("const nuanceRows = [", usageStart);
+  const translationStart = rich.indexOf('data-vocabulary-module="translations"');
+  const translationEnd = rich.indexOf('data-vocabulary-module="nuance-context"', translationStart);
+  assert.ok(usageStart > 0 && usageEnd > usageStart);
+  assert.ok(translationStart > usageEnd && translationEnd > translationStart);
+  assert.match(rich.slice(usageStart, usageEnd), /item\.usage\?\.context/);
+  assert.match(rich.slice(usageStart, usageEnd), /item\.usageNote/);
+  assert.doesNotMatch(rich.slice(translationStart, translationEnd), /usageNote|usageRows|fullExplanation/);
+  assert.match(rich.slice(translationStart, translationEnd), /translation\.expression/);
+  assert.match(rich.slice(translationStart, translationEnd), /translation\.contextRestriction/);
+  assert.match(rich.slice(translationStart, translationEnd), /translation\.mismatchNote/);
+  assert.ok(rich.includes("usageRows.map((row, index) => ("));
+  assert.ok(rich.includes("<LearnerProse"));
+  assert.ok(rich.includes("<LearnerInline text={translation.contextRestriction} />"));
+  assert.ok(rich.includes("<LearnerInline text={translation.mismatchNote} />"));
+});
+
 test("Vocabulary authored prose retains paragraph boundaries in all module surfaces", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
   assert.ok(rich.includes("function splitLearnerProseParagraphs("));
-  assert.ok(rich.includes("translation-guidance"));
+  assert.doesNotMatch(rich, /translation-guidance/);
+  assert.match(rich, /data-vocabulary-module="usage"/);
+  assert.match(rich, /data-vocabulary-module="translations"/);
   assert.ok(rich.includes("memory-tip"));
   assert.ok(rich.includes("construction.explanation"));
   assert.doesNotMatch(rich, /const closesIdea/);
