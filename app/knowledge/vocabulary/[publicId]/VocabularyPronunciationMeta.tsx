@@ -6,6 +6,7 @@ import styles from "./VocabularyPronunciationMeta.module.css";
 
 type Props = {
   pronunciation: string;
+  secondaryOnly?: boolean;
   hanViet: string | null;
   secondaryForms: VocabularyForm[];
   proficiency: VocabularyProficiency[];
@@ -31,6 +32,7 @@ function proficiencyLabel(row: VocabularyProficiency, labels: Props["labels"]) {
 
 export default function VocabularyPronunciationMeta({
   pronunciation,
+  secondaryOnly = false,
   hanViet,
   secondaryForms,
   proficiency,
@@ -41,15 +43,17 @@ export default function VocabularyPronunciationMeta({
   );
 
   return (
-    <div className={styles.pronMeta}>
-      <div className={styles.pronLine}>
-        <span className={styles.pinyin}>{pronunciation}</span>
-      </div>
+    <div className={styles.pronMeta} data-secondary-only={secondaryOnly ? "true" : undefined}>
+      {!secondaryOnly ? (
+        <div className={styles.pronLine}>
+          <span className={styles.pinyin}>{pronunciation}</span>
+        </div>
+      ) : null}
 
       {hasSecondaryMeta ? (
         <div className={styles.secondaryLine}>
           {secondaryForms.map((form) => (
-            <span key={form.publicId} className={styles.secondaryItem}>
+            <span key={form.publicId} className={styles.secondaryItem} data-script-variant={form.scriptVariantCode ?? undefined}>
               <span className={styles.secondaryLabel}>{formLabel(form, labels)}</span>
               <strong className={styles.traditional}>{form.text}</strong>
             </span>
