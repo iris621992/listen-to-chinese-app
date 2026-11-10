@@ -745,6 +745,15 @@ test("Vocabulary learner POS labels never expose raw surname code", async () => 
   assert.doesNotMatch(view, /<span[^>]*>\{group\.posCode\}<\/span>/);
 });
 
+test("Surname stays a category and navigation target but never appears as a POS header chip", async () => {
+  const view = await read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx");
+  assert.match(view, /allPosCodes\.filter\(\(code\) => code !== "surname"\)\.map/);
+  assert.match(view, /className=\{styles\.headerPosChip\}/);
+  assert.match(view, /surname:\s*\{ en: "Surname", vi: "Họ"/);
+  assert.match(view, /allPosCodes\.map\(\(code\) => \(/);
+  assert.match(view, /const learnerPosLabel = posLabel\(/);
+});
+
 test("Translation Equivalent guidance stays aligned with its expression", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
   const css = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css");
