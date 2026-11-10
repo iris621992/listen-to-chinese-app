@@ -147,23 +147,21 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
     ? item.collocations
     : item.collocations.slice(0, 6);
 
-  const authoredUsageCopy = distinctLearnerProse(
+  // Knowledge owns these two distinct learner roles. A usage note must
+  // never be repurposed as translation guidance merely because translations
+  // are present. The source prose stays verbatim and in its authored module.
+  const usageRows = [
     item.usage?.context,
-    item.fullExplanation,
-  );
-  const usageCopy = authoredUsageCopy
-    ?? (
-      item.translationEquivalents.length === 0
-        ? distinctLearnerProse(item.usageNote, item.fullExplanation)
-        : null
+    item.usageNote,
+  ].reduce<string[]>((rows, candidate) => {
+    const distinct = distinctLearnerProse(
+      candidate,
+      item.fullExplanation,
+      ...rows,
     );
-  const translationSummary = item.translationEquivalents.length > 0
-    ? distinctLearnerProse(
-        item.usageNote,
-        item.fullExplanation,
-        usageCopy,
-      )
-    : null;
+    if (distinct) rows.push(distinct);
+    return rows;
+  }, []);
   const nuanceRows = [
     item.usageContext,
     item.socialContext,
@@ -172,8 +170,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
     const distinct = distinctLearnerProse(
       candidate,
       item.fullExplanation,
-      usageCopy,
-      translationSummary,
+      ...usageRows,
       ...rows,
     );
     if (distinct) rows.push(distinct);
@@ -181,8 +178,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
   }, []);
 
   const hasRichSupport = Boolean(
-    usageCopy
-    || translationSummary
+    usageRows.length > 0
     || nuanceRows.length
     || item.translationEquivalents.length
     || item.collocations.length
@@ -202,22 +198,22 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
 
   return (
     <div className={styles.supportStack}>
-      {usageCopy ? (
+      {usageRows.length > 0 ? (
         <section className={styles.supportBlock} data-vocabulary-module="usage">
           <h4>{labels.usage}</h4>
-          <LearnerProse text={usageCopy} keyPrefix={`${item.publicId}-usage`} />
+          {usageRows.map((row, index) => (
+            <LearnerProse
+              key={`${item.publicId}-usage-${index}`}
+              text={row}
+              keyPrefix={`${item.publicId}-usage-${index}`}
+            />
+          ))}
         </section>
       ) : null}
 
       {item.translationEquivalents.length > 0 ? (
         <section className={styles.translationDetails} data-vocabulary-module="translations">
           <h4>{labels.translationEquivalent}</h4>
-          {translationSummary ? (
-            <LearnerProse
-              text={translationSummary}
-              keyPrefix={`${item.publicId}-translation-guidance`}
-            />
-          ) : null}
           <div className={styles.translationList}>
             {item.translationEquivalents.map((translation) => (
               <div key={translation.publicId} className={styles.translationItem}>
