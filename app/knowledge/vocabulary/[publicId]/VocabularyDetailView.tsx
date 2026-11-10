@@ -237,7 +237,7 @@ export default function VocabularyDetailView({
                       : `${row.levelSystemCode} ${row.levelCode}`}
                   </span>
                 ))}
-                {allPosCodes.map((code) => {
+                {allPosCodes.filter((code) => code !== "surname").map((code) => {
                   const label = posLabel(code, interfaceLocaleCode);
                   return label ? (
                     <span key={code} className={styles.headerPosChip}>{label}</span>
