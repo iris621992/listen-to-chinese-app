@@ -267,3 +267,30 @@ test("existing Word comparison surface enriches target facts without changing th
   assert.match(sticky, /data-sticky-nav/u);
   assert.doesNotMatch(rich, /entryKey|itemKey|readiness|navigationContract|sourceRegistry/u);
 });
+
+test("Production v9 fallback transports K1L vi/en/zh with authored participant and Han Viet", async () => {
+  for (const locale of ["vi", "en", "zh"]) {
+    const label = { vi: "biết", en: "know", zh: "知晓；懂得" }[locale];
+    const doc = payload({ participant: { display_form: "知道", pronunciation: "zhīdào", short_label: label, content_locale: locale }, requestedLocale: locale, fallbackLocale: locale });
+    const ri = doc.entry.pronunciations[0].reading_items[0];
+    ri.content_locale = locale;
+    ri.quick_distinctions[0].content_locale = locale;
+    const h = await createLoaderHarness(async (rpc) => rpc === "get_public_vocabulary_entry_v9"
+      ? { data: doc, error: null }
+      : { data: null, error: { code: "PGRST202", message: "Missing RPC" } });
+    const result = await h.load(PUBLIC_ID, { requestedLocaleCode: locale, fallbackLocaleCode: locale, exactContentLocaleCode: locale });
+    const distinction = firstDistinction(result);
+    assert.deepEqual(h.calls.map(c => c.name), ["get_public_vocabulary_entry_v12", "get_public_vocabulary_entry_v10", "get_public_vocabulary_entry_v9"]);
+    assert.equal(distinction.participant?.shortLabel, label);
+    assert.equal(distinction.targetExpression, "知道");
+    assert.equal(distinction.learnerExplanation, "Hai từ có trọng tâm khác nhau.");
+    assert.equal(result.detail.hanViet?.text, locale === "vi" ? "đổng" : undefined);
+  }
+});
+
+test("K1L participant keeps the accepted collapsible comparison and inline learner prose", async () => {
+  const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
+  assert.match(rich, /<details key=\{distinction\.publicId\}/u);
+  assert.match(rich, /<LearnerInline text=\{distinction\.learnerExplanation\} \/>/u);
+  assert.match(rich, /distinction\.participant\.shortLabel/u);
+});

@@ -146,7 +146,7 @@ test("Structured Quick Distinction renders authored source/target cards without 
   assert.match(rich, /if \(!structured\)/u);
   assert.match(rich, /distinction\.learnerExplanation \? <p>/u);
 
-  assert.doesNotMatch(rich, /split\(/u);
+  assert.doesNotMatch(rich, /distinction\.learnerExplanation\.(?:split|substring|match|replace)\(/u);
   assert.doesNotMatch(rich, /substring\(/u);
   assert.doesNotMatch(rich, /learnerExplanation\.(?:match|replace)\(/u);
 

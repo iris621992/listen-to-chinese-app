@@ -39,3 +39,40 @@ test("Vocabulary Detail keeps lexical identity above dedicated POS/read navigati
   assert.doesNotMatch(sticky, /Tiếng Việt|中文|Lưu|Save/);
   assert.doesNotMatch(page, /saveButton|saved-item|content-toggle/i);
 });
+
+
+test("Demo v8.3.7 preserves in-page POS anchors and authored example content", async () => {
+  const [view, styles, rich, richStyles] = await Promise.all([
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyDetail.module.css"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css"),
+  ]);
+  assert.match(view, /data-demo-v837="true"/u);
+  assert.match(view, /className=\{styles\.identityRow\}/u);
+  assert.match(view, /className=\{styles\.inlinePinyin\}/u);
+  assert.match(view, /className=\{styles\.headerHskChip\}/u);
+  assert.match(view, /className=\{styles\.headerSubmeta\}/u);
+  assert.match(styles, /\.page\[data-demo-v837="true"\] \.identityRow/u);
+  assert.match(styles, /\.page\[data-demo-v837="true"\]:has\(\.compactSticky\[data-active="true"\]\) \.sectionNav/u);
+  assert.doesNotMatch(view, /item\.examples\[0\]/u);
+  assert.match(rich, /data-vocabulary-module="examples"/u);
+  assert.match(rich, /visibleExamples\.map/u);
+  assert.match(rich, /aria-expanded=\{examplesExpanded\}/u);
+  assert.match(view, /id=\{\x60pos-\$\{pronunciation\.publicId\}-\$\{group\.key\}\x60\}/u);
+  assert.match(styles, /data-demo-v837="true"\] \.sectionNav \{[\s\S]*?position: sticky/u);
+  assert.match(styles, /\.page\[data-demo-v837="true"\] \.senseIntro \{[\s\S]*?display: block/u);
+  assert.match(styles, /\.senseIntro \.meaningExplanation \{[\s\S]*?max-width: none/u);
+  assert.doesNotMatch(styles, /\.representativeExample|data-has-representative-example/u);
+  assert.match(rich, /data-vocabulary-module="related-words"/u);
+  assert.match(rich, /relationType="near_synonym"/u);
+  assert.match(rich, /<section className=\{styles\.translationDetails\}/u);
+  assert.match(rich, /className=\{styles\.distinctionSummary\}/u);
+  assert.match(richStyles, /\.collocationList \{ grid-template-columns: repeat\(3/u);
+  assert.doesNotMatch(view, /Wǒ dǒng|不懂就问|hiểu; rành/u);
+  assert.match(view, /<LearnerInline text=\{item\.fullExplanation\} \/>/u);
+  assert.match(rich, /export function LearnerInline/u);
+  assert.match(rich, /text\.matchAll\(/u);
+  assert.match(rich, /<LearnerInline text=\{distinction\.sourceUseWhen!\} \/>/u);
+  assert.match(rich, /<LearnerInline text=\{collocation\.learnerMeaning\} \/>/u);
+});

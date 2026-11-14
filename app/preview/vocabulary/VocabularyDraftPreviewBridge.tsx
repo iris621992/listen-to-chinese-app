@@ -9,6 +9,7 @@ import {
 } from "@/lib/knowledgeLanguage";
 import { preservedLearnerContextQuery } from "@/lib/proficiencyContext";
 import VocabularyDetailView from "@/app/knowledge/vocabulary/[publicId]/VocabularyDetailView";
+import { buildVocabularyCharacterFallback } from "@/lib/vocabularyCharacterDelivery";
 import {
   parseVocabularyDraftPreviewCharacters,
   parseVocabularyDraftPreviewPayload,
@@ -277,10 +278,18 @@ export default function VocabularyDraftPreviewBridge() {
       interfaceLocale.code,
       knowledgeLanguage,
     );
-    return parseVocabularyDraftPreviewCharacters(
+    const projected = parseVocabularyDraftPreviewCharacters(
       state.envelope.payloads[locale],
     );
-  }, [state, interfaceLocale.code, knowledgeLanguage]);
+    // The public Learner page already uses this exact accepted fallback when
+    // canonical Character delivery is unavailable. Preview must do the same,
+    // without inventing Character knowledge or requiring Vocabulary publish.
+    return projected.length > 0
+      ? projected
+      : detail
+        ? buildVocabularyCharacterFallback(detail)
+        : [];
+  }, [state, interfaceLocale.code, knowledgeLanguage, detail]);
 
   const learnerContextQuery = preservedLearnerContextQuery({
     uiLang: searchParams.get("uiLang") ?? undefined,
