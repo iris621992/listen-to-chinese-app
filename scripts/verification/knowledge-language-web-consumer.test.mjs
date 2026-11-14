@@ -283,5 +283,5 @@ test("Vocabulary-only scroll preservation leaves all other Header navigation unc
   assert.equal(blocked.length, 0, "Hidden interface locales must remain unavailable");
 
   const knowledgeToggle = await read("app/knowledge/vocabulary/[publicId]/KnowledgeLanguageToggle.tsx");
-  assert.match(knowledgeToggle, /router\.replace\(.+\, \{ scroll: false \}\)/u);
+  assert.match(knowledgeToggle, /router\.replace\(.+, \{ scroll: false \}\)/u);
 });
