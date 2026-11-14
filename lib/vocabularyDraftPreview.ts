@@ -220,6 +220,7 @@ function parseQuickDistinction(
     publicId: stringValue(row.public_id) ?? fallbackId,
     readingItemPublicId,
     targetExpression,
+    participant: null,
     learnerExplanation: stringValue(row.learner_explanation),
     sourceUseWhen: stringValue(row.source_use_when),
     targetUseWhen: stringValue(row.target_use_when),

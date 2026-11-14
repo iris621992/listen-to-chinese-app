@@ -365,11 +365,18 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
           <h4>{labels.quickDistinction}</h4>
           <div className={styles.distinctionList}>
             {item.quickDistinctions.map((distinction) => {
+              const targetDisplayForm = distinction.participant?.displayForm ?? distinction.targetExpression;
               const structured = Boolean(distinction.sourceUseWhen && distinction.targetUseWhen);
               if (!structured) {
                 return (
                   <div key={distinction.publicId} className={styles.distinctionItem}>
-                    <strong>{distinction.targetExpression}</strong>
+                    <strong>{targetDisplayForm}</strong>
+                    {distinction.participant ? (
+                      <>
+                        <small className={styles.distinctionPinyin}>{distinction.participant.pronunciation}</small>
+                        <small className={styles.distinctionTranslation}>{distinction.participant.shortLabel}</small>
+                      </>
+                    ) : null}
                     {distinction.learnerExplanation ? <p><LearnerInline text={distinction.learnerExplanation} /></p> : null}
                   </div>
                 );
@@ -377,7 +384,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
               return (
                 <details key={distinction.publicId} className={styles.structuredDistinction}>
                   <summary className={styles.distinctionSummary}>
-                    <span>{sourceExpression}</span><span aria-hidden="true"> ↔ </span><span>{distinction.targetExpression}</span>
+                    <span>{sourceExpression}</span><span aria-hidden="true"> ↔ </span><span>{targetDisplayForm}</span>
                   </summary>
                   {distinction.learnerExplanation ? (
                     <p className={styles.distinctionIntro}><LearnerInline text={distinction.learnerExplanation} /></p>
@@ -397,7 +404,13 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                       </div>
                     </section>
                     <section className={styles.distinctionCard}>
-                      <strong className={styles.distinctionTerm}>{distinction.targetExpression}</strong>
+                      <strong className={styles.distinctionTerm}>{targetDisplayForm}</strong>
+                      {distinction.participant ? (
+                        <>
+                          <small className={styles.distinctionPinyin}>{distinction.participant.pronunciation}</small>
+                          <small className={styles.distinctionTranslation}>{distinction.participant.shortLabel}</small>
+                        </>
+                      ) : null}
                       <p className={styles.distinctionUse}><LearnerInline text={distinction.targetUseWhen!} /></p>
                       <div className={styles.distinctionExamples}>
                         {distinction.contrastExamples.map((example, index) => (

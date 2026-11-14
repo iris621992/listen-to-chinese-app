@@ -62,6 +62,7 @@ test("Vocabulary Detail exact Chinese mode consumes truthful localized projectio
 
   assert.match(loader, /KnowledgeContentLocaleRequest/u);
   assert.match(loader, /exactContentLocaleCode/u);
+  assert.match(loader, /K1L_PROJECTION_CONTRACT/u);
   assert.match(loader, /K1J_PROJECTION_CONTRACT/u);
   assert.match(loader, /K1I_PROJECTION_CONTRACT/u);
   assert.match(loader, /K1H_PROJECTION_CONTRACT/u);
@@ -69,7 +70,7 @@ test("Vocabulary Detail exact Chinese mode consumes truthful localized projectio
   assert.match(loader, /K1F_PROJECTION_CONTRACT/u);
   assert.match(
     loader,
-    /\[K1J_PROJECTION_CONTRACT, K1I_PROJECTION_CONTRACT, K1H_PROJECTION_CONTRACT, K1G_PROJECTION_CONTRACT, K1F_PROJECTION_CONTRACT\]\.includes/u,
+    /\[K1L_PROJECTION_CONTRACT, K1J_PROJECTION_CONTRACT, K1I_PROJECTION_CONTRACT, K1H_PROJECTION_CONTRACT, K1G_PROJECTION_CONTRACT, K1F_PROJECTION_CONTRACT\]\.includes/u,
   );
   assert.match(loader, /detail\.requestedLocale !== exactContentLocaleCode/u);
   assert.match(loader, /item\.contentLocale !== exactContentLocaleCode/u);
