@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import vm from "node:vm";
 import test from "node:test";
 
 const read = (path) => readFile(path, "utf8");
@@ -179,4 +180,108 @@ test("Vocabulary final visual corrections keep exact toggle labels and sticky ra
     characterStyles,
     /@media \(max-width: 620px\), \(max-width: 900px\) and \(max-height: 520px\)[\s\S]*\.desktopRail\s*\{[\s\S]*display:\s*none;[\s\S]*\.embedded \.characterRailInner\s*\{[\s\S]*position:\s*static;/u,
   );
+});
+
+
+function runHeaderLocaleSwitch(header, { pathname, from, to, query }) {
+  const match = header.match(
+    /  function handleLanguageChange\(nextInterfaceLocaleCode: string\) \{\n([\s\S]*?)\n  \}\n\n  return \(\n    <HeaderContent/u,
+  );
+  assert.ok(match, "Use the actual shared Header language handler, not a copied implementation");
+  const navigations = [];
+  const ctx = {
+    visibleInterfaceLocales: [{ code: "vi" }, { code: "en" }],
+    pathname,
+    interfaceLocale: { code: from },
+    searchParams: new URLSearchParams(query),
+    URLSearchParams,
+    INTERFACE_LOCALE_PARAM: "uiLang",
+    KNOWLEDGE_LANGUAGE_PARAM: "knowledgeLang",
+    isKnowledgeLanguageValue: (value) => value === "user" || value === "zh",
+    router: {
+      push(href, options) {
+        navigations.push({ href, scroll: options?.scroll });
+      },
+    },
+  };
+  vm.runInNewContext(
+    "function handleLanguageChange(nextInterfaceLocaleCode) {\n"
+      + match[1]
+      + "\n}\nhandleLanguageChange("
+      + JSON.stringify(to)
+      + ");",
+    ctx,
+  );
+  return navigations;
+}
+
+test("Vocabulary detail VI/EN switching preserves current scroll without losing authored-page context", async () => {
+  const header = await read("components/Header.tsx");
+  const detail = "/knowledge/vocabulary/vocab_" + "a".repeat(64);
+  const queries = [
+    { from: "vi", to: "en", knowledgeLang: "user" },
+    { from: "en", to: "vi", knowledgeLang: "zh" },
+  ];
+
+  for (const { from, to, knowledgeLang } of queries) {
+    const navigations = runHeaderLocaleSwitch(header, {
+      pathname: detail,
+      from,
+      to,
+      query: "uiLang=" + from + "&lang=" + from + "&knowledgeLang=" + knowledgeLang
+        + "&levelSystem=gf0025_2021&level=2&cursor=legacy",
+    });
+    assert.equal(navigations.length, 1);
+    assert.equal(navigations[0].scroll, false, from + " → " + to + ": keep the current reading position");
+    const href = new URL(navigations[0].href, "https://yunchinese.example");
+    assert.equal(href.pathname, detail, "The headword route must not change");
+    assert.equal(href.searchParams.get("uiLang"), to);
+    assert.equal(href.searchParams.get("lang"), to);
+    assert.equal(href.searchParams.get("knowledgeLang"), knowledgeLang);
+    assert.equal(href.searchParams.get("levelSystem"), "gf0025_2021");
+    assert.equal(href.searchParams.get("level"), "2");
+    assert.equal(href.searchParams.has("cursor"), false, "Existing cursor behavior stays unchanged");
+  }
+
+  assert.equal(
+    (header.match(/onChange=\{\(event\) => onLanguageChange\?\.\(event\.target\.value\)\}/gu) ?? []).length,
+    2,
+    "Desktop and mobile language controls must use the same scoped handler",
+  );
+});
+
+test("Vocabulary-only scroll preservation leaves all other Header navigation unchanged", async () => {
+  const header = await read("components/Header.tsx");
+  const notDetail = [
+    "/",
+    "/knowledge",
+    "/knowledge/vocabulary",
+    "/knowledge/vocabulary/search",
+    "/knowledge/vocabulary/vocab_" + "a".repeat(63),
+    "/knowledge/vocabulary/vocab_" + "a".repeat(64) + "/extra",
+    "/practice",
+  ];
+  for (const pathname of notDetail) {
+    const navigations = runHeaderLocaleSwitch(header, {
+      pathname,
+      from: "vi",
+      to: "en",
+      query: "uiLang=vi&lang=vi&knowledgeLang=user",
+    });
+    assert.equal(navigations.length, 1);
+    assert.equal(navigations[0].scroll, undefined, "Do not alter " + pathname + "'s prior scroll behavior");
+    const url = new URL(navigations[0].href, "https://yunchinese.example");
+    assert.equal(url.pathname, pathname);
+  }
+
+  const blocked = runHeaderLocaleSwitch(header, {
+    pathname: "/knowledge/vocabulary/vocab_" + "a".repeat(64),
+    from: "vi",
+    to: "ar",
+    query: "uiLang=vi&lang=vi",
+  });
+  assert.equal(blocked.length, 0, "Hidden interface locales must remain unavailable");
+
+  const knowledgeToggle = await read("app/knowledge/vocabulary/[publicId]/KnowledgeLanguageToggle.tsx");
+  assert.match(knowledgeToggle, /router\.replace\(.+\, \{ scroll: false \}\)/u);
 });

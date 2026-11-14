@@ -340,7 +340,18 @@ function LocalizedHeader() {
     }
     nextSearchParams.delete("cursor");
     const query = nextSearchParams.toString();
-    router.push(query ? `${pathname}?${query}` : pathname);
+    const destination = query ? `${pathname}?${query}` : pathname;
+    // Only same-entry Vocabulary detail VI/EN switches retain the current reading position.
+    // Other navigation keeps its existing scroll-to-top behavior.
+    const isVocabularyDetail = /^\/knowledge\/vocabulary\/vocab_[a-f0-9]{64}$/u.test(pathname);
+    const isViEnSwitch =
+      (interfaceLocale.code === "vi" || interfaceLocale.code === "en")
+      && (nextInterfaceLocaleCode === "vi" || nextInterfaceLocaleCode === "en");
+    if (isVocabularyDetail && isViEnSwitch) {
+      router.push(destination, { scroll: false });
+    } else {
+      router.push(destination);
+    }
   }
 
   return (
