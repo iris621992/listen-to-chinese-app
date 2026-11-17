@@ -654,3 +654,32 @@
     border-left: 1px solid #ebe7df;
   }
 }
+
+/* Word Comparison touch divider balance v1.
+   Scope: mobile/tablet touch layout only. Desktop and authored content stay unchanged. */
+@media (max-width: 1100px) and (hover: none) and (pointer: coarse) {
+  .distinctionBlock .distinctionList {
+    gap: 0;
+  }
+
+  .distinctionBlock .structuredDistinction {
+    padding: 0;
+    border-top: 0;
+    border-bottom: 1px solid #ebe6dc;
+  }
+
+  .distinctionBlock .structuredDistinction:first-child {
+    border-top: 1px solid #ebe6dc;
+  }
+
+  .distinctionBlock .distinctionSummary {
+    box-sizing: border-box;
+    min-height: 54px;
+    padding: 12px 2px;
+    line-height: 1.5;
+  }
+
+  .distinctionBlock .structuredDistinction[open] {
+    padding-bottom: 12px;
+  }
+}
