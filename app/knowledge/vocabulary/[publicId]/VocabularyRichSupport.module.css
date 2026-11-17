@@ -571,3 +571,86 @@
 .mistakeContrast strong { background: #eef5eb; }
 @container (max-width: 620px) { .collocationList { grid-template-columns: repeat(2,minmax(0,1fr)); } .constructionExamples, .exampleList { grid-template-columns: 1fr; } .translationItem { grid-template-columns: minmax(0, 1fr); gap: 4px; } .translationMismatch { grid-column: 1; } }
 @container (max-width: 460px) { .collocationList { grid-template-columns: 1fr; } .distinctionCard, .distinctionCard + .distinctionCard { border: 1px solid #e0dbd1; border-radius: 8px; } .distinctionCard + .distinctionCard { margin-top: 8px; } }
+
+/* Word Comparison v5 structured rows: additive, scoped to the new fields only. */
+.comparisonRows {
+  display: grid;
+  width: 100%;
+  overflow-wrap: anywhere;
+  border: 1px solid #e8e3d9;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.comparisonRow {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.8fr) repeat(2, minmax(0, 1.8fr));
+}
+
+.comparisonRow + .comparisonRow {
+  border-top: 1px solid #ebe7df;
+}
+
+.comparisonRow > * {
+  min-width: 0;
+  padding: 11px 12px;
+  font-size: 13px;
+  line-height: 1.65;
+  font-weight: 400;
+  white-space: pre-wrap;
+}
+
+.comparisonRow > :not(:first-child) {
+  border-left: 1px solid #ebe7df;
+}
+
+.comparisonRow:first-child {
+  background: #f6f8f4;
+}
+
+.comparisonRow:first-child > strong,
+.comparisonRowLabel {
+  font-weight: 650;
+}
+
+.comparisonRowLabel {
+  background: #f8f7f2;
+}
+
+.comparisonCellExamples {
+  display: grid;
+  gap: 8px;
+}
+
+.comparisonContextExamples {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: #f8faf7;
+  border-radius: 6px;
+}
+
+.comparisonClosingNote {
+  margin: 0;
+  color: #565e57;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 620px) {
+  .comparisonRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .comparisonRow > :first-child {
+    grid-column: 1 / -1;
+    background: #f6f8f4;
+    padding: 7px 10px;
+  }
+  .comparisonRow > :nth-child(2) {
+    border-left: 0;
+  }
+  .comparisonRow > :nth-child(3) {
+    border-left: 1px solid #ebe7df;
+  }
+}

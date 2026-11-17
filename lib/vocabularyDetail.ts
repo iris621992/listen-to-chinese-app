@@ -110,6 +110,52 @@ export type VocabularyQuickDistinctionContrastExample = {
   contentLocale: string | null;
 };
 
+
+export type VocabularyComparisonRow = {
+  rowKey: string;
+  label: string;
+  sourceText: string;
+  targetText: string;
+  contentLocale: string;
+};
+
+export type VocabularyComparisonContextExample = {
+  chinese: string;
+  pinyin: string;
+  translation: string | null;
+  contentLocale: string;
+};
+
+export function parseVocabularyComparisonRows(value: unknown, locale: string | null): VocabularyComparisonRow[] {
+  if (!locale) return [];
+  return asArray(value).flatMap(item => {
+    const row = asObject(item);
+    const locs = row ? asObject(row.localizations) : null;
+    const loc = locs ? asObject(locs[locale]) : null;
+    if (!row || !loc) return [];
+    const rowKey = stringValue(row.row_key);
+    const label = stringValue(loc.label);
+    const sourceText = stringValue(loc.source_text);
+    const targetText = stringValue(loc.target_text);
+    if (!rowKey || !label || !sourceText || !targetText) return [];
+    return [{ rowKey, label, sourceText, targetText, contentLocale: locale }];
+  });
+}
+
+export function parseVocabularyContextExamples(value: unknown, locale: string | null): VocabularyComparisonContextExample[] {
+  return asArray(value).flatMap(item => {
+    const row = asObject(item);
+    if (!row) return [];
+    const chinese = stringValue(row.chinese);
+    const pinyin = stringValue(row.pinyin);
+    const locs = asObject(row.localizations);
+    const loc = locs && locale ? asObject(locs[locale]) : null;
+    const translation = loc ? stringValue(loc.translation) : null;
+    if (!chinese || !pinyin || (locale !== "zh" && !translation)) return [];
+    return [{ chinese, pinyin, translation, contentLocale: locale ?? "zh" }];
+  });
+}
+
 export type VocabularyQuickDistinction = {
   publicId: string;
   readingItemPublicId: string;
@@ -119,6 +165,9 @@ export type VocabularyQuickDistinction = {
   sourceUseWhen: string | null;
   targetUseWhen: string | null;
   contrastExamples: VocabularyQuickDistinctionContrastExample[];
+  comparisonRows: VocabularyComparisonRow[];
+  contextExamples: VocabularyComparisonContextExample[];
+  closingNote: string | null;
   contentLocale: string | null;
 };
 
@@ -449,6 +498,9 @@ function parseQuickDistinction(value: unknown, readingItemPublicId: string): Voc
     contrastExamples: asArray(row.contrast_examples)
       .map(parseQuickDistinctionContrastExample)
       .filter((item): item is VocabularyQuickDistinctionContrastExample => item !== null),
+    comparisonRows: parseVocabularyComparisonRows(row.comparison_rows, contentLocale),
+    contextExamples: parseVocabularyContextExamples(row.context_examples, contentLocale),
+    closingNote: stringValue(row.closing_note),
     contentLocale,
   };
 }

@@ -16,6 +16,8 @@ import type {
   VocabularyPronunciation,
   VocabularyQuickDistinction,
   VocabularyQuickDistinctionContrastExample,
+  parseVocabularyComparisonRows,
+  parseVocabularyContextExamples,
   VocabularyReadingItem,
   VocabularyTranslationEquivalent,
 } from "@/lib/vocabularyDetail";
@@ -230,6 +232,9 @@ function parseQuickDistinction(
         (item): item is VocabularyQuickDistinctionContrastExample =>
           item !== null,
       ),
+    comparisonRows: parseVocabularyComparisonRows(row.comparison_rows, stringValue(row.content_locale)),
+    contextExamples: parseVocabularyContextExamples(row.context_examples, stringValue(row.content_locale)),
+    closingNote: stringValue(row.closing_note),
     contentLocale: stringValue(row.content_locale),
   };
 }

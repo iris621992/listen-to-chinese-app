@@ -294,3 +294,78 @@ test("K1L participant keeps the accepted collapsible comparison and inline learn
   assert.match(rich, /<LearnerInline text=\{distinction\.learnerExplanation\} \/>/u);
   assert.match(rich, /distinction\.participant\.shortLabel/u);
 });
+
+
+test("PR120 Word Comparison preserves four structured case shapes in VI EN and ZH", async () => {
+  for (const locale of ["vi", "en", "zh"]) {
+    const source = payload({ requestedLocale: locale, fallbackLocale: locale });
+    const ri = source.entry.pronunciations[0].reading_items[0];
+    ri.content_locale = locale;
+    const keys = ["main_focus", "typical_phrase", "characteristic_use"];
+    const row = (key) => ({
+      row_key: key,
+      localizations: {
+        vi: { label: "Góc " + key, source_text: "知道消息 (*zhīdào xiāoxi*) — biết tin.", target_text: "懂道理 — hiểu đạo lý." },
+        en: { label: "Aspect " + key, source_text: "Know **a fact**.", target_text: "Understand a meaning." },
+        zh: { label: "侧重点", source_text: "侧重掌握事实或信息。", target_text: "侧重理解内容、意思或道理。" },
+      },
+    });
+    ri.quick_distinctions = [
+      { ...ri.quick_distinctions[0], public_id: "quick1", target_expression: "懂", content_locale: locale,
+        comparison_rows: keys.map(row) },
+      { ...ri.quick_distinctions[0], public_id: "quick2", target_expression: "了解", content_locale: locale,
+        comparison_rows: keys.map(row),
+        context_examples: [{ chinese: "我知道这件事，但不太了解具体情况。",
+          pinyin: "Wǒ zhīdào zhè jiàn shì, dàn bú tài liǎojiě jùtǐ qíngkuàng.",
+          localizations: { vi: { translation: "Tôi biết chuyện này, nhưng chưa rõ tình hình cụ thể." },
+            en: { translation: "I know about this, but I’m not very familiar with the details." } } }] },
+      { ...ri.quick_distinctions[0], public_id: "quick3", target_expression: "认识", content_locale: locale,
+        comparison_rows: [row("meaning")],
+        closing_note: { vi: "Cả hai câu đều đúng.", en: "Both sentences are correct.", zh: "两句话都可以成立。" }[locale],
+        contrast_examples: [
+          { source_expression: "我知道那位作家。", target_expression: "我认识那位作家。",
+            source_pinyin: "Wǒ zhīdào nà wèi zuòjiā.", target_pinyin: "Wǒ rènshi nà wèi zuòjiā.",
+            source_translation: "Biết đến nhà văn.", target_translation: "Quen nhà văn." },
+        ] },
+      { ...ri.quick_distinctions[0], public_id: "quick4", target_expression: "懂得", content_locale: locale,
+        comparison_rows: ["main_focus", "typical_phrase"].map(row) },
+    ];
+    const harness = await createLoaderHarness(async (name) => {
+      assert.equal(name, "get_public_vocabulary_entry_v12");
+      return { data: source, error: null };
+    });
+    const result = await harness.load(PUBLIC_ID, {
+      requestedLocaleCode: locale, fallbackLocaleCode: locale, exactContentLocaleCode: locale,
+    });
+    assert.equal(result.status, "FOUND");
+    const pairs = result.detail.pronunciations[0].readingItems[0].quickDistinctions;
+    assert.deepEqual(pairs.map(pair => pair.targetExpression), ["懂", "了解", "认识", "懂得"]);
+    assert.deepEqual(pairs.map(pair => pair.comparisonRows.length), [3, 3, 1, 2]);
+    assert.deepEqual(pairs[0].comparisonRows.map(row => row.rowKey), keys);
+    assert.equal(pairs[1].contextExamples.length, 1);
+    assert.equal(pairs[1].contextExamples[0].chinese, "我知道这件事，但不太了解具体情况。");
+    assert.equal(pairs[1].contextExamples[0].translation === null, locale === "zh");
+    assert.equal(pairs[2].contrastExamples.length, 1);
+    assert.equal(pairs[2].closingNote, { vi: "Cả hai câu đều đúng.", en: "Both sentences are correct.", zh: "两句话都可以成立。" }[locale]);
+    assert.equal(pairs[3].comparisonRows[0].contentLocale, locale);
+  }
+});
+
+test("PR120 optional fields preserve legacy 懂 and semantic display order on desktop/mobile", async () => {
+  const h = await createLoaderHarness(async () => ({ data: payload(), error: null }));
+  const distinction = firstDistinction(await h.load(PUBLIC_ID, exactViRequest()));
+  assert.equal(distinction.comparisonRows.length, 0);
+  assert.equal(distinction.contextExamples.length, 0);
+  assert.equal(distinction.closingNote, null);
+  const [render, css] = await Promise.all([
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css"),
+  ]);
+  assert.ok(render.indexOf("distinction.comparisonRows.map") < render.indexOf("data-comparison-contrast-examples"));
+  assert.ok(render.indexOf("data-comparison-contrast-examples") < render.indexOf("data-comparison-context-examples"));
+  assert.ok(render.indexOf("data-comparison-context-examples") < render.indexOf("data-comparison-closing-note"));
+  assert.match(render, /const hasExtendedComparison =/u);
+  assert.match(render, /if \(!structured\)/u);
+  assert.match(css, /grid-template-columns:\s*minmax\(90px, 0\.8fr\) repeat\(2, minmax\(0, 1\.8fr\)\)/u);
+  assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.comparisonRow/u);
+});
