@@ -419,10 +419,10 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                           <div className={styles.comparisonRow} role="row">
                             <div className={styles.comparisonRowLabel} role="rowheader"><strong>例子</strong></div>
                             <div role="cell" className={styles.comparisonCellExamples}>
-                              {contrast.map((example, index) => <span key={index}>{example.sourceExpression}</span>)}
+                              {contrast.map((example, index) => <span key={index}>{example.sourceExpression}{example.sourcePinyin ? <small className={styles.distinctionPinyin}>{example.sourcePinyin}</small> : null}</span>)}
                             </div>
                             <div role="cell" className={styles.comparisonCellExamples}>
-                              {contrast.map((example, index) => <span key={index}>{example.targetExpression}</span>)}
+                              {contrast.map((example, index) => <span key={index}>{example.targetExpression}{example.targetPinyin ? <small className={styles.distinctionPinyin}>{example.targetPinyin}</small> : null}</span>)}
                             </div>
                           </div>
                         ) : null}
