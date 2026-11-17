@@ -401,6 +401,22 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                     {distinction.learnerExplanation ? (
                       <p className={styles.distinctionIntro}><ComparisonInline text={distinction.learnerExplanation} /></p>
                     ) : null}
+                    {distinction.sourceUseWhen || distinction.targetUseWhen ? (
+                      <div className={styles.distinctionCompareGrid}>
+                        <section className={styles.distinctionCard}>
+                          <strong className={styles.distinctionTerm}>{sourceExpression}</strong>
+                          {distinction.sourceUseWhen ? (
+                            <p className={styles.distinctionUse}><ComparisonInline text={distinction.sourceUseWhen} /></p>
+                          ) : null}
+                        </section>
+                        <section className={styles.distinctionCard}>
+                          <strong className={styles.distinctionTerm}>{targetDisplayForm}</strong>
+                          {distinction.targetUseWhen ? (
+                            <p className={styles.distinctionUse}><ComparisonInline text={distinction.targetUseWhen} /></p>
+                          ) : null}
+                        </section>
+                      </div>
+                    ) : null}
                     {distinction.comparisonRows.length > 0 ? (
                       <div className={styles.comparisonRows} role="table" aria-label={sourceExpression + " / " + targetDisplayForm}>
                         <div className={styles.comparisonRow} role="row">
@@ -426,22 +442,6 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                             </div>
                           </div>
                         ) : null}
-                      </div>
-                    ) : null}
-                    {distinction.sourceUseWhen || distinction.targetUseWhen ? (
-                      <div className={styles.distinctionCompareGrid}>
-                        <section className={styles.distinctionCard}>
-                          <strong className={styles.distinctionTerm}>{sourceExpression}</strong>
-                          {distinction.sourceUseWhen ? (
-                            <p className={styles.distinctionUse}><ComparisonInline text={distinction.sourceUseWhen} /></p>
-                          ) : null}
-                        </section>
-                        <section className={styles.distinctionCard}>
-                          <strong className={styles.distinctionTerm}>{targetDisplayForm}</strong>
-                          {distinction.targetUseWhen ? (
-                            <p className={styles.distinctionUse}><ComparisonInline text={distinction.targetUseWhen} /></p>
-                          ) : null}
-                        </section>
                       </div>
                     ) : null}
                     {!zhContrastsInRows && contrast.length > 0 ? (
