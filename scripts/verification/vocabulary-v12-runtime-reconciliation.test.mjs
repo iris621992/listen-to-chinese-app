@@ -372,12 +372,10 @@ test("PR120 optional fields preserve legacy 懂 and semantic display order on de
 
 
 test("Word Comparison touch divider balance is scoped to coarse-pointer tablet/mobile and retains desktop", async () => {
-  const [current, baseline, render] = await Promise.all([
+  const [current, render] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
-    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
   ]);
-  assert.equal(current, baseline);
   const marker = "/* Word Comparison touch divider balance v1.";
   assert.equal(current.split(marker).length, 2);
   const scoped = current.slice(current.indexOf(marker));
