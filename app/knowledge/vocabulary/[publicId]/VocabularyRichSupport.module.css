@@ -655,31 +655,24 @@
   }
 }
 
-/* Word Comparison touch divider balance v1.
-   Scope: mobile/tablet touch layout only. Desktop and authored content stay unchanged. */
+/* Word Comparison shared dashed-row alignment v2.
+   Each column keeps its own dashed border; CSS subgrid aligns them to the
+   same row after the longer explanation. Scoped to two-column touch layouts. */
 @media (max-width: 1100px) and (hover: none) and (pointer: coarse) {
-  .distinctionBlock .distinctionList {
-    gap: 0;
-  }
+  @container (min-width: 621px) {
+    .distinctionCompareGridSynced {
+      grid-template-rows: auto auto auto;
+    }
 
-  .distinctionBlock .structuredDistinction {
-    padding: 0;
-    border-top: 0;
-    border-bottom: 1px solid #ebe6dc;
-  }
+    .distinctionCompareGridSynced > .distinctionCard {
+      display: grid;
+      grid-row: 1 / span 3;
+      grid-template-rows: subgrid;
+      row-gap: 0;
+    }
 
-  .distinctionBlock .structuredDistinction:first-child {
-    border-top: 1px solid #ebe6dc;
-  }
-
-  .distinctionBlock .distinctionSummary {
-    box-sizing: border-box;
-    min-height: 54px;
-    padding: 12px 2px;
-    line-height: 1.5;
-  }
-
-  .distinctionBlock .structuredDistinction[open] {
-    padding-bottom: 12px;
+    .distinctionCompareGridSynced .distinctionCardHeading {
+      min-width: 0;
+    }
   }
 }

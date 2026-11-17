@@ -516,9 +516,11 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                   {distinction.learnerExplanation ? (
                     <p className={styles.distinctionIntro}><LearnerInline text={distinction.learnerExplanation} /></p>
                   ) : null}
-                  <div className={styles.distinctionCompareGrid}>
+                  <div className={`${styles.distinctionCompareGrid} ${styles.distinctionCompareGridSynced}`}>
                     <section className={styles.distinctionCard}>
-                      <strong className={styles.distinctionTerm}>{sourceExpression}</strong>
+                      <div className={styles.distinctionCardHeading}>
+                        <strong className={styles.distinctionTerm}>{sourceExpression}</strong>
+                      </div>
                       <p className={styles.distinctionUse}><LearnerInline text={distinction.sourceUseWhen!} /></p>
                       <div className={styles.distinctionExamples}>
                         {distinction.contrastExamples.map((example, index) => (
@@ -531,13 +533,15 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                       </div>
                     </section>
                     <section className={styles.distinctionCard}>
-                      <strong className={styles.distinctionTerm}>{targetDisplayForm}</strong>
-                      {distinction.participant ? (
-                        <>
-                          <small className={styles.distinctionPinyin}>{distinction.participant.pronunciation}</small>
-                          <small className={styles.distinctionTranslation}>{distinction.participant.shortLabel}</small>
-                        </>
-                      ) : null}
+                      <div className={styles.distinctionCardHeading}>
+                        <strong className={styles.distinctionTerm}>{targetDisplayForm}</strong>
+                        {distinction.participant ? (
+                          <>
+                            <small className={styles.distinctionPinyin}>{distinction.participant.pronunciation}</small>
+                            <small className={styles.distinctionTranslation}>{distinction.participant.shortLabel}</small>
+                          </>
+                        ) : null}
+                      </div>
                       <p className={styles.distinctionUse}><LearnerInline text={distinction.targetUseWhen!} /></p>
                       <div className={styles.distinctionExamples}>
                         {distinction.contrastExamples.map((example, index) => (

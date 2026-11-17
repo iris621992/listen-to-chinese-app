@@ -370,21 +370,23 @@ test("PR120 optional fields preserve legacy 懂 and semantic display order on de
   assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.comparisonRow/u);
 });
 
-
-test("Word Comparison touch divider balance is scoped to coarse-pointer tablet/mobile and retains desktop", async () => {
-  const [current, render] = await Promise.all([
+test("Word Comparison keeps two independent dashed borders at the same row on touch tablets", async () => {
+  const [css, render] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
   ]);
-  const marker = "/* Word Comparison touch divider balance v1.";
-  assert.equal(current.split(marker).length, 2);
-  const scoped = current.slice(current.indexOf(marker));
+  assert.doesNotMatch(css, /Word Comparison touch divider balance v1/u);
+  const marker = "/* Word Comparison shared dashed-row alignment v2.";
+  assert.equal(css.split(marker).length, 2);
+  const scoped = css.slice(css.indexOf(marker));
   assert.match(scoped, /@media \(max-width: 1100px\) and \(hover: none\) and \(pointer: coarse\)/u);
-  assert.match(scoped, /\.distinctionBlock \.distinctionList\s*\{\s*gap:\s*0;/u);
-  assert.match(scoped, /\.distinctionBlock \.structuredDistinction\s*\{[^}]*border-top:\s*0;[^}]*border-bottom:\s*1px solid #ebe6dc;/u);
-  assert.match(scoped, /\.distinctionBlock \.structuredDistinction:first-child\s*\{\s*border-top:\s*1px solid #ebe6dc;/u);
-  assert.match(scoped, /\.distinctionBlock \.distinctionSummary\s*\{[^}]*min-height:\s*54px;[^}]*padding:\s*12px 2px;/u);
-  assert.match(scoped, /\.distinctionBlock \.structuredDistinction\[open\]\s*\{\s*padding-bottom:\s*12px;/u);
-  assert.match(render, /className=\{styles\.structuredDistinction\}/u);
-  assert.match(render, /className=\{styles\.distinctionSummary\}/u);
+  assert.match(scoped, /@container \(min-width: 621px\)/u);
+  assert.match(scoped, /\.distinctionCompareGridSynced\s*\{\s*grid-template-rows: auto auto auto;/u);
+  assert.match(scoped, /\.distinctionCompareGridSynced > \.distinctionCard\s*\{[^}]*grid-template-rows: subgrid;/u);
+  assert.match(css, /\.distinctionExamples\s*\{[^}]*border-top: 1px dashed #e2d9ca;/u);
+  const legacy = render.slice(render.indexOf("const structured = Boolean(distinction.sourceUseWhen"));
+  assert.match(legacy, /styles\.distinctionCompareGridSynced/u);
+  assert.equal(legacy.split("className={styles.distinctionCardHeading}").length - 1, 2);
+  assert.equal(legacy.split("className={styles.distinctionExamples}").length - 1, 2);
+  assert.doesNotMatch(legacy, /grid-template-rows/u);
 });
