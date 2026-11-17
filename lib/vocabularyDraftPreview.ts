@@ -1,4 +1,5 @@
 import type { VocabularyCharacterOccurrence } from "@/lib/vocabularyCharacterDelivery";
+import { parseVocabularyComparisonRows, parseVocabularyContextExamples } from "@/lib/vocabularyDetail";
 import type {
   VocabularyClassifier,
   VocabularyLexicalRelation,
@@ -16,8 +17,6 @@ import type {
   VocabularyPronunciation,
   VocabularyQuickDistinction,
   VocabularyQuickDistinctionContrastExample,
-  parseVocabularyComparisonRows,
-  parseVocabularyContextExamples,
   VocabularyReadingItem,
   VocabularyTranslationEquivalent,
 } from "@/lib/vocabularyDetail";
