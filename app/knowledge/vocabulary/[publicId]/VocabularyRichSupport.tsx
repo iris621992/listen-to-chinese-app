@@ -404,26 +404,26 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                     {distinction.comparisonRows.length > 0 ? (
                       <div className={styles.comparisonRows} role="table" aria-label={sourceExpression + " / " + targetDisplayForm}>
                         <div className={styles.comparisonRow} role="row">
-                          <span role="columnheader" aria-hidden="true" />
-                          <strong role="columnheader">{sourceExpression}</strong>
-                          <strong role="columnheader">{targetDisplayForm}</strong>
+                          <div role="columnheader" aria-hidden="true" />
+                          <div role="columnheader"><strong>{sourceExpression}</strong></div>
+                          <div role="columnheader"><strong>{targetDisplayForm}</strong></div>
                         </div>
                         {distinction.comparisonRows.map(row => (
                           <div className={styles.comparisonRow} role="row" key={row.rowKey}>
-                            <strong className={styles.comparisonRowLabel} role="rowheader">{row.label}</strong>
-                            <span role="cell"><ComparisonInline text={row.sourceText} /></span>
-                            <span role="cell"><ComparisonInline text={row.targetText} /></span>
+                            <div className={styles.comparisonRowLabel} role="rowheader"><strong>{row.label}</strong></div>
+                            <div role="cell"><ComparisonInline text={row.sourceText} /></div>
+                            <div role="cell"><ComparisonInline text={row.targetText} /></div>
                           </div>
                         ))}
                         {zhContrastsInRows && contrast.length > 0 ? (
                           <div className={styles.comparisonRow} role="row">
-                            <strong className={styles.comparisonRowLabel} role="rowheader">例子</strong>
-                            <span role="cell" className={styles.comparisonCellExamples}>
+                            <div className={styles.comparisonRowLabel} role="rowheader"><strong>例子</strong></div>
+                            <div role="cell" className={styles.comparisonCellExamples}>
                               {contrast.map((example, index) => <span key={index}>{example.sourceExpression}</span>)}
-                            </span>
-                            <span role="cell" className={styles.comparisonCellExamples}>
+                            </div>
+                            <div role="cell" className={styles.comparisonCellExamples}>
                               {contrast.map((example, index) => <span key={index}>{example.targetExpression}</span>)}
-                            </span>
+                            </div>
                           </div>
                         ) : null}
                       </div>
