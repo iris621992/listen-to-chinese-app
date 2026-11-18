@@ -498,12 +498,6 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                 return (
                   <div key={distinction.publicId} className={styles.distinctionItem}>
                     <strong>{targetDisplayForm}</strong>
-                    {distinction.participant ? (
-                      <>
-                        <small className={styles.distinctionPinyin}>{distinction.participant.pronunciation}</small>
-                        <small className={styles.distinctionTranslation}>{distinction.participant.shortLabel}</small>
-                      </>
-                    ) : null}
                     {distinction.learnerExplanation ? <p><LearnerInline text={distinction.learnerExplanation} /></p> : null}
                   </div>
                 );
@@ -535,12 +529,6 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                     <section className={styles.distinctionCard}>
                       <div className={styles.distinctionCardHeading}>
                         <strong className={styles.distinctionTerm}>{targetDisplayForm}</strong>
-                        {distinction.participant ? (
-                          <>
-                            <small className={styles.distinctionPinyin}>{distinction.participant.pronunciation}</small>
-                            <small className={styles.distinctionTranslation}>{distinction.participant.shortLabel}</small>
-                          </>
-                        ) : null}
                       </div>
                       <p className={styles.distinctionUse}><LearnerInline text={distinction.targetUseWhen!} /></p>
                       <div className={styles.distinctionExamples}>

@@ -242,7 +242,7 @@ test("exact locale drops a participant from another locale without rewriting loc
   assert.equal(distinction.targetUseWhen, "Dùng khi biết thông tin.");
 });
 
-test("existing Word comparison surface enriches target facts without changing the accepted visual system", async () => {
+test("Word Comparison keeps target Hanzi without duplicating participant pronunciation or short meaning", async () => {
   const [rich, detailCss, header, characterRail, sticky] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetail.module.css"),
@@ -252,8 +252,10 @@ test("existing Word comparison surface enriches target facts without changing th
   ]);
 
   assert.match(rich, /distinction\.participant\?\.displayForm \?\? distinction\.targetExpression/u);
-  assert.match(rich, /distinction\.participant\.pronunciation/u);
-  assert.match(rich, /distinction\.participant\.shortLabel/u);
+  assert.doesNotMatch(rich, /distinction\.participant\.pronunciation/u);
+  assert.doesNotMatch(rich, /distinction\.participant\.shortLabel/u);
+  assert.match(rich, /example\.sourcePinyin/u);
+  assert.match(rich, /example\.targetPinyin/u);
   assert.match(rich, /styles\.distinctionPinyin/u);
   assert.match(rich, /styles\.distinctionTranslation/u);
   assert.match(rich, /distinction\.learnerExplanation/u);
@@ -288,11 +290,12 @@ test("Production v9 fallback transports K1L vi/en/zh with authored participant a
   }
 });
 
-test("K1L participant keeps the accepted collapsible comparison and inline learner prose", async () => {
+test("K1L participant stays in the data contract, not as duplicate comparison heading text", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
   assert.match(rich, /<details key=\{distinction\.publicId\}/u);
   assert.match(rich, /<LearnerInline text=\{distinction\.learnerExplanation\} \/>/u);
-  assert.match(rich, /distinction\.participant\.shortLabel/u);
+  assert.doesNotMatch(rich, /distinction\.participant\.shortLabel/u);
+  assert.doesNotMatch(rich, /distinction\.participant\.pronunciation/u);
 });
 
 
