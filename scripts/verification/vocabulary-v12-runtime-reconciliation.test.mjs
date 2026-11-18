@@ -370,23 +370,21 @@ test("PR120 optional fields preserve legacy 懂 and semantic display order on de
   assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.comparisonRow/u);
 });
 
-test("Word Comparison keeps two independent dashed borders at the same row on touch tablets", async () => {
+test("Word Comparison dashed separators align in all two-column layouts, not only pointer-coarse tablets", async () => {
   const [css, render] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
   ]);
-  assert.doesNotMatch(css, /Word Comparison touch divider balance v1/u);
-  const marker = "/* Word Comparison shared dashed-row alignment v2.";
+  const marker = "/* Word Comparison shared dashed-row alignment v3.";
   assert.equal(css.split(marker).length, 2);
-  const scoped = css.slice(css.indexOf(marker));
-  assert.match(scoped, /@media \(max-width: 1100px\) and \(hover: none\) and \(pointer: coarse\)/u);
-  assert.match(scoped, /@container \(min-width: 621px\)/u);
-  assert.match(scoped, /\.distinctionCompareGridSynced\s*\{\s*grid-template-rows: auto auto auto;/u);
-  assert.match(scoped, /\.distinctionCompareGridSynced > \.distinctionCard\s*\{[^}]*grid-template-rows: subgrid;/u);
+  const alignedRules = css.slice(css.indexOf(marker));
+  assert.match(alignedRules, /@container \(min-width: 621px\)/u);
+  assert.doesNotMatch(alignedRules, /@media|pointer: coarse|hover: none|max-width: 1100px/u);
+  assert.match(alignedRules, /\.distinctionCompareGridSynced\s*\{\s*grid-template-rows: auto auto auto;/u);
+  assert.match(alignedRules, /\.distinctionCompareGridSynced > \.distinctionCard\s*\{[^}]*grid-row: 1 \/ span 3;[^}]*grid-template-rows: subgrid;/u);
   assert.match(css, /\.distinctionExamples\s*\{[^}]*border-top: 1px dashed #e2d9ca;/u);
   const legacy = render.slice(render.indexOf("const structured = Boolean(distinction.sourceUseWhen"));
   assert.match(legacy, /styles\.distinctionCompareGridSynced/u);
   assert.equal(legacy.split("className={styles.distinctionCardHeading}").length - 1, 2);
   assert.equal(legacy.split("className={styles.distinctionExamples}").length - 1, 2);
-  assert.doesNotMatch(legacy, /grid-template-rows/u);
 });
