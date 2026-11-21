@@ -368,7 +368,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                 const zhContrastsInRows = zh && distinction.comparisonRows.length > 0;
                 const contrast = distinction.contrastExamples;
                 return (
-                  <details key={distinction.publicId} className={styles.structuredDistinction}>
+                  <details key={distinction.publicId} className={styles.structuredDistinction} open>
                     <summary className={styles.distinctionSummary}>
                       <span>{sourceExpression}</span><span aria-hidden="true"> ↔ </span><span>{targetDisplayForm}</span>
                     </summary>

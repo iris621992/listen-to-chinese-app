@@ -95,3 +95,13 @@ test("Vocabulary notes and comparisons use one safe renderer without losing publ
   assert.match(rich,/distinction\.closingNote/);
   assert.match(preview,/YUNCHINESE_VOCABULARY_V5_RICH_RENDERING_V1/);
 });
+
+test("new authored Vocabulary v5 comparison rows are visible by default, while legacy 懂 disclosure stays unchanged", async () => {
+  const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
+  assert.match(rich,/const hasExtendedComparison = distinction\.comparisonRows\.length > 0/);
+  assert.equal((rich.match(/<details key=\{distinction\.publicId\} className=\{styles\.structuredDistinction\} open>/g)??[]).length,1);
+  assert.equal((rich.match(/<details key=\{distinction\.publicId\} className=\{styles\.structuredDistinction\}>/g)??[]).length,1);
+  const visible=rich.indexOf("<details key={distinction.publicId} className={styles.structuredDistinction} open>");
+  const fallback=rich.indexOf("<details key={distinction.publicId} className={styles.structuredDistinction}>",visible+1);
+  assert.ok(visible>0&&fallback>visible);
+});
