@@ -67,11 +67,24 @@ function LearnerExample({ example }: { example: VocabularyExample }) {
   );
 }
 
-function RelationTarget({ target }: { target: VocabularyRelationTarget }) {
+function RelationTarget({
+  target,
+  sourceRelationContext,
+}: {
+  target: VocabularyRelationTarget;
+  sourceRelationContext?: string | null;
+}) {
   return (
     <div className={styles.relationItem}>
-      <strong>{target.displayForm}</strong>
-      <span> · {target.pronunciation} — {target.shortLabel}</span>
+      <div>
+        <strong>{target.displayForm}</strong>
+        <span> · {target.pronunciation} — {target.shortLabel}</span>
+      </div>
+      {sourceRelationContext ? (
+        <div className={styles.sourceRelationContext}>
+          <LearnerProse text={sourceRelationContext} keyPrefix="source-relation-context" />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -150,6 +163,7 @@ function RelationGroup({
           <RelationTarget
             key={relation.target.displayForm + relation.target.pronunciation + index}
             target={relation.target}
+            sourceRelationContext={relation.sourceRelationContext}
           />
         ))}
       </div>

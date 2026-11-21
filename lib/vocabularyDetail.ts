@@ -38,6 +38,7 @@ export type VocabularyRelationTarget = {
 export type VocabularyLexicalRelation = {
   relationType: "synonym" | "near_synonym" | "antonym";
   target: VocabularyRelationTarget;
+  sourceRelationContext: string | null;
 };
 
 export type VocabularyRelatedWord = {
@@ -337,7 +338,10 @@ function parseLexicalRelation(value: unknown): VocabularyLexicalRelation | null 
   ) {
     return null;
   }
-  return { relationType, target };
+  return {
+    relationType, target,
+    sourceRelationContext: stringValue(row.source_relation_context),
+  };
 }
 
 function parseRelatedWord(value: unknown): VocabularyRelatedWord | null {

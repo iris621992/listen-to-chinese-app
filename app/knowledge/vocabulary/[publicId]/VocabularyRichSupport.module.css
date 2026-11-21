@@ -32,6 +32,21 @@
   text-transform: none;
 }
 
+.sourceRelationContext {
+  margin-top: 6px;
+  color: #576159;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.sourceRelationContext p {
+  margin: 0;
+}
+
+.sourceRelationContext p + p {
+  margin-top: 6px;
+}
+
 .exampleList,
 .constructionList,
 .classifierList,

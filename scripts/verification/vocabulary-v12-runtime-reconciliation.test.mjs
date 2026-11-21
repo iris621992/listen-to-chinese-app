@@ -123,6 +123,38 @@ function exactViRequest() {
   };
 }
 
+
+test("near-synonym source relation context stays independent of target description and exact locale", async () => {
+  const source = {
+    vi: "Hai từ có nét nghĩa gần nhau; xem thêm ở phần **Phân biệt từ**.",
+    en: "The two words overlap; see **Word comparison**.",
+    zh: "两词有相近的意义。",
+  };
+  const original = payload({ requestedLocale: "vi", fallbackLocale: "vi" });
+  const ri = original.entry.pronunciations[0].reading_items[0];
+  ri.lexical_relations = [{
+    relation_type: "near_synonym",
+    target: { display_form: "懂得", pronunciation: "dǒngde", short_label: "hiểu; biết", content_locale: "vi" },
+    source_relation_context: source.vi,
+  }];
+  const harness = await createLoaderHarness(async () => ({ data: original, error: null }));
+  const result = await harness.load(PUBLIC_ID, exactViRequest());
+  assert.equal(result.status, "FOUND");
+  const relation = result.detail.pronunciations[0].readingItems[0].lexicalRelations[0];
+  assert.equal(relation.target.shortLabel, "hiểu; biết");
+  assert.equal(relation.sourceRelationContext, source.vi);
+
+  const legacy = payload({ requestedLocale: "vi", fallbackLocale: "vi" });
+  legacy.entry.pronunciations[0].reading_items[0].lexical_relations = [{
+    relation_type: "near_synonym",
+    target: { display_form: "懂得", pronunciation: "dǒngde", short_label: "hiểu; biết", content_locale: "vi" },
+  }];
+  const oldHarness = await createLoaderHarness(async () => ({ data: legacy, error: null }));
+  const old = await oldHarness.load(PUBLIC_ID, exactViRequest());
+  assert.equal(old.status, "FOUND");
+  assert.equal(old.detail.pronunciations[0].readingItems[0].lexicalRelations[0].sourceRelationContext, null);
+});
+
 function firstDistinction(result) {
   assert.equal(result.status, "FOUND");
   return result.detail.pronunciations[0].readingItems[0].quickDistinctions[0];
