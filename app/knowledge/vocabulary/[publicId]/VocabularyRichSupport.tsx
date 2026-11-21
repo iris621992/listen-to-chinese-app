@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
+import VocabularyRichText, { VocabularyRichInline } from "./VocabularyRichText";
 import type {
   VocabularyExample,
   VocabularyLexicalRelation,
@@ -34,6 +35,12 @@ type Props = {
   };
 };
 
+
+/** Preserve authored comparison Hanzi, pinyin and safe Markdown emphasis. */
+function ComparisonInline({ text }: { text: string }) {
+  return <VocabularyRichInline text={text} />;
+}
+
 function LearnerExample({ example }: { example: VocabularyExample }) {
   return (
     <div className={styles.exampleItem}>
@@ -49,26 +56,28 @@ function LearnerExample({ example }: { example: VocabularyExample }) {
   );
 }
 
-function RelationTarget({ target }: { target: VocabularyRelationTarget }) {
+function RelationTarget({
+  target,
+  sourceRelationContext,
+}: {
+  target: VocabularyRelationTarget;
+  sourceRelationContext?: string | null;
+}) {
   return (
     <div className={styles.relationItem}>
-      <strong>{target.displayForm}</strong>
-      <span> · {target.pronunciation} — {target.shortLabel}</span>
+      <div>
+        <strong>{target.displayForm}</strong>
+        <span> · {target.pronunciation} — {target.shortLabel}</span>
+      </div>
+      {sourceRelationContext ? (
+        <div className={styles.sourceRelationContext}>
+          <LearnerProse text={sourceRelationContext} keyPrefix="source-relation-context" />
+        </div>
+      ) : null}
     </div>
   );
 }
 
-
-function splitLearnerProseParagraphs(text: string): string[] {
-  // Knowledge-authored blank lines mark paragraph boundaries. Punctuation does not:
-  // splitting sentences would invent visual grouping not accepted by the Owner.
-  return text
-    .replace(/\r\n?/gu, "\n")
-    .trim()
-    .split(/\n[ \t]*\n+/gu)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
-}
 
 function normalizedLearnerProse(value: string | null | undefined): string | null {
   const normalized = value?.replace(/\\s+/gu, " ").trim();
@@ -88,29 +97,11 @@ function distinctLearnerProse(
 
 /** Render author-supplied Markdown emphasis as typography, without rewriting copy. */
 export function LearnerInline({ text }: { text: string }) {
-  const content: ReactNode[] = [];
-  let cursor = 0;
-  let emphasisIndex = 0;
-  for (const match of text.matchAll(/\*\*([^*\n]+)\*\*/gu)) {
-    const at = match.index ?? cursor;
-    if (at > cursor) content.push(text.slice(cursor, at));
-    content.push(<strong key={emphasisIndex++}>{match[1]}</strong>);
-    cursor = at + match[0].length;
-  }
-  if (cursor < text.length) content.push(text.slice(cursor));
-  return <>{content}</>;
+  return <VocabularyRichInline text={text} />;
 }
 
-function LearnerProse({
-  text,
-  keyPrefix,
-}: {
-  text: string;
-  keyPrefix: string;
-}) {
-  return splitLearnerProseParagraphs(text).map((paragraph, index) => (
-    <p key={`${keyPrefix}-${index}`}><LearnerInline text={paragraph} /></p>
-  ));
+function LearnerProse({ text }: { text: string; keyPrefix: string }) {
+  return <VocabularyRichText text={text} />;
 }
 
 function RelationGroup({
@@ -132,6 +123,7 @@ function RelationGroup({
           <RelationTarget
             key={relation.target.displayForm + relation.target.pronunciation + index}
             target={relation.target}
+            sourceRelationContext={relation.sourceRelationContext}
           />
         ))}
       </div>
@@ -366,17 +358,120 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
           <div className={styles.distinctionList}>
             {item.quickDistinctions.map((distinction) => {
               const targetDisplayForm = distinction.participant?.displayForm ?? distinction.targetExpression;
+
+              // New structured comparisons use the exact authored row inventory.
+              // Keep the legacy rendering branch below byte-for-byte for 懂 and older entries.
+              const hasExtendedComparison = distinction.comparisonRows.length > 0
+                || distinction.contextExamples.length > 0 || Boolean(distinction.closingNote);
+              if (hasExtendedComparison) {
+                const zh = distinction.contentLocale === "zh";
+                const zhContrastsInRows = zh && distinction.comparisonRows.length > 0;
+                const contrast = distinction.contrastExamples;
+                return (
+                  <details key={distinction.publicId} className={styles.structuredDistinction} open>
+                    <summary className={styles.distinctionSummary}>
+                      <span>{sourceExpression}</span><span aria-hidden="true"> ↔ </span><span>{targetDisplayForm}</span>
+                    </summary>
+                    {distinction.learnerExplanation ? (
+                      <p className={styles.distinctionIntro}><ComparisonInline text={distinction.learnerExplanation} /></p>
+                    ) : null}
+                    {distinction.sourceUseWhen || distinction.targetUseWhen ? (
+                      <div className={styles.distinctionCompareGrid}>
+                        <section className={styles.distinctionCard}>
+                          <strong className={styles.distinctionTerm}>{sourceExpression}</strong>
+                          {distinction.sourceUseWhen ? (
+                            <p className={styles.distinctionUse}><ComparisonInline text={distinction.sourceUseWhen} /></p>
+                          ) : null}
+                        </section>
+                        <section className={styles.distinctionCard}>
+                          <strong className={styles.distinctionTerm}>{targetDisplayForm}</strong>
+                          {distinction.targetUseWhen ? (
+                            <p className={styles.distinctionUse}><ComparisonInline text={distinction.targetUseWhen} /></p>
+                          ) : null}
+                        </section>
+                      </div>
+                    ) : null}
+                    {distinction.comparisonRows.length > 0 ? (
+                      <div className={styles.comparisonRows} role="table" aria-label={sourceExpression + " / " + targetDisplayForm}>
+                        <div className={styles.comparisonRow} role="row">
+                          <div role="columnheader" aria-hidden="true" />
+                          <div role="columnheader"><strong>{sourceExpression}</strong></div>
+                          <div role="columnheader"><strong>{targetDisplayForm}</strong></div>
+                        </div>
+                        {distinction.comparisonRows.map(row => (
+                          <div className={styles.comparisonRow} role="row" key={row.rowKey}>
+                            <div className={styles.comparisonRowLabel} role="rowheader"><strong>{row.label}</strong></div>
+                            <div role="cell"><ComparisonInline text={row.sourceText} /></div>
+                            <div role="cell"><ComparisonInline text={row.targetText} /></div>
+                          </div>
+                        ))}
+                        {zhContrastsInRows && contrast.length > 0 ? (
+                          <div className={styles.comparisonRow} role="row">
+                            <div className={styles.comparisonRowLabel} role="rowheader"><strong>例子</strong></div>
+                            <div role="cell" className={styles.comparisonCellExamples}>
+                              {contrast.map((example, index) => <span key={index}>{example.sourceExpression}{example.sourcePinyin ? <small className={styles.distinctionPinyin}>{example.sourcePinyin}</small> : null}</span>)}
+                            </div>
+                            <div role="cell" className={styles.comparisonCellExamples}>
+                              {contrast.map((example, index) => <span key={index}>{example.targetExpression}{example.targetPinyin ? <small className={styles.distinctionPinyin}>{example.targetPinyin}</small> : null}</span>)}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
+                    {!zhContrastsInRows && contrast.length > 0 ? (
+                      <div className={styles.distinctionCompareGrid} data-comparison-contrast-examples="true">
+                        <section className={styles.distinctionCard}>
+                          <strong className={styles.distinctionTerm}>{sourceExpression}</strong>
+                          <div className={styles.distinctionExamples}>
+                            {contrast.map((example, index) => (
+                              <span key={index}>
+                                <b>{example.sourceExpression}</b>
+                                {example.sourcePinyin ? <small className={styles.distinctionPinyin}>{example.sourcePinyin}</small> : null}
+                                {example.sourceTranslation ? <small className={styles.distinctionTranslation}><ComparisonInline text={example.sourceTranslation} /></small> : null}
+                              </span>
+                            ))}
+                          </div>
+                        </section>
+                        <section className={styles.distinctionCard}>
+                          <strong className={styles.distinctionTerm}>{targetDisplayForm}</strong>
+                          <div className={styles.distinctionExamples}>
+                            {contrast.map((example, index) => (
+                              <span key={index}>
+                                <b>{example.targetExpression}</b>
+                                {example.targetPinyin ? <small className={styles.distinctionPinyin}>{example.targetPinyin}</small> : null}
+                                {example.targetTranslation ? <small className={styles.distinctionTranslation}><ComparisonInline text={example.targetTranslation} /></small> : null}
+                              </span>
+                            ))}
+                          </div>
+                        </section>
+                      </div>
+                    ) : null}
+                    {distinction.contextExamples.length > 0 ? (
+                      <div className={styles.comparisonContextExamples} data-comparison-context-examples="true">
+                        {distinction.contextExamples.map((example, index) => (
+                          <div key={index} className={styles.exampleItem}>
+                            <span className={styles.exampleChinese}>{example.chinese}</span>
+                            <span className={styles.examplePinyin}>{example.pinyin}</span>
+                            {example.translation ? (
+                              <span className={styles.exampleTranslation}><ComparisonInline text={example.translation} /></span>
+                            ) : null}
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    {distinction.closingNote ? (
+                      <p className={styles.comparisonClosingNote} data-comparison-closing-note="true">
+                        <ComparisonInline text={distinction.closingNote} />
+                      </p>
+                    ) : null}
+                  </details>
+                );
+              }
               const structured = Boolean(distinction.sourceUseWhen && distinction.targetUseWhen);
               if (!structured) {
                 return (
                   <div key={distinction.publicId} className={styles.distinctionItem}>
                     <strong>{targetDisplayForm}</strong>
-                    {distinction.participant ? (
-                      <>
-                        <small className={styles.distinctionPinyin}>{distinction.participant.pronunciation}</small>
-                        <small className={styles.distinctionTranslation}>{distinction.participant.shortLabel}</small>
-                      </>
-                    ) : null}
                     {distinction.learnerExplanation ? <p><LearnerInline text={distinction.learnerExplanation} /></p> : null}
                   </div>
                 );
@@ -389,9 +484,11 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                   {distinction.learnerExplanation ? (
                     <p className={styles.distinctionIntro}><LearnerInline text={distinction.learnerExplanation} /></p>
                   ) : null}
-                  <div className={styles.distinctionCompareGrid}>
+                  <div className={`${styles.distinctionCompareGrid} ${styles.distinctionCompareGridSynced}`}>
                     <section className={styles.distinctionCard}>
-                      <strong className={styles.distinctionTerm}>{sourceExpression}</strong>
+                      <div className={styles.distinctionCardHeading}>
+                        <strong className={styles.distinctionTerm}>{sourceExpression}</strong>
+                      </div>
                       <p className={styles.distinctionUse}><LearnerInline text={distinction.sourceUseWhen!} /></p>
                       <div className={styles.distinctionExamples}>
                         {distinction.contrastExamples.map((example, index) => (
@@ -404,13 +501,9 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                       </div>
                     </section>
                     <section className={styles.distinctionCard}>
-                      <strong className={styles.distinctionTerm}>{targetDisplayForm}</strong>
-                      {distinction.participant ? (
-                        <>
-                          <small className={styles.distinctionPinyin}>{distinction.participant.pronunciation}</small>
-                          <small className={styles.distinctionTranslation}>{distinction.participant.shortLabel}</small>
-                        </>
-                      ) : null}
+                      <div className={styles.distinctionCardHeading}>
+                        <strong className={styles.distinctionTerm}>{targetDisplayForm}</strong>
+                      </div>
                       <p className={styles.distinctionUse}><LearnerInline text={distinction.targetUseWhen!} /></p>
                       <div className={styles.distinctionExamples}>
                         {distinction.contrastExamples.map((example, index) => (

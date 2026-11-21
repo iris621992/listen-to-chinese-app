@@ -772,7 +772,11 @@ test("Translation Equivalent guidance stays aligned with its expression", async 
 
 test("Vocabulary prose only splits where the author placed a blank line", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
-  assert.ok(rich.includes("function splitLearnerProseParagraphs(text: string): string[]"));
+  const parser = await read("lib/vocabularyRichTextBlocks.ts");
+  assert.ok(parser.includes("function parseVocabularyRichTextBlocks(source: string)"));
+  assert.ok(parser.includes("source.replace(/\\r\\n?/gu, \"\\n\").split(\"\\n\")"));
+  assert.ok(parser.includes("!line.trim()"));
+  assert.doesNotMatch(parser, /const closesIdea|character === "；"|character === "。"/);
   assert.ok(rich.includes("function LearnerProse("));
   assert.doesNotMatch(rich, /const closesIdea/);
   assert.doesNotMatch(rich, /character === "；"|character === "。"/);
@@ -826,7 +830,13 @@ test("Vocabulary Usage note stays in Usage in every locale; Translation Equivale
 
 test("Vocabulary authored prose retains paragraph boundaries in all module surfaces", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
-  assert.ok(rich.includes("function splitLearnerProseParagraphs("));
+  const parser = await read("lib/vocabularyRichTextBlocks.ts");
+  const display = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichText.tsx");
+  assert.ok(parser.includes("export function parseVocabularyRichTextBlocks("));
+  assert.ok(display.includes("parseVocabularyRichTextBlocks(text).map"));
+  assert.match(display, /<p key=\{index\}/u);
+  assert.match(display, /<ul key=\{index\}/u);
+  assert.match(display, /<table className=\{styles\.richTextTable\}/u);
   assert.doesNotMatch(rich, /translation-guidance/);
   assert.match(rich, /data-vocabulary-module="usage"/);
   assert.match(rich, /data-vocabulary-module="translations"/);

@@ -54,6 +54,13 @@ test("Draft Preview uses same canonical-first Character fallback as public Learn
   assert.match(delivery, /strokeCount: null/);
 });
 
+test("Vocabulary v5 preview advertises the exact rendering compatibility gate", async () => {
+  const previewBridge = await read("app/preview/vocabulary/VocabularyDraftPreviewBridge.tsx");
+  assert.match(previewBridge, /YUNCHINESE_VOCABULARY_V5_RICH_RENDERING_V1/);
+  assert.match(previewBridge, /renderingContract:/);
+  assert.match(previewBridge, /opener\.postMessage\(ready, openerOrigin\)/);
+});
+
 test("Vocabulary Draft Preview handoff is short-lived, opener-bound, and fail closed", async () => {
   const [previewBridge, previewPage, nextConfig] = await Promise.all([
     read("app/preview/vocabulary/VocabularyDraftPreviewBridge.tsx"),

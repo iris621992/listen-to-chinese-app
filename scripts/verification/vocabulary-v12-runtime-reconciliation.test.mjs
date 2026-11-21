@@ -123,6 +123,38 @@ function exactViRequest() {
   };
 }
 
+
+test("near-synonym source relation context stays independent of target description and exact locale", async () => {
+  const source = {
+    vi: "Hai từ có nét nghĩa gần nhau; xem thêm ở phần **Phân biệt từ**.",
+    en: "The two words overlap; see **Word comparison**.",
+    zh: "两词有相近的意义。",
+  };
+  const original = payload({ requestedLocale: "vi", fallbackLocale: "vi" });
+  const ri = original.entry.pronunciations[0].reading_items[0];
+  ri.lexical_relations = [{
+    relation_type: "near_synonym",
+    target: { display_form: "懂得", pronunciation: "dǒngde", short_label: "hiểu; biết", content_locale: "vi" },
+    source_relation_context: source.vi,
+  }];
+  const harness = await createLoaderHarness(async () => ({ data: original, error: null }));
+  const result = await harness.load(PUBLIC_ID, exactViRequest());
+  assert.equal(result.status, "FOUND");
+  const relation = result.detail.pronunciations[0].readingItems[0].lexicalRelations[0];
+  assert.equal(relation.target.shortLabel, "hiểu; biết");
+  assert.equal(relation.sourceRelationContext, source.vi);
+
+  const legacy = payload({ requestedLocale: "vi", fallbackLocale: "vi" });
+  legacy.entry.pronunciations[0].reading_items[0].lexical_relations = [{
+    relation_type: "near_synonym",
+    target: { display_form: "懂得", pronunciation: "dǒngde", short_label: "hiểu; biết", content_locale: "vi" },
+  }];
+  const oldHarness = await createLoaderHarness(async () => ({ data: legacy, error: null }));
+  const old = await oldHarness.load(PUBLIC_ID, exactViRequest());
+  assert.equal(old.status, "FOUND");
+  assert.equal(old.detail.pronunciations[0].readingItems[0].lexicalRelations[0].sourceRelationContext, null);
+});
+
 function firstDistinction(result) {
   assert.equal(result.status, "FOUND");
   return result.detail.pronunciations[0].readingItems[0].quickDistinctions[0];
@@ -242,7 +274,7 @@ test("exact locale drops a participant from another locale without rewriting loc
   assert.equal(distinction.targetUseWhen, "Dùng khi biết thông tin.");
 });
 
-test("existing Word comparison surface enriches target facts without changing the accepted visual system", async () => {
+test("Word Comparison keeps target Hanzi without duplicating participant pronunciation or short meaning", async () => {
   const [rich, detailCss, header, characterRail, sticky] = await Promise.all([
     read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
     read("app/knowledge/vocabulary/[publicId]/VocabularyDetail.module.css"),
@@ -252,8 +284,10 @@ test("existing Word comparison surface enriches target facts without changing th
   ]);
 
   assert.match(rich, /distinction\.participant\?\.displayForm \?\? distinction\.targetExpression/u);
-  assert.match(rich, /distinction\.participant\.pronunciation/u);
-  assert.match(rich, /distinction\.participant\.shortLabel/u);
+  assert.doesNotMatch(rich, /distinction\.participant\.pronunciation/u);
+  assert.doesNotMatch(rich, /distinction\.participant\.shortLabel/u);
+  assert.match(rich, /example\.sourcePinyin/u);
+  assert.match(rich, /example\.targetPinyin/u);
   assert.match(rich, /styles\.distinctionPinyin/u);
   assert.match(rich, /styles\.distinctionTranslation/u);
   assert.match(rich, /distinction\.learnerExplanation/u);
@@ -288,9 +322,104 @@ test("Production v9 fallback transports K1L vi/en/zh with authored participant a
   }
 });
 
-test("K1L participant keeps the accepted collapsible comparison and inline learner prose", async () => {
+test("K1L participant stays in the data contract, not as duplicate comparison heading text", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
   assert.match(rich, /<details key=\{distinction\.publicId\}/u);
   assert.match(rich, /<LearnerInline text=\{distinction\.learnerExplanation\} \/>/u);
-  assert.match(rich, /distinction\.participant\.shortLabel/u);
+  assert.doesNotMatch(rich, /distinction\.participant\.shortLabel/u);
+  assert.doesNotMatch(rich, /distinction\.participant\.pronunciation/u);
+});
+
+
+test("PR120 Word Comparison preserves four structured case shapes in VI EN and ZH", async () => {
+  for (const locale of ["vi", "en", "zh"]) {
+    const source = payload({ requestedLocale: locale, fallbackLocale: locale });
+    const ri = source.entry.pronunciations[0].reading_items[0];
+    ri.content_locale = locale;
+    const keys = ["main_focus", "typical_phrase", "characteristic_use"];
+    const row = (key) => ({
+      row_key: key,
+      localizations: {
+        vi: { label: "Góc " + key, source_text: "知道消息 (*zhīdào xiāoxi*) — biết tin.", target_text: "懂道理 — hiểu đạo lý." },
+        en: { label: "Aspect " + key, source_text: "Know **a fact**.", target_text: "Understand a meaning." },
+        zh: { label: "侧重点", source_text: "侧重掌握事实或信息。", target_text: "侧重理解内容、意思或道理。" },
+      },
+    });
+    ri.quick_distinctions = [
+      { ...ri.quick_distinctions[0], public_id: "quick1", target_expression: "懂", content_locale: locale,
+        comparison_rows: keys.map(row) },
+      { ...ri.quick_distinctions[0], public_id: "quick2", target_expression: "了解", content_locale: locale,
+        comparison_rows: keys.map(row),
+        context_examples: [{ chinese: "我知道这件事，但不太了解具体情况。",
+          pinyin: "Wǒ zhīdào zhè jiàn shì, dàn bú tài liǎojiě jùtǐ qíngkuàng.",
+          localizations: { vi: { translation: "Tôi biết chuyện này, nhưng chưa rõ tình hình cụ thể." },
+            en: { translation: "I know about this, but I’m not very familiar with the details." } } }] },
+      { ...ri.quick_distinctions[0], public_id: "quick3", target_expression: "认识", content_locale: locale,
+        comparison_rows: [row("meaning")],
+        closing_note: { vi: "Cả hai câu đều đúng.", en: "Both sentences are correct.", zh: "两句话都可以成立。" }[locale],
+        contrast_examples: [
+          { source_expression: "我知道那位作家。", target_expression: "我认识那位作家。",
+            source_pinyin: "Wǒ zhīdào nà wèi zuòjiā.", target_pinyin: "Wǒ rènshi nà wèi zuòjiā.",
+            source_translation: "Biết đến nhà văn.", target_translation: "Quen nhà văn." },
+        ] },
+      { ...ri.quick_distinctions[0], public_id: "quick4", target_expression: "懂得", content_locale: locale,
+        comparison_rows: ["main_focus", "typical_phrase"].map(row) },
+    ];
+    const harness = await createLoaderHarness(async (name) => {
+      assert.equal(name, "get_public_vocabulary_entry_v12");
+      return { data: source, error: null };
+    });
+    const result = await harness.load(PUBLIC_ID, {
+      requestedLocaleCode: locale, fallbackLocaleCode: locale, exactContentLocaleCode: locale,
+    });
+    assert.equal(result.status, "FOUND");
+    const pairs = result.detail.pronunciations[0].readingItems[0].quickDistinctions;
+    assert.deepEqual(pairs.map(pair => pair.targetExpression), ["懂", "了解", "认识", "懂得"]);
+    assert.deepEqual(pairs.map(pair => pair.comparisonRows.length), [3, 3, 1, 2]);
+    assert.deepEqual(pairs[0].comparisonRows.map(row => row.rowKey), keys);
+    assert.equal(pairs[1].contextExamples.length, 1);
+    assert.equal(pairs[1].contextExamples[0].chinese, "我知道这件事，但不太了解具体情况。");
+    assert.equal(pairs[1].contextExamples[0].translation === null, locale === "zh");
+    assert.equal(pairs[2].contrastExamples.length, 1);
+    assert.equal(pairs[2].closingNote, { vi: "Cả hai câu đều đúng.", en: "Both sentences are correct.", zh: "两句话都可以成立。" }[locale]);
+    assert.equal(pairs[3].comparisonRows[0].contentLocale, locale);
+  }
+});
+
+test("PR120 optional fields preserve legacy 懂 and semantic display order on desktop/mobile", async () => {
+  const h = await createLoaderHarness(async () => ({ data: payload(), error: null }));
+  const distinction = firstDistinction(await h.load(PUBLIC_ID, exactViRequest()));
+  assert.equal(distinction.comparisonRows.length, 0);
+  assert.equal(distinction.contextExamples.length, 0);
+  assert.equal(distinction.closingNote, null);
+  const [render, css] = await Promise.all([
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css"),
+  ]);
+  assert.ok(render.indexOf("distinction.comparisonRows.map") < render.indexOf("data-comparison-contrast-examples"));
+  assert.ok(render.indexOf("data-comparison-contrast-examples") < render.indexOf("data-comparison-context-examples"));
+  assert.ok(render.indexOf("data-comparison-context-examples") < render.indexOf("data-comparison-closing-note"));
+  assert.match(render, /const hasExtendedComparison =/u);
+  assert.match(render, /if \(!structured\)/u);
+  assert.match(css, /grid-template-columns:\s*minmax\(90px, 0\.8fr\) repeat\(2, minmax\(0, 1\.8fr\)\)/u);
+  assert.match(css, /@media \(max-width: 620px\)[\s\S]*\.comparisonRow/u);
+});
+
+test("Word Comparison dashed separators align in all two-column layouts, not only pointer-coarse tablets", async () => {
+  const [css, render] = await Promise.all([
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css"),
+    read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx"),
+  ]);
+  const marker = "/* Word Comparison shared dashed-row alignment v3.";
+  assert.equal(css.split(marker).length, 2);
+  const alignedRules = css.slice(css.indexOf(marker));
+  assert.match(alignedRules, /@container \(min-width: 621px\)/u);
+  assert.doesNotMatch(alignedRules, /@media|pointer: coarse|hover: none|max-width: 1100px/u);
+  assert.match(alignedRules, /\.distinctionCompareGridSynced\s*\{\s*grid-template-rows: auto auto auto;/u);
+  assert.match(alignedRules, /\.distinctionCompareGridSynced > \.distinctionCard\s*\{[^}]*grid-row: 1 \/ span 3;[^}]*grid-template-rows: subgrid;/u);
+  assert.match(css, /\.distinctionExamples\s*\{[^}]*border-top: 1px dashed #e2d9ca;/u);
+  const legacy = render.slice(render.indexOf("const structured = Boolean(distinction.sourceUseWhen"));
+  assert.match(legacy, /styles\.distinctionCompareGridSynced/u);
+  assert.equal(legacy.split("className={styles.distinctionCardHeading}").length - 1, 2);
+  assert.equal(legacy.split("className={styles.distinctionExamples}").length - 1, 2);
 });

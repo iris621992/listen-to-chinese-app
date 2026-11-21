@@ -32,6 +32,21 @@
   text-transform: none;
 }
 
+.sourceRelationContext {
+  margin-top: 6px;
+  color: #576159;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.sourceRelationContext p {
+  margin: 0;
+}
+
+.sourceRelationContext p + p {
+  margin-top: 6px;
+}
+
 .exampleList,
 .constructionList,
 .classifierList,
@@ -571,3 +586,159 @@
 .mistakeContrast strong { background: #eef5eb; }
 @container (max-width: 620px) { .collocationList { grid-template-columns: repeat(2,minmax(0,1fr)); } .constructionExamples, .exampleList { grid-template-columns: 1fr; } .translationItem { grid-template-columns: minmax(0, 1fr); gap: 4px; } .translationMismatch { grid-column: 1; } }
 @container (max-width: 460px) { .collocationList { grid-template-columns: 1fr; } .distinctionCard, .distinctionCard + .distinctionCard { border: 1px solid #e0dbd1; border-radius: 8px; } .distinctionCard + .distinctionCard { margin-top: 8px; } }
+
+/* Word Comparison v5 structured rows: additive, scoped to the new fields only. */
+.comparisonRows {
+  display: grid;
+  width: 100%;
+  overflow-wrap: anywhere;
+  border: 1px solid #e8e3d9;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.comparisonRow {
+  display: grid;
+  grid-template-columns: minmax(90px, 0.8fr) repeat(2, minmax(0, 1.8fr));
+}
+
+.comparisonRow + .comparisonRow {
+  border-top: 1px solid #ebe7df;
+}
+
+.comparisonRow > * {
+  min-width: 0;
+  padding: 11px 12px;
+  font-size: 13px;
+  line-height: 1.65;
+  font-weight: 400;
+  white-space: pre-wrap;
+}
+
+.comparisonRow > :not(:first-child) {
+  border-left: 1px solid #ebe7df;
+}
+
+.comparisonRow:first-child {
+  background: #f6f8f4;
+}
+
+.comparisonRow:first-child > strong,
+.comparisonRowLabel {
+  font-weight: 650;
+}
+
+.comparisonRowLabel {
+  background: #f8f7f2;
+}
+
+.comparisonCellExamples {
+  display: grid;
+  gap: 8px;
+}
+
+.comparisonContextExamples {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  background: #f8faf7;
+  border-radius: 6px;
+}
+
+.comparisonClosingNote {
+  margin: 0;
+  color: #565e57;
+  font-size: 13px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+@media (max-width: 620px) {
+  .comparisonRow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .comparisonRow > :first-child {
+    grid-column: 1 / -1;
+    background: #f6f8f4;
+    padding: 7px 10px;
+  }
+  .comparisonRow > :nth-child(2) {
+    border-left: 0;
+  }
+  .comparisonRow > :nth-child(3) {
+    border-left: 1px solid #ebe7df;
+  }
+}
+
+/* Word Comparison shared dashed-row alignment v3.
+   Align title, explanation and example rows whenever the cards form two columns,
+   regardless of the device's viewport, hover or pointer type. Tablet browsers
+   can report desktop-like media settings even while showing two narrow columns.
+   Each card retains its own separate dashed example border. */
+@container (min-width: 621px) {
+  .distinctionCompareGridSynced {
+    grid-template-rows: auto auto auto;
+  }
+
+  .distinctionCompareGridSynced > .distinctionCard {
+    display: grid;
+    grid-row: 1 / span 3;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+  }
+
+  .distinctionCompareGridSynced .distinctionCardHeading {
+    min-width: 0;
+  }
+}
+
+
+/* Exact authored Vocabulary rich text: one coherent usage module, not one card per Markdown paragraph. */
+.richText {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+  color: #394f45;
+  font-size: 14px;
+  line-height: 1.75;
+}
+.richTextHeading {
+  margin: 13px 0 0;
+  padding: 9px 12px;
+  border: 1px solid #dce8ef;
+  border-radius: 9px;
+  background: #edf4f8;
+  color: #345a70;
+  font-size: 14px;
+  font-weight: 720;
+  line-height: 1.65;
+}
+.richTextHeading:first-child { margin-top: 0; }
+.richTextParagraph { margin: 0; overflow-wrap: anywhere; }
+.richTextList {
+  margin: 0;
+  padding: 8px 12px 8px 32px;
+  border-left: 2px solid #dce8ef;
+  background: #f8faf9;
+  border-radius: 6px;
+  display: grid;
+  gap: 10px;
+}
+.richTextList li { padding-left: 3px; overflow-wrap: anywhere; }
+.richTextList em, .richText em { color: #9c5c3e; font-style: italic; }
+.richTextTableScroll { max-width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+.richTextTable { width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.65; }
+.richTextTable th, .richTextTable td {
+  border: 1px solid #e4e8df;
+  padding: 9px 11px;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.richTextTable th { background: #edf4f8; color: #345a70; font-weight: 690; }
+.richTextTable td { background: #fcfdfb; }
+@container (max-width: 460px) {
+  .richText { font-size: 13px; }
+  .richTextTable { min-width: 450px; }
+  .richTextList { padding-left: 26px; }
+}

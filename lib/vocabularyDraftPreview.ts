@@ -1,4 +1,5 @@
 import type { VocabularyCharacterOccurrence } from "@/lib/vocabularyCharacterDelivery";
+import { parseVocabularyComparisonRows, parseVocabularyContextExamples } from "@/lib/vocabularyDetail";
 import type {
   VocabularyClassifier,
   VocabularyLexicalRelation,
@@ -85,7 +86,10 @@ function parseLexicalRelation(value: unknown): VocabularyLexicalRelation | null 
   const relationType = stringValue(row.relation_type);
   const target = parseRelationTarget(row.target);
   if (!target || (relationType !== "synonym" && relationType !== "near_synonym" && relationType !== "antonym")) return null;
-  return { relationType, target };
+  return {
+    relationType, target,
+    sourceRelationContext: stringValue(row.source_relation_context),
+  };
 }
 
 function parseRelatedWord(value: unknown): VocabularyRelatedWord | null {
@@ -230,6 +234,9 @@ function parseQuickDistinction(
         (item): item is VocabularyQuickDistinctionContrastExample =>
           item !== null,
       ),
+    comparisonRows: parseVocabularyComparisonRows(row.comparison_rows, stringValue(row.content_locale)),
+    contextExamples: parseVocabularyContextExamples(row.context_examples, stringValue(row.content_locale)),
+    closingNote: stringValue(row.closing_note),
     contentLocale: stringValue(row.content_locale),
   };
 }
