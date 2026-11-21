@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
+import VocabularyRichText, { VocabularyRichInline } from "./VocabularyRichText";
 import type {
   VocabularyExample,
   VocabularyLexicalRelation,
@@ -37,19 +38,7 @@ type Props = {
 
 /** Preserve authored comparison Hanzi, pinyin and safe Markdown emphasis. */
 function ComparisonInline({ text }: { text: string }) {
-  const parts: ReactNode[] = [];
-  const pattern = /\*\*([^*\n]+)\*\*|\*([^*\n]+)\*/gu;
-  let cursor = 0;
-  let index = 0;
-  for (const match of text.matchAll(pattern)) {
-    const offset = match.index ?? cursor;
-    if (offset > cursor) parts.push(text.slice(cursor, offset));
-    if (match[1] !== undefined) parts.push(<strong key={index++}>{match[1]}</strong>);
-    else parts.push(<em key={index++}>{match[2]}</em>);
-    cursor = offset + match[0].length;
-  }
-  if (cursor < text.length) parts.push(text.slice(cursor));
-  return <>{parts}</>;
+  return <VocabularyRichInline text={text} />;
 }
 
 function LearnerExample({ example }: { example: VocabularyExample }) {
@@ -90,17 +79,6 @@ function RelationTarget({
 }
 
 
-function splitLearnerProseParagraphs(text: string): string[] {
-  // Knowledge-authored blank lines mark paragraph boundaries. Punctuation does not:
-  // splitting sentences would invent visual grouping not accepted by the Owner.
-  return text
-    .replace(/\r\n?/gu, "\n")
-    .trim()
-    .split(/\n[ \t]*\n+/gu)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean);
-}
-
 function normalizedLearnerProse(value: string | null | undefined): string | null {
   const normalized = value?.replace(/\\s+/gu, " ").trim();
   return normalized || null;
@@ -119,29 +97,11 @@ function distinctLearnerProse(
 
 /** Render author-supplied Markdown emphasis as typography, without rewriting copy. */
 export function LearnerInline({ text }: { text: string }) {
-  const content: ReactNode[] = [];
-  let cursor = 0;
-  let emphasisIndex = 0;
-  for (const match of text.matchAll(/\*\*([^*\n]+)\*\*/gu)) {
-    const at = match.index ?? cursor;
-    if (at > cursor) content.push(text.slice(cursor, at));
-    content.push(<strong key={emphasisIndex++}>{match[1]}</strong>);
-    cursor = at + match[0].length;
-  }
-  if (cursor < text.length) content.push(text.slice(cursor));
-  return <>{content}</>;
+  return <VocabularyRichInline text={text} />;
 }
 
-function LearnerProse({
-  text,
-  keyPrefix,
-}: {
-  text: string;
-  keyPrefix: string;
-}) {
-  return splitLearnerProseParagraphs(text).map((paragraph, index) => (
-    <p key={`${keyPrefix}-${index}`}><LearnerInline text={paragraph} /></p>
-  ));
+function LearnerProse({ text }: { text: string; keyPrefix: string }) {
+  return <VocabularyRichText text={text} />;
 }
 
 function RelationGroup({

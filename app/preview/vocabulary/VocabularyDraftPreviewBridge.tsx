@@ -38,6 +38,7 @@ type PreviewEnvelope = {
 type PreviewReadyMessage = {
   type: "YUNCHINESE_VOCABULARY_DRAFT_PREVIEW_READY";
   handoff: string;
+  renderingContract: "YUNCHINESE_VOCABULARY_V5_RICH_RENDERING_V1";
 };
 
 type BridgeState =
@@ -238,6 +239,7 @@ export default function VocabularyDraftPreviewBridge() {
     const ready: PreviewReadyMessage = {
       type: "YUNCHINESE_VOCABULARY_DRAFT_PREVIEW_READY",
       handoff,
+      renderingContract: "YUNCHINESE_VOCABULARY_V5_RICH_RENDERING_V1",
     };
     opener.postMessage(ready, openerOrigin);
 
