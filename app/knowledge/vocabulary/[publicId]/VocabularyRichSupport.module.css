@@ -587,25 +587,28 @@
 @container (max-width: 620px) { .collocationList { grid-template-columns: repeat(2,minmax(0,1fr)); } .constructionExamples, .exampleList { grid-template-columns: 1fr; } .translationItem { grid-template-columns: minmax(0, 1fr); gap: 4px; } .translationMismatch { grid-column: 1; } }
 @container (max-width: 460px) { .collocationList { grid-template-columns: 1fr; } .distinctionCard, .distinctionCard + .distinctionCard { border: 1px solid #e0dbd1; border-radius: 8px; } .distinctionCard + .distinctionCard { margin-top: 8px; } }
 
-/* Word Comparison v5 structured rows: additive, scoped to the new fields only. */
+/* v5 structured Word Comparison only. Legacy 懂 card styles are unchanged.
+   Dimensions and every contrast-example pair share one A/B three-column grid. */
+.v5StructuredComparison .distinctionIntro {
+  background: #e8f0e2;
+  border: 1px solid #d1e0ca;
+  color: #304d34;
+}
+.v5StructuredComparison .distinctionCard { background: #e4eee0; border-color: #c9d9c2; }
+.v5StructuredComparison .distinctionCard + .distinctionCard { background: #f6e6d6; border-color: #e5cbb5; }
 .comparisonRows {
   display: grid;
   width: 100%;
-  overflow-wrap: anywhere;
-  border: 1px solid #e8e3d9;
-  border-radius: 6px;
   overflow: hidden;
+  overflow-wrap: anywhere;
+  border: 1px solid var(--border-subtle, #ddd2bb);
+  border-radius: 8px;
 }
-
 .comparisonRow {
   display: grid;
   grid-template-columns: minmax(90px, 0.8fr) repeat(2, minmax(0, 1.8fr));
 }
-
-.comparisonRow + .comparisonRow {
-  border-top: 1px solid #ebe7df;
-}
-
+.comparisonRow + .comparisonRow { border-top: 1px solid var(--border-subtle, #ddd2bb); }
 .comparisonRow > * {
   min-width: 0;
   padding: 11px 12px;
@@ -613,61 +616,55 @@
   line-height: 1.65;
   font-weight: 400;
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
-
-.comparisonRow > :not(:first-child) {
-  border-left: 1px solid #ebe7df;
-}
-
-.comparisonRow:first-child {
-  background: #f6f8f4;
-}
-
-.comparisonRow:first-child > strong,
+.comparisonRow > :not(:first-child) { border-left: 1px solid var(--border-subtle, #ddd2bb); }
 .comparisonRowLabel {
+  background: var(--surface-subtle, #f2ead9);
+  color: var(--brand-brown, #7b603b);
   font-weight: 650;
 }
-
-.comparisonRowLabel {
-  background: #f8f7f2;
-}
-
+.comparisonRow > :nth-child(2) { background: #e4eee0; color: #304d34; }
+.comparisonRow > :nth-child(3) { background: #f6e6d6; color: #62432f; }
+.comparisonRow:first-child > :nth-child(2) { background: #d6e5ce; }
+.comparisonRow:first-child > :nth-child(3) { background: #f0d9c3; }
+.comparisonRow:first-child > :nth-child(2),
+.comparisonRow:first-child > :nth-child(3) { font-weight: 700; }
 .comparisonCellExamples {
   display: grid;
-  gap: 8px;
+  align-content: start;
+  gap: 3px;
 }
-
+.comparisonCellExamples b {
+  font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Noto Sans SC", sans-serif;
+  font-weight: 650;
+}
 .comparisonContextExamples {
   display: grid;
   gap: 10px;
   padding: 12px;
-  background: #f8faf7;
-  border-radius: 6px;
+  background: #e8f0e2;
+  border: 1px solid #d1e0ca;
+  border-radius: 8px;
 }
-
 .comparisonClosingNote {
   margin: 0;
-  color: #565e57;
+  padding: 4px 2px 0;
+  color: #394f45;
   font-size: 13px;
   line-height: 1.7;
   white-space: pre-wrap;
 }
-
-@media (max-width: 620px) {
-  .comparisonRow {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+/* Scope to actual content container (including tablets), not viewport.
+   One grid row keeps the source and target divider heights synchronized. */
+@container (max-width: 620px) {
+  .comparisonRow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .comparisonRow > :first-child {
     grid-column: 1 / -1;
-    background: #f6f8f4;
     padding: 7px 10px;
   }
-  .comparisonRow > :nth-child(2) {
-    border-left: 0;
-  }
-  .comparisonRow > :nth-child(3) {
-    border-left: 1px solid #ebe7df;
-  }
+  .comparisonRow > :nth-child(2) { border-left: 0; }
+  .comparisonRow > :nth-child(3) { border-left: 1px solid var(--border-subtle, #ddd2bb); }
 }
 
 /* Word Comparison shared dashed-row alignment v3.
