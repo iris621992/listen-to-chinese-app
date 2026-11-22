@@ -365,10 +365,10 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                 || distinction.contextExamples.length > 0 || Boolean(distinction.closingNote);
               if (hasExtendedComparison) {
                 const zh = distinction.contentLocale === "zh";
-                const zhContrastsInRows = zh && distinction.comparisonRows.length > 0;
+                const contrastLabel = zh ? "例子" : distinction.contentLocale === "vi" ? "Ví dụ" : "Examples";
                 const contrast = distinction.contrastExamples;
                 return (
-                  <details key={distinction.publicId} className={styles.structuredDistinction} open>
+                  <details key={distinction.publicId} className={`${styles.structuredDistinction} ${styles.v5StructuredComparison}`} open>
                     <summary className={styles.distinctionSummary}>
                       <span>{sourceExpression}</span><span aria-hidden="true"> ↔ </span><span>{targetDisplayForm}</span>
                     </summary>
@@ -391,7 +391,7 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                         </section>
                       </div>
                     ) : null}
-                    {distinction.comparisonRows.length > 0 ? (
+                    {distinction.comparisonRows.length > 0 || contrast.length > 0 ? (
                       <div className={styles.comparisonRows} role="table" aria-label={sourceExpression + " / " + targetDisplayForm}>
                         <div className={styles.comparisonRow} role="row">
                           <div role="columnheader" aria-hidden="true" />
@@ -405,45 +405,23 @@ export default function VocabularyRichSupport({ item, sourceExpression, labels }
                             <div role="cell"><ComparisonInline text={row.targetText} /></div>
                           </div>
                         ))}
-                        {zhContrastsInRows && contrast.length > 0 ? (
-                          <div className={styles.comparisonRow} role="row">
-                            <div className={styles.comparisonRowLabel} role="rowheader"><strong>例子</strong></div>
-                            <div role="cell" className={styles.comparisonCellExamples}>
-                              {contrast.map((example, index) => <span key={index}>{example.sourceExpression}{example.sourcePinyin ? <small className={styles.distinctionPinyin}>{example.sourcePinyin}</small> : null}</span>)}
+                        {contrast.map((example, index) => (
+                          <div className={styles.comparisonRow} role="row" key={`contrast-${index}`} data-comparison-contrast-examples="true">
+                            <div className={styles.comparisonRowLabel} role="rowheader">
+                              {index === 0 ? <strong>{contrastLabel}</strong> : null}
                             </div>
                             <div role="cell" className={styles.comparisonCellExamples}>
-                              {contrast.map((example, index) => <span key={index}>{example.targetExpression}{example.targetPinyin ? <small className={styles.distinctionPinyin}>{example.targetPinyin}</small> : null}</span>)}
+                              <b>{example.sourceExpression}</b>
+                              {example.sourcePinyin ? <small className={styles.distinctionPinyin}>{example.sourcePinyin}</small> : null}
+                              {!zh && example.sourceTranslation ? <small className={styles.distinctionTranslation}><ComparisonInline text={example.sourceTranslation} /></small> : null}
+                            </div>
+                            <div role="cell" className={styles.comparisonCellExamples}>
+                              <b>{example.targetExpression}</b>
+                              {example.targetPinyin ? <small className={styles.distinctionPinyin}>{example.targetPinyin}</small> : null}
+                              {!zh && example.targetTranslation ? <small className={styles.distinctionTranslation}><ComparisonInline text={example.targetTranslation} /></small> : null}
                             </div>
                           </div>
-                        ) : null}
-                      </div>
-                    ) : null}
-                    {!zhContrastsInRows && contrast.length > 0 ? (
-                      <div className={styles.distinctionCompareGrid} data-comparison-contrast-examples="true">
-                        <section className={styles.distinctionCard}>
-                          <strong className={styles.distinctionTerm}>{sourceExpression}</strong>
-                          <div className={styles.distinctionExamples}>
-                            {contrast.map((example, index) => (
-                              <span key={index}>
-                                <b>{example.sourceExpression}</b>
-                                {example.sourcePinyin ? <small className={styles.distinctionPinyin}>{example.sourcePinyin}</small> : null}
-                                {example.sourceTranslation ? <small className={styles.distinctionTranslation}><ComparisonInline text={example.sourceTranslation} /></small> : null}
-                              </span>
-                            ))}
-                          </div>
-                        </section>
-                        <section className={styles.distinctionCard}>
-                          <strong className={styles.distinctionTerm}>{targetDisplayForm}</strong>
-                          <div className={styles.distinctionExamples}>
-                            {contrast.map((example, index) => (
-                              <span key={index}>
-                                <b>{example.targetExpression}</b>
-                                {example.targetPinyin ? <small className={styles.distinctionPinyin}>{example.targetPinyin}</small> : null}
-                                {example.targetTranslation ? <small className={styles.distinctionTranslation}><ComparisonInline text={example.targetTranslation} /></small> : null}
-                              </span>
-                            ))}
-                          </div>
-                        </section>
+                        ))}
                       </div>
                     ) : null}
                     {distinction.contextExamples.length > 0 ? (
