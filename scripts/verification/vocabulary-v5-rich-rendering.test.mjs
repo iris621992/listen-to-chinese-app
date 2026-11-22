@@ -99,9 +99,82 @@ test("Vocabulary notes and comparisons use one safe renderer without losing publ
 test("new authored Vocabulary v5 comparison rows are visible by default, while legacy 懂 disclosure stays unchanged", async () => {
   const rich = await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
   assert.match(rich,/const hasExtendedComparison = distinction\.comparisonRows\.length > 0/);
-  assert.equal((rich.match(/<details key=\{distinction\.publicId\} className=\{styles\.structuredDistinction\} open>/g)??[]).length,1);
+  assert.equal((rich.match(/v5StructuredComparison/g)??[]).length,1);
   assert.equal((rich.match(/<details key=\{distinction\.publicId\} className=\{styles\.structuredDistinction\}>/g)??[]).length,1);
-  const visible=rich.indexOf("<details key={distinction.publicId} className={styles.structuredDistinction} open>");
+  const visible=rich.indexOf("v5StructuredComparison");
   const fallback=rich.indexOf("<details key={distinction.publicId} className={styles.structuredDistinction}>",visible+1);
   assert.ok(visible>0&&fallback>visible);
+});
+
+
+test("every structured v5 pair uses one shared table geometry for row dimensions and paired examples",async()=>{
+  const rich=await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
+  const style=await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css");
+  assert.match(rich,/distinction\.comparisonRows\.length > 0 \|\| contrast\.length > 0/);
+  assert.match(rich,/distinction\.comparisonRows\.map\(row =>/);
+  assert.match(rich,/contrast\.map\(\(example, index\) =>/);
+  assert.match(rich,/data-comparison-contrast-examples="true"/);
+  assert.doesNotMatch(rich,/zhContrastsInRows/);
+  assert.match(rich,/!zh && example\.sourceTranslation/);
+  assert.match(rich,/!zh && example\.targetTranslation/);
+  assert.match(style,/grid-template-columns: minmax\(90px, 0\.8fr\) repeat\(2, minmax\(0, 1\.8fr\)\)/);
+  assert.match(style,/@container \(max-width: 620px\)/);
+  assert.match(style,/\.v5StructuredComparison \.distinctionIntro/);
+  assert.match(style,/var\(--brand-brown, #7b603b\)/);
+  const legacy=rich.slice(rich.indexOf("const structured = Boolean(distinction.sourceUseWhen && distinction.targetUseWhen)"));
+  assert.match(legacy,/distinctionCompareGridSynced/);
+});
+
+test("different vocabulary pairs, counts and ZH/VI/EN locales render paired examples without per-pair layouts",async()=>{
+  const React=require("react");
+  const support=await compile("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx",name=>{
+    if(name.endsWith("VocabularyRichSupport.module.css"))
+      return {default:new Proxy({},{get:(_,key)=>String(key)})};
+    if(name==="./VocabularyRichText")
+      return {__esModule:true,default:({text})=>React.createElement("span",null,text),
+        VocabularyRichInline:({text})=>React.createElement("span",null,text)};
+    return require(name);
+  });
+  const empty={publicId:"ri",usage:null,usageNote:"",fullExplanation:"",
+    usageContext:"",socialContext:"",pragmaticExplanation:"",translationEquivalents:[],
+    collocations:[],classifiers:[],constructions:[],examples:[],lexicalRelations:[],
+    relatedWords:[],commonMistakes:[],memoryTip:"",knowledgeLinks:[],practiceLinks:[],quickDistinctions:[]};
+  const ex=(x)=>({sourceExpression:"我知道"+x+"。",targetExpression:"我认识"+x+"。",
+    sourcePinyin:"Wǒ zhīdào.",targetPinyin:"Wǒ rènshi.",
+    sourceTranslation:"VI source "+x,targetTranslation:"VI target "+x});
+  const entry=(target,locale,dimensions,examples,extra={})=>({
+    publicId:"qd-"+target,contentLocale:locale,targetExpression:target,participant:null,
+    learnerExplanation:"",sourceUseWhen:"",targetUseWhen:"",
+    comparisonRows:dimensions.map((label,i)=>({rowKey:"r"+i,label,sourceText:"Source "+i,targetText:"Target "+i})),
+    contrastExamples:examples.map(ex),contextExamples:[],closingNote:"",...extra});
+  const render=(entry)=>renderToStaticMarkup(React.createElement(support.default,{
+    item:{...empty,quickDistinctions:[entry]},sourceExpression:"知道",
+    labels:{quickDistinction:"Phân biệt từ"},
+  }));
+  const vi=render(entry("认识","vi",["Trọng tâm"],["A","B"]));
+  assert.equal((vi.match(/class="comparisonRow"/g)??[]).length,4);
+  assert.equal((vi.match(/data-comparison-contrast-examples="true"/g)??[]).length,2);
+  assert.match(vi,/VI source A/);
+  assert.match(vi,/VI target B/);
+  assert.match(vi,/Ví dụ/);
+  const en=render(entry("了解","en",["Focus","Scope","Context"],["C"]));
+  assert.equal((en.match(/class="comparisonRow"/g)??[]).length,5);
+  assert.match(en,/Examples/);
+  const zh=render(entry("懂得","zh",["侧重点"],["D"]));
+  assert.match(zh,/例子/);
+  assert.match(zh,/Wǒ zhīdào/);
+  assert.doesNotMatch(zh,/VI source D|VI target D/);
+  const sparse=render(entry("理解","vi",[],["E"],{
+    closingNote:"Lời kết độc lập",
+    contextExamples:[{chinese:"这是另外一个例子。",pinyin:"Zhè shì lìngwài yí ge lìzi.",translation:"Ví dụ riêng."}],
+  }));
+  assert.equal((sparse.match(/class="comparisonRow"/g)??[]).length,2);
+  assert.match(sparse,/Lời kết độc lập/);
+  assert.match(sparse,/Ví dụ riêng/);
+  const old=render(entry("懂","vi",[],["legacy"],{
+    sourceUseWhen:"Khi biết thông tin",targetUseWhen:"Khi hiểu nghĩa",
+    contextExamples:[],closingNote:"",comparisonRows:[],
+  }));
+  assert.doesNotMatch(old,/class="comparisonRows"/);
+  assert.match(old,/distinctionCompareGridSynced/);
 });
