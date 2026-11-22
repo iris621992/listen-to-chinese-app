@@ -129,7 +129,9 @@ test("different vocabulary pairs, counts and ZH/VI/EN locales render paired exam
   const React=require("react");
   const support=await compile("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx",name=>{
     if(name.endsWith("VocabularyRichSupport.module.css"))
-      return {default:new Proxy({},{get:(_,key)=>String(key)})};
+      // TypeScript transpiles the default CSS import with __importDefault.
+      // Mark this stub as an ES module so style class names are not lost.
+      return {__esModule:true,default:new Proxy({},{get:(_,key)=>String(key)})};
     if(name==="./VocabularyRichText")
       return {__esModule:true,default:({text})=>React.createElement("span",null,text),
         VocabularyRichInline:({text})=>React.createElement("span",null,text)};
