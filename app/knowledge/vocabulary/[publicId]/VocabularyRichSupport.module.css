@@ -596,6 +596,39 @@
 }
 .v5StructuredComparison .distinctionCard { background: #e4eee0; border-color: #c9d9c2; }
 .v5StructuredComparison .distinctionCard + .distinctionCard { background: #f6e6d6; border-color: #e5cbb5; }
+/* Shared v5 comparison sections: one geometry and palette for every pair.
+   Content roles remain distinct even when their visual treatment is consistent. */
+.comparisonSection,
+.comparisonExamplesRegion {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+  min-width: 0;
+}
+.comparisonSectionHeading {
+  margin: 0;
+  color: #574b38;
+  background: #f2ead9;
+  border: 1px solid #ddd2bb;
+  border-radius: 8px;
+  padding: 7px 11px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+.comparisonExamplesRegion .comparisonRows {
+  border-color: #ddd2bb;
+}
+.comparisonExamplesRegion .comparisonContextExamples {
+  margin: 0;
+}
+.comparisonExamplesRegion .comparisonContextExamples .exampleItem {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
 .comparisonRows {
   display: grid;
   width: 100%;
