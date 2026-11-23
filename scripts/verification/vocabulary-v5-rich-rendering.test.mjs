@@ -110,7 +110,8 @@ test("new authored Vocabulary v5 comparison rows are visible by default, while l
 test("every structured v5 pair uses one shared table geometry for row dimensions and paired examples",async()=>{
   const rich=await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx");
   const style=await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css");
-  assert.match(rich,/distinction\.comparisonRows\.length > 0 \|\| contrast\.length > 0/);
+  assert.match(rich,/distinction\.comparisonRows\.length > 0 \? \(/);
+  assert.match(rich,/const hasExamples = contrast\.length > 0 \|\| distinction\.contextExamples\.length > 0/);
   assert.match(rich,/distinction\.comparisonRows\.map\(row =>/);
   assert.match(rich,/contrast\.map\(\(example, index\) =>/);
   assert.match(rich,/data-comparison-contrast-examples="true"/);
@@ -154,13 +155,13 @@ test("different vocabulary pairs, counts and ZH/VI/EN locales render paired exam
     labels:{quickDistinction:"Phân biệt từ"},
   }));
   const vi=render(entry("认识","vi",["Trọng tâm"],["A","B"]));
-  assert.equal((vi.match(/class="comparisonRow"/g)??[]).length,4);
+  assert.equal((vi.match(/class="comparisonRow"/g)??[]).length,5);
   assert.equal((vi.match(/data-comparison-contrast-examples="true"/g)??[]).length,2);
   assert.match(vi,/VI source A/);
   assert.match(vi,/VI target B/);
   assert.match(vi,/Ví dụ/);
   const en=render(entry("了解","en",["Focus","Scope","Context"],["C"]));
-  assert.equal((en.match(/class="comparisonRow"/g)??[]).length,5);
+  assert.equal((en.match(/class="comparisonRow"/g)??[]).length,6);
   assert.match(en,/Examples/);
   const zh=render(entry("懂得","zh",["侧重点"],["D"]));
   assert.match(zh,/例子/);
@@ -179,4 +180,52 @@ test("different vocabulary pairs, counts and ZH/VI/EN locales render paired exam
   }));
   assert.doesNotMatch(old,/class="comparisonRows"/);
   assert.match(old,/distinctionCompareGridSynced/);
+});
+
+test("approved Knowledge PR #124 uses common differences/examples sections without changing authored row labels", async () => {
+  const React=require("react");
+  const support=await compile("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.tsx",name=>{
+    if(name.endsWith("VocabularyRichSupport.module.css"))
+      return {__esModule:true,default:new Proxy({},{get:(_,key)=>String(key)})};
+    if(name==="./VocabularyRichText")
+      return {__esModule:true,default:({text})=>React.createElement("span",null,text),
+        VocabularyRichInline:({text})=>React.createElement("span",null,text)};
+    return require(name);
+  });
+  const empty={publicId:"ri",usage:null,usageNote:"",fullExplanation:"",
+    usageContext:"",socialContext:"",pragmaticExplanation:"",translationEquivalents:[],
+    collocations:[],classifiers:[],constructions:[],examples:[],lexicalRelations:[],
+    relatedWords:[],commonMistakes:[],memoryTip:"",knowledgeLinks:[],practiceLinks:[],quickDistinctions:[]};
+  const rowLabels={zh:["含义","侧重点"],vi:["Ý nghĩa","Trọng tâm"],en:["Meaning","Main focus"]};
+  for(const locale of ["zh","vi","en"]){
+    const entry={publicId:"qd-1",contentLocale:locale,targetExpression:"认识",participant:null,
+      learnerExplanation:"",sourceUseWhen:"",targetUseWhen:"",
+      comparisonRows:rowLabels[locale].map((label,i)=>({rowKey:"r"+i,label,sourceText:"知道"+i,targetText:"认识"+i})),
+      contrastExamples:[{sourceExpression:"我知道那位作家。",targetExpression:"我认识那位作家。",
+        sourcePinyin:"Wǒ zhīdào nà wèi zuòjiā.",targetPinyin:"Wǒ rènshi nà wèi zuòjiā.",
+        sourceTranslation:"Tôi biết đến nhà văn ấy.",targetTranslation:"Tôi quen nhà văn ấy."}],
+      contextExamples:[{chinese:"我知道这件事，但不太了解具体情况。",
+        pinyin:"Wǒ zhīdào zhè jiàn shì, dàn bú tài liǎojiě jùtǐ qíngkuàng.",
+        translation:"Bản dịch được giữ nguyên."}],closingNote:"Lời kết."};
+    const html=renderToStaticMarkup(React.createElement(support.default,{
+      item:{...empty,quickDistinctions:[entry]},sourceExpression:"知道",
+      labels:{quickDistinction:"Phân biệt từ"},
+    }));
+    const sectionLabel=locale==="zh"?"主要区别":locale==="vi"?"Khác biệt chính":"Key differences";
+    const exampleLabel=locale==="zh"?"例子":locale==="vi"?"Ví dụ":"Examples";
+    assert.match(html,new RegExp(sectionLabel));
+    assert.match(html,new RegExp(exampleLabel));
+    for(const label of rowLabels[locale])assert.ok(html.includes(label),`authored ${locale} label lost: ${label}`);
+    assert.equal((html.match(/data-comparison-section="differences"/g)??[]).length,1);
+    assert.equal((html.match(/data-comparison-section="examples"/g)??[]).length,1);
+    assert.equal((html.match(/data-comparison-contrast-examples="true"/g)??[]).length,1);
+    assert.equal((html.match(/data-comparison-context-examples="true"/g)??[]).length,1);
+    assert.equal((html.match(/class="comparisonRow"/g)??[]).length,5);
+    assert.match(html,/我知道这件事，但不太了解具体情况。/);
+    assert.match(html,/Lời kết。|Lời kết\./);
+  }
+  const css=await read("app/knowledge/vocabulary/[publicId]/VocabularyRichSupport.module.css");
+  assert.match(css,/\.comparisonExamplesRegion/);
+  assert.match(css,/\.comparisonSectionHeading/);
+  assert.match(css,/\.comparisonExamplesRegion \.comparisonContextExamples \.exampleItem/);
 });
