@@ -211,8 +211,9 @@ test("learner shell keeps responsive, accessibility, brand, and truthful sign-in
   assert.match(header, /aria-controls=\{drawerId\}/);
   assert.match(header, /event\.key === "Escape"/);
   assert.match(header, /menuTriggerRef\.current\?\.focus\(\)/);
-  assert.match(header, /disabled title=\{labels\.signInUnavailable\}/);
-  assert.doesNotMatch(header, /href=[^\n]+(?:sign-in|signin|login|account)/i);
+  assert.match(header, /LearnerAuthLink/);
+  assert.doesNotMatch(header, /disabled title=\{labels\.signInUnavailable\}/);
+  assert.match(header, /hrefFor=\{hrefFor\}/);
   assert.doesNotMatch(header, /\/vocabulary|\/idioms|\/grammar|\/dictation|\/translation/);
 
   assert.match(styles, /\.brandLogo\{[^}]*transform:none!important/s);
