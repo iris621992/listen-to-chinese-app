@@ -19,6 +19,7 @@ import {
   PROFICIENCY_LEVEL_SYSTEM_PARAM,
 } from "@/lib/proficiencyContext";
 import styles from "./Header.module.css";
+import { LearnerAuthLink } from "./LearnerAuthLink";
 
 type HeaderLabels = {
   home: string;
@@ -29,7 +30,7 @@ type HeaderLabels = {
   closeMenu: string;
   brandTagline: string;
   signIn: string;
-  signInUnavailable: string;
+  account: string;
 };
 
 const HEADER_LABELS: Record<string, HeaderLabels> = {
@@ -42,7 +43,7 @@ const HEADER_LABELS: Record<string, HeaderLabels> = {
     closeMenu: "Close menu",
     brandTagline: "Chinese learning library",
     signIn: "Sign in",
-    signInUnavailable: "Account sign-in is not connected in this learner build yet.",
+    account: "Account",
   },
   vi: {
     home: "Trang chủ",
@@ -53,7 +54,7 @@ const HEADER_LABELS: Record<string, HeaderLabels> = {
     closeMenu: "Đóng menu",
     brandTagline: "Thư viện tiếng Trung",
     signIn: "Đăng nhập",
-    signInUnavailable: "Đăng nhập tài khoản chưa được kết nối trong bản learner hiện tại.",
+    account: "Tài khoản",
   },
   ar: {
     home: "الرئيسية",
@@ -64,7 +65,7 @@ const HEADER_LABELS: Record<string, HeaderLabels> = {
     closeMenu: "إغلاق القائمة",
     brandTagline: "مكتبة لتعلّم الصينية",
     signIn: "تسجيل الدخول",
-    signInUnavailable: "تسجيل الدخول للحساب غير متصل بعد في هذه النسخة.",
+    account: "الحساب",
   },
 };
 
@@ -263,7 +264,7 @@ function HeaderContent({
                 <ChevronDown />
               </span>
             </label>
-            <button type="button" className={styles.signIn} disabled title={labels.signInUnavailable}>{labels.signIn}</button>
+            <LearnerAuthLink className={styles.signIn} signIn={labels.signIn} account={labels.account} hrefFor={hrefFor} />
           </div>
         </div>
 
@@ -306,7 +307,7 @@ function HeaderContent({
                   <ChevronDown />
                 </span>
               </label>
-              <button type="button" className={styles.drawerSignIn} disabled title={labels.signInUnavailable}>{labels.signIn}</button>
+              <LearnerAuthLink className={styles.drawerSignIn} signIn={labels.signIn} account={labels.account} hrefFor={hrefFor} onNavigate={() => setDrawerOpen(false)} />
             </div>
           </div>
         </div>
