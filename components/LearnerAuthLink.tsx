@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { AuthChangeEvent, Session } from "@supabase/supabase-js";
 import { useEffect, useState } from "react";
 import { getBrowserAuthClient } from "@/lib/supabase/authBrowser";
 
@@ -18,10 +19,10 @@ export function LearnerAuthLink({ signIn, account, hrefFor, className, onNavigat
   useEffect(() => {
     let active = true;
     const auth = getBrowserAuthClient().auth;
-    const { data: { subscription } } = auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = auth.onAuthStateChange((_event: AuthChangeEvent, session: Session | null) => {
       if (active) setSignedIn(Boolean(session?.user?.id));
     });
-    void auth.getUser().then(({ data }) => {
+    void auth.getUser().then(({ data }: { data: { user: { id: string } | null } }) => {
       if (active) setSignedIn(Boolean(data.user?.id));
     }).catch(() => {
       if (active) setSignedIn(false);
