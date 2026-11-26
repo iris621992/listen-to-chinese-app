@@ -122,13 +122,34 @@ export function withVocabularyCharacterDisplayFallback(
 ): VocabularyCharacterOccurrence[] {
   const fallback = buildVocabularyCharacterFallback(detail);
   if (fallback.length === 0) return projected;
-  const occupiedPositions = new Set(
-    projected
-      .filter((row) => row.writtenFormPublicId === fallback[0].writtenFormPublicId)
-      .map((row) => row.position),
-  );
+  const primaryFormId = fallback[0].writtenFormPublicId;
+  const primaryRows = projected.filter((row) => row.writtenFormPublicId === primaryFormId);
+  const occupiedPositions = new Set(primaryRows.map((row) => row.position));
   const missing = fallback.filter((row) => !occupiedPositions.has(row.position));
-  return missing.length > 0 ? [...projected, ...missing] : projected;
+
+  // The rail shows primary-form occurrences in array order. Keep canonical
+  // objects unchanged, but order the combined primary-form positions correctly.
+  const orderedPrimaryRows = [...primaryRows, ...missing]
+    .sort((left, right) => left.position - right.position);
+  const alreadyOrdered = missing.length === 0 && primaryRows.every(
+    (row, index) => row === orderedPrimaryRows[index],
+  );
+  if (alreadyOrdered) return projected;
+
+  // Keep secondary-form occurrences and their relative order untouched.
+  // Insert the complete primary sequence at its first original position.
+  if (primaryRows.length === 0) return [...projected, ...orderedPrimaryRows];
+  let insertedPrimary = false;
+  const result: VocabularyCharacterOccurrence[] = [];
+  for (const row of projected) {
+    if (row.writtenFormPublicId !== primaryFormId) {
+      result.push(row);
+    } else if (!insertedPrimary) {
+      result.push(...orderedPrimaryRows);
+      insertedPrimary = true;
+    }
+  }
+  return result;
 }
 
 const asObject = (value: unknown): JsonObject | null =>

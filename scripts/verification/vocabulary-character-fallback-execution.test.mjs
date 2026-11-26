@@ -109,6 +109,47 @@ test("partial canonical Character delivery retains authentic facts and fills onl
   assert.equal(mixed.slice(1).map(x => x.character.glyph).join(""), "喜欢");
 });
 
+
+test("canonical Character at a later position does not reverse the glyph sequence", () => {
+  const detail = fixture("喜欢");
+  const baseline = buildVocabularyCharacterFallback(detail);
+  const canonicalSecond = {
+    ...baseline[1],
+    character: {
+      ...baseline[1].character,
+      publicId: "canonical-huan",
+      hanViet: "only-canonical-huan-reading",
+    },
+  };
+  const combined = withVocabularyCharacterDisplayFallback(detail, [canonicalSecond]);
+  assert.equal(combined.map(row => row.character.glyph).join(""), "喜欢");
+  assert.equal(combined.map(row => row.position).join(","), "1,2");
+  assert.equal(combined[0].character.hanViet, null);
+  assert.equal(combined[1], canonicalSecond);
+
+  const canonicalFirst = {
+    ...baseline[0],
+    character: { ...baseline[0].character, publicId: "canonical-xi" },
+  };
+  const unsortedCanonical = [canonicalSecond, canonicalFirst];
+  const ordered = withVocabularyCharacterDisplayFallback(detail, unsortedCanonical);
+  assert.equal(ordered.map(row => row.character.glyph).join(""), "喜欢");
+  assert.equal(ordered[0], canonicalFirst);
+  assert.equal(ordered[1], canonicalSecond);
+
+  const unrelatedSecondary = {
+    ...canonicalSecond,
+    writtenFormPublicId: "traditional-form",
+    writtenForm: "喜歡",
+    isPrimaryForm: false,
+  };
+  const mixed = withVocabularyCharacterDisplayFallback(detail, [unrelatedSecondary, canonicalSecond]);
+  assert.equal(mixed.length, 3);
+  assert.equal(mixed[0], unrelatedSecondary);
+  assert.equal(mixed.slice(1).map(row => row.character.glyph).join(""), "喜欢");
+  assert.equal(mixed[2], canonicalSecond);
+});
+
 test("public Vocabulary and private Admin Preview use one shared fallback", async () => {
   const publicPage = await readFile("app/knowledge/vocabulary/[publicId]/page.tsx", "utf8");
   const preview = await readFile("app/preview/vocabulary/VocabularyDraftPreviewBridge.tsx", "utf8");
