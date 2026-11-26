@@ -16,7 +16,8 @@ test("Learner Product Positioning v1 keeps Home focused on Knowledge and Practic
   assert.doesNotMatch(header, /key: "library"|Cấp độ · Tất cả|Level · All|getPublicProficiencyOptions/);
   assert.match(header, /brandTagline: "Thư viện tiếng Trung"/);
   assert.match(header, /signIn: "Đăng nhập"/);
-  assert.match(header, /disabled title=\{labels\.signInUnavailable\}/);
+  assert.match(header, /LearnerAuthLink/);
+  assert.doesNotMatch(header, /disabled title=\{labels\.signInUnavailable\}/);
 
   const orderedSections = ["hero", "knowledge", "practice", "positioning", "account", "final", "footer"];
   let previousIndex = -1;
