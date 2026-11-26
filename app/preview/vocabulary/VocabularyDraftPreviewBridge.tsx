@@ -8,6 +8,7 @@ import {
   type KnowledgeLanguage,
 } from "@/lib/knowledgeLanguage";
 import { preservedLearnerContextQuery } from "@/lib/proficiencyContext";
+import { validatedAdminPreviewOrigin } from "@/lib/vocabularyAdminPreviewOrigin";
 import VocabularyDetailView from "@/app/knowledge/vocabulary/[publicId]/VocabularyDetailView";
 import { buildVocabularyCharacterFallback } from "@/lib/vocabularyCharacterDelivery";
 import {
@@ -49,30 +50,6 @@ type BridgeState =
 const isObject = (value: unknown): value is JsonObject =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-function isAllowedAdminStagingOrigin(origin: string) {
-  try {
-    const url = new URL(origin);
-    if (url.protocol !== "https:") return false;
-    return (
-      url.hostname === "listen-to-chinese-staging.vercel.app"
-      || (
-        url.hostname.startsWith("listen-to-chinese-staging-")
-        && url.hostname.endsWith(".vercel.app")
-      )
-    );
-  } catch {
-    return false;
-  }
-}
-
-function validatedAdminStagingOrigin(value: string | null): string | null {
-  if (!value || !isAllowedAdminStagingOrigin(value)) return null;
-  try {
-    return new URL(value).origin;
-  } catch {
-    return null;
-  }
-}
 
 function parseEnvelope(
   value: unknown,
@@ -165,7 +142,7 @@ export default function VocabularyDraftPreviewBridge() {
         waitingTitle: "Đang nhận bản nháp từ Admin…",
         waitingBody: "Bản xem trước chỉ hoạt động khi được mở trực tiếp từ phiên quản trị hợp lệ.",
         invalidTitle: "Không thể mở bản xem trước.",
-        invalidBody: "Phiên review không hợp lệ, đã hết hạn hoặc không được mở từ Admin Staging.",
+        invalidBody: "Phiên review không hợp lệ, đã hết hạn hoặc không được mở từ YunChinese Admin.",
         payloadTitle: "Không thể dựng bản xem trước.",
         payloadBody: "Dữ liệu xem trước không hợp lệ hoặc phiên review đã hết hạn.",
         banner: isPublishedPreview
@@ -176,7 +153,7 @@ export default function VocabularyDraftPreviewBridge() {
         waitingTitle: "Receiving the draft from Admin…",
         waitingBody: "Draft Preview works only when opened directly from a valid Owner session.",
         invalidTitle: "Draft Preview cannot be opened.",
-        invalidBody: "The review handoff is invalid, expired, or was not opened from Admin Staging.",
+        invalidBody: "The review handoff is invalid, expired, or was not opened from YunChinese Admin.",
         payloadTitle: "Draft Preview cannot be rendered.",
         payloadBody: "The Preview payload is invalid or the handoff has expired.",
         banner: isPublishedPreview
@@ -203,7 +180,7 @@ export default function VocabularyDraftPreviewBridge() {
     }
 
     const opener = window.opener;
-    const openerOrigin = validatedAdminStagingOrigin(
+    const openerOrigin = validatedAdminPreviewOrigin(
       searchParams.get("sourceOrigin"),
     );
     if (!opener || !openerOrigin) {

@@ -71,7 +71,8 @@ test("Vocabulary Draft Preview handoff is short-lived, opener-bound, and fail cl
   assert.match(previewBridge, /HANDOFF_TTL_MS = 10 \* 60 \* 1000/);
   assert.match(previewBridge, /window\.opener/);
   assert.match(previewBridge, /event\.source !== opener/);
-  assert.match(previewBridge, /validatedAdminStagingOrigin/);
+  assert.match(previewBridge, /validatedAdminPreviewOrigin/);
+  assert.match(previewBridge, /@\/lib\/vocabularyAdminPreviewOrigin/);
   assert.match(previewBridge, /searchParams\.get\("sourceOrigin"\)/);
   assert.match(previewBridge, /event\.origin !== openerOrigin/);
   assert.match(previewBridge, /opener\.postMessage\(ready, openerOrigin\)/);
@@ -208,4 +209,48 @@ test("Vocabulary Preview banner distinguishes published public projection from d
 
   assert.doesNotMatch(previewBridge, /previewSource/);
   assert.doesNotMatch(previewBridge, /searchParams\.get\("previewSource"\)/);
+});
+
+test("Vocabulary Preview accepts only canonical Production Admin and existing Staging origins", async () => {
+  const { validatedAdminPreviewOrigin } = await import("../../lib/vocabularyAdminPreviewOrigin.ts");
+
+  for (const allowed of [
+    "https://admin.yunchinese.com",
+    "https://listen-to-chinese-staging.vercel.app",
+    "https://listen-to-chinese-staging-branch-example.vercel.app",
+  ]) {
+    assert.equal(validatedAdminPreviewOrigin(allowed), allowed, allowed);
+  }
+
+  for (const rejected of [
+    null,
+    "",
+    "http://admin.yunchinese.com",
+    "https://admin.yunchinese.com.evil.invalid",
+    "https://fake-admin.yunchinese.com",
+    "https://www.admin.yunchinese.com",
+    "https://admin.yunchinese.com:8443",
+    "https://user@admin.yunchinese.com",
+    "https://admin.yunchinese.com/path",
+    "https://admin.yunchinese.com/?handoff=abc",
+    "https://listen-to-chinese.vercel.app",
+    "https://yunchinese.com",
+    "https://listen-to-chinese-staging-attacker.vercel.app.evil.invalid",
+    "javascript:alert(1)",
+  ]) {
+    assert.equal(validatedAdminPreviewOrigin(rejected), null, String(rejected));
+  }
+});
+
+test("Production Admin preview retains exact opener and origin checks, TTL, and private payload boundary", async () => {
+  const bridge = await read("app/preview/vocabulary/VocabularyDraftPreviewBridge.tsx");
+  const originGuard = await read("lib/vocabularyAdminPreviewOrigin.ts");
+  assert.match(bridge, /event\\.source !== opener/);
+  assert.match(bridge, /event\\.origin !== openerOrigin/);
+  assert.match(bridge, /opener\\.postMessage\\(ready, openerOrigin\\)/);
+  assert.match(bridge, /HANDOFF_TTL_MS = 10 \\* 60 \\* 1000/);
+  assert.match(bridge, /parseEnvelope\\(event\\.data, handoff, Date\\.now\\(\\)\\)/);
+  assert.doesNotMatch(bridge, /postMessage\\([^\\n]+, "\\*"/);
+  assert.match(originGuard, /PRODUCTION_ADMIN_ORIGIN = "https:\\/\\/admin\\.yunchinese\\.com"/);
+  assert.doesNotMatch(originGuard, /\\.includes\\(value\\)|\\.endsWith\\("yunchinese\\.com"\\)/);
 });
