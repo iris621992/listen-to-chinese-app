@@ -245,12 +245,12 @@ test("Vocabulary Preview accepts only canonical Production Admin and existing St
 test("Production Admin preview retains exact opener and origin checks, TTL, and private payload boundary", async () => {
   const bridge = await read("app/preview/vocabulary/VocabularyDraftPreviewBridge.tsx");
   const originGuard = await read("lib/vocabularyAdminPreviewOrigin.ts");
-  assert.match(bridge, /event\\.source !== opener/);
-  assert.match(bridge, /event\\.origin !== openerOrigin/);
-  assert.match(bridge, /opener\\.postMessage\\(ready, openerOrigin\\)/);
-  assert.match(bridge, /HANDOFF_TTL_MS = 10 \\* 60 \\* 1000/);
-  assert.match(bridge, /parseEnvelope\\(event\\.data, handoff, Date\\.now\\(\\)\\)/);
-  assert.doesNotMatch(bridge, /postMessage\\([^\\n]+, "\\*"/);
-  assert.match(originGuard, /PRODUCTION_ADMIN_ORIGIN = "https:\\/\\/admin\\.yunchinese\\.com"/);
-  assert.doesNotMatch(originGuard, /\\.includes\\(value\\)|\\.endsWith\\("yunchinese\\.com"\\)/);
+  assert.match(bridge, /event\.source !== opener/);
+  assert.match(bridge, /event\.origin !== openerOrigin/);
+  assert.match(bridge, /opener\.postMessage\(ready, openerOrigin\)/);
+  assert.match(bridge, /HANDOFF_TTL_MS = 10 \* 60 \* 1000/);
+  assert.match(bridge, /parseEnvelope\(event\.data, handoff, Date\.now\(\)\)/);
+  assert.doesNotMatch(bridge, /postMessage\([^\n]+, "\*"/);
+  assert.match(originGuard, /PRODUCTION_ADMIN_ORIGIN = "https:\/\/admin\.yunchinese\.com"/);
+  assert.doesNotMatch(originGuard, /\.includes\(value\)|\.endsWith\("yunchinese\.com"\)/);
 });
