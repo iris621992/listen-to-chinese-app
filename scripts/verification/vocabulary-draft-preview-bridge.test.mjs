@@ -11,13 +11,9 @@ test("Vocabulary Draft Preview uses the exact shared learner renderer", async ()
     read("app/preview/vocabulary/VocabularyDraftPreviewBridge.tsx"),
     read("app/preview/vocabulary/layout.tsx"),
   ]);
-
-  assert.match(publicPage, /VocabularyDetailView/);
   assert.match(publicPage, /<VocabularyDetailView/);
-  assert.match(previewBridge, /VocabularyDetailView/);
   assert.match(previewBridge, /<VocabularyDetailView/);
   assert.match(previewLayout, /VocabularyDetailSearch/);
-
   assert.match(view, /VocabularyStickyNav/);
   assert.match(view, /VocabularyRichSupport/);
   assert.match(view, /VocabularyCharacterRail/);
@@ -30,25 +26,23 @@ test("Vocabulary Draft Preview uses the exact shared learner renderer", async ()
   assert.match(view, /constructions: labels\.constructions/);
   assert.match(view, /commonMistakes: labels\.commonMistakes/);
   assert.match(previewBridge, /parseVocabularyDraftPreviewCharacters/);
-  assert.match(previewBridge, /buildVocabularyCharacterFallback/);
-  assert.match(previewBridge, /projected\.length > 0/);
-  assert.match(previewBridge, /buildVocabularyCharacterFallback\(detail\)/);
+  assert.match(previewBridge, /withVocabularyCharacterDisplayFallback\(detail, projected\)/);
   assert.match(previewBridge, /characters=\{characters\}/);
-
   assert.doesNotMatch(previewBridge, /styles\.entryCard|styles\.senseStack|styles\.readingFlow/);
 });
 
-test("Draft Preview uses same canonical-first Character fallback as public Learner without publication", async () => {
+test("Draft, published Preview and public Learner share canonical-first multi-glyph fallback", async () => {
   const [previewBridge, publicPage, delivery] = await Promise.all([
     read("app/preview/vocabulary/VocabularyDraftPreviewBridge.tsx"),
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
     read("lib/vocabularyCharacterDelivery.ts"),
   ]);
   assert.match(previewBridge, /const projected = parseVocabularyDraftPreviewCharacters/);
-  assert.match(previewBridge, /projected\.length > 0[\s\S]*?projected[\s\S]*?buildVocabularyCharacterFallback\(detail\)/);
+  assert.match(previewBridge, /withVocabularyCharacterDisplayFallback\(detail, projected\)/);
   assert.match(previewBridge, /\[state, interfaceLocale\.code, knowledgeLanguage, detail\]/);
-  assert.match(publicPage, /buildVocabularyCharacterFallback\(result\.detail\)/);
+  assert.match(publicPage, /withVocabularyCharacterDisplayFallback\(/);
   assert.match(delivery, /export function buildVocabularyCharacterFallback/);
+  assert.match(delivery, /export function withVocabularyCharacterDisplayFallback/);
   assert.match(delivery, /const HAN_CHARACTER_PATTERN/);
   assert.match(delivery, /radical: null/);
   assert.match(delivery, /strokeCount: null/);

@@ -724,24 +724,24 @@ test("Translation Equivalent preserves learner context and mismatch notes", asyn
   assert.doesNotMatch(rich, /translation\.equivalenceProfile|translation\.preferenceStatus/u);
 });
 
-test("Vocabulary learner page falls back to the exact single Han character when K1E is empty", async () => {
+test("Vocabulary learner uses the shared canonical-first, multi-glyph Character fallback", async () => {
   const [characterLoader, page] = await Promise.all([
     read("lib/vocabularyCharacterDelivery.ts"),
     read("app/knowledge/vocabulary/[publicId]/page.tsx"),
   ]);
-  assert.match(characterLoader, /buildVocabularyCharacterFallback/);
-  assert.ok(characterLoader.includes("const HAN_CHARACTER_PATTERN = /^\\p{Script=Han}$/u;"));
-  assert.match(characterLoader, /detail\.forms\.find\(\(form\) => form\.isPrimary\)/);
-  assert.match(characterLoader, /lexicalContextPronunciation: pronunciation\?\.pronunciation \?\? null/);
-  assert.match(characterLoader, /hanViet: detail\.hanViet\?\.text \?\? null/);
+  assert.match(characterLoader, /export function buildVocabularyCharacterFallback/);
+  assert.match(characterLoader, /export function withVocabularyCharacterDisplayFallback/);
+  assert.match(characterLoader, /const HAN_CHARACTER_PATTERN/);
+  assert.match(characterLoader, /Array\.from\(primaryForm\.text\)/);
+  assert.match(characterLoader, /singleCharacter \? pronunciation\?\.pronunciation \?\? null : null/);
+  assert.match(characterLoader, /singleCharacter \? detail\.hanViet\?\.text \?\? null : null/);
   assert.match(characterLoader, /radical: null/);
   assert.match(characterLoader, /strokeCount: null/);
   assert.match(characterLoader, /structureFormula: null/);
   assert.match(characterLoader, /chanind\/hanzi-writer-data/);
-  assert.match(page, /characterResult\.status === "FOUND" && characterResult\.characters\.length > 0/);
-  assert.match(page, /buildVocabularyCharacterFallback\(result\.detail\)/);
+  assert.match(page, /withVocabularyCharacterDisplayFallback\(/);
+  assert.match(page, /characterResult\.status === "FOUND" \? characterResult\.characters : \[\]/);
 });
-
 
 test("Vocabulary learner POS labels never expose raw surname code", async () => {
   const view = await read("app/knowledge/vocabulary/[publicId]/VocabularyDetailView.tsx");

@@ -65,38 +65,70 @@ export function buildVocabularyCharacterFallback(
   detail: VocabularyCharacterFallbackInput,
 ): VocabularyCharacterOccurrence[] {
   const primaryForm = detail.forms.find((form) => form.isPrimary) ?? detail.forms[0];
-  if (!primaryForm || !HAN_CHARACTER_PATTERN.test(primaryForm.text)) return [];
+  if (!primaryForm) return [];
 
-  const pronunciation =
-    detail.pronunciations.find((item) => item.isDefault)
-    ?? detail.pronunciations[0];
+  // A display-only fallback: exact Han glyphs from the authored Written Form,
+  // with their original code-point position (including repeats).
+  const glyphs = Array.from(primaryForm.text)
+    .map((glyph, index) => ({ glyph, position: index + 1 }))
+    .filter(({ glyph }) => HAN_CHARACTER_PATTERN.test(glyph));
+  if (glyphs.length === 0) return [];
 
-  return [{
+  // Whole-word pronunciation/Hán Việt is valid for a one-glyph word only.
+  // No runtime inference of individual readings or Character-owned facts.
+  const singleCharacter = HAN_CHARACTER_PATTERN.test(primaryForm.text);
+  const pronunciation = singleCharacter
+    ? detail.pronunciations.find((item) => item.isDefault) ?? detail.pronunciations[0]
+    : null;
+
+  return glyphs.map(({ glyph, position }): VocabularyCharacterOccurrence => ({
     writtenFormPublicId: primaryForm.publicId,
     writtenForm: primaryForm.text,
     isPrimaryForm: true,
     scriptProfileCode: primaryForm.scriptProfileCode,
     scriptVariantCode: primaryForm.scriptVariantCode,
-    position: 1,
-    lexicalContextPronunciation: pronunciation?.pronunciation ?? null,
+    position,
+    lexicalContextPronunciation: singleCharacter ? pronunciation?.pronunciation ?? null : null,
     character: {
-      publicId: `fallback:${detail.publicId}:1`,
-      glyph: primaryForm.text,
+      // Technical occurrence key, NOT canonical Character identity/navigation.
+      publicId: `fallback:${detail.publicId}:${position}`,
+      glyph,
       standaloneReading: null,
-      hanViet: detail.hanViet?.text ?? null,
+      hanViet: singleCharacter ? detail.hanViet?.text ?? null : null,
       radical: null,
       strokeCount: null,
       structureCode: null,
       structureFormula: null,
       componentNote: null,
       writing: {
+        // Glyph-exact technical animation asset, not a writing-standard claim.
         sourceRepository: LOCKED_WRITING_REPOSITORY,
         sourceCommit: LOCKED_WRITING_COMMIT,
-        sourcePath: `data/${primaryForm.text}.json`,
+        sourcePath: `data/${glyph}.json`,
         licenseCode: LOCKED_WRITING_LICENSE,
       },
     },
-  }];
+  }));
+}
+
+/**
+ * Prefer canonical Character facts at each primary-form position. Fill only
+ * missing glyphs for presentation, without ever editing projected rows.
+ * Shared by published Learner and Admin Draft/Published Preview.
+ */
+export function withVocabularyCharacterDisplayFallback(
+  detail: VocabularyCharacterFallbackInput,
+  projected: VocabularyCharacterOccurrence[],
+): VocabularyCharacterOccurrence[] {
+  const fallback = buildVocabularyCharacterFallback(detail);
+  if (fallback.length === 0) return projected;
+  const occupiedPositions = new Set(
+    projected
+      .filter((row) => row.writtenFormPublicId === fallback[0].writtenFormPublicId)
+      .map((row) => row.position),
+  );
+  const missing = fallback.filter((row) => !occupiedPositions.has(row.position));
+  return missing.length > 0 ? [...projected, ...missing] : projected;
 }
 
 const asObject = (value: unknown): JsonObject | null =>
