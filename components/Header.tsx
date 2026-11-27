@@ -334,7 +334,7 @@ function LocalizedHeader() {
     nextSearchParams.set(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode);
     nextSearchParams.set("lang", nextInterfaceLocaleCode);
     if (
-      !pathname.startsWith("/knowledge")
+      !(pathname.startsWith("/knowledge") || pathname === "/preview/vocabulary")
       || !isKnowledgeLanguageValue(nextSearchParams.get(KNOWLEDGE_LANGUAGE_PARAM))
     ) {
       nextSearchParams.delete(KNOWLEDGE_LANGUAGE_PARAM);
