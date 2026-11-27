@@ -346,7 +346,7 @@ function LocalizedHeader() {
     nextSearchParams.delete("cursor");
     const query = nextSearchParams.toString();
     const destination = query ? `${pathname}?${query}` : pathname;
-    // Both public Vocabulary Detail and its shared-renderer Owner Draft Preview
+    // Both public Vocabulary Detail and its shared-renderer Draft Preview
     // retain the current reading position when switching between VI and EN.
     // Other destinations keep the established scroll-to-top behavior.
     const isVocabularyDetail = pathParts.length === 4
