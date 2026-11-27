@@ -342,17 +342,19 @@ function LocalizedHeader() {
     nextSearchParams.delete("cursor");
     const query = nextSearchParams.toString();
     const destination = query ? `${pathname}?${query}` : pathname;
-    // Only same-entry Vocabulary detail VI/EN switches retain the current reading position.
-    // Other navigation keeps its existing scroll-to-top behavior.
+    // Both public Vocabulary Detail and its shared-renderer Owner Draft Preview
+    // retain the current reading position when switching between VI and EN.
+    // Other destinations keep the established scroll-to-top behavior.
     const pathParts = pathname.split("/");
     const isVocabularyDetail = pathParts.length === 4
       && pathParts[1] === "knowledge"
       && pathParts[2] === "vocabulary"
       && /^vocab_[a-f0-9]{64}$/u.test(pathParts[3]);
+    const isVocabularyDraftPreview = pathname === "/preview/vocabulary";
     const isViEnSwitch =
       (interfaceLocale.code === "vi" || interfaceLocale.code === "en")
       && (nextInterfaceLocaleCode === "vi" || nextInterfaceLocaleCode === "en");
-    if (isVocabularyDetail && isViEnSwitch) {
+    if ((isVocabularyDetail || isVocabularyDraftPreview) && isViEnSwitch) {
       router.push(destination, { scroll: false });
     } else {
       router.push(destination);
