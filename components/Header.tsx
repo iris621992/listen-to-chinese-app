@@ -330,11 +330,15 @@ function LocalizedHeader() {
 
   function handleLanguageChange(nextInterfaceLocaleCode: string) {
     if (!visibleInterfaceLocales.some((locale) => locale.code === nextInterfaceLocaleCode)) return;
+    const pathParts = pathname.split("/");
+    const isVocabularyDraftPreview = pathParts.length === 3
+      && pathParts[1] === "preview"
+      && pathParts[2] === "vocabulary";
     const nextSearchParams = new URLSearchParams(searchParams.toString());
     nextSearchParams.set(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode);
     nextSearchParams.set("lang", nextInterfaceLocaleCode);
     if (
-      !pathname.startsWith("/knowledge")
+      !(pathname.startsWith("/knowledge") || isVocabularyDraftPreview)
       || !isKnowledgeLanguageValue(nextSearchParams.get(KNOWLEDGE_LANGUAGE_PARAM))
     ) {
       nextSearchParams.delete(KNOWLEDGE_LANGUAGE_PARAM);
@@ -342,9 +346,9 @@ function LocalizedHeader() {
     nextSearchParams.delete("cursor");
     const query = nextSearchParams.toString();
     const destination = query ? `${pathname}?${query}` : pathname;
-    // Only same-entry Vocabulary detail VI/EN switches retain the current reading position.
-    // Other navigation keeps its existing scroll-to-top behavior.
-    const pathParts = pathname.split("/");
+    // Both public Vocabulary Detail and its shared-renderer Draft Preview
+    // retain the current reading position when switching between VI and EN.
+    // Other destinations keep the established scroll-to-top behavior.
     const isVocabularyDetail = pathParts.length === 4
       && pathParts[1] === "knowledge"
       && pathParts[2] === "vocabulary"
@@ -352,7 +356,7 @@ function LocalizedHeader() {
     const isViEnSwitch =
       (interfaceLocale.code === "vi" || interfaceLocale.code === "en")
       && (nextInterfaceLocaleCode === "vi" || nextInterfaceLocaleCode === "en");
-    if (isVocabularyDetail && isViEnSwitch) {
+    if ((isVocabularyDetail || isVocabularyDraftPreview) && isViEnSwitch) {
       router.push(destination, { scroll: false });
     } else {
       router.push(destination);

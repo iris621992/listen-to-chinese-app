@@ -250,6 +250,107 @@ test("Vocabulary detail VI/EN switching preserves current scroll without losing 
   );
 });
 
+test("Owner Vocabulary Draft Preview VI/EN switch preserves scroll and private handoff context", async () => {
+  const header = await read("components/Header.tsx");
+  const previewPath = "/preview/vocabulary";
+  const handoff = "a".repeat(32);
+  for (const [from, to, knowledgeLang] of [
+    ["vi", "en", "user"],
+    ["en", "vi", "zh"],
+  ]) {
+    const navigations = runHeaderLocaleSwitch(header, {
+      pathname: previewPath,
+      from,
+      to,
+      query: "uiLang=" + from + "&lang=" + from
+        + "&knowledgeLang=" + knowledgeLang
+        + "&sourceOrigin=https%3A%2F%2Flisten-to-chinese-staging.vercel.app"
+        + "&handoff=" + handoff + "&levelSystem=gf0025_2021&level=2&cursor=legacy",
+    });
+    assert.equal(navigations.length, 1);
+    assert.equal(navigations[0].scroll, false, from + " → " + to + ": retain Draft Preview scroll");
+    const url = new URL(navigations[0].href, "https://learner.example");
+    assert.equal(url.pathname, previewPath);
+    assert.equal(url.searchParams.get("uiLang"), to);
+    assert.equal(url.searchParams.get("lang"), to);
+    assert.equal(url.searchParams.get("knowledgeLang"), knowledgeLang);
+    assert.equal(url.searchParams.get("sourceOrigin"), "https://listen-to-chinese-staging.vercel.app");
+    assert.equal(url.searchParams.get("handoff"), handoff);
+    assert.equal(url.searchParams.get("levelSystem"), "gf0025_2021");
+    assert.equal(url.searchParams.get("level"), "2");
+    assert.equal(url.searchParams.has("cursor"), false);
+  }
+  // The same Header handler drives both desktop and mobile language selectors.
+  assert.equal(
+    (header.match(/onChange=\{\(event\) => onLanguageChange\?\.\(event\.target\.value\)\}/gu) ?? []).length,
+    2,
+  );
+});
+
+test("Vocabulary detail and Draft Preview repeated VI/EN changes keep navigation context", async () => {
+  const header = await read("components/Header.tsx");
+  const cases = [
+    {
+      pathname: "/knowledge/vocabulary/vocab_" + "a".repeat(64),
+      knowledgeLang: "user",
+      privateHandoff: false,
+    },
+    {
+      pathname: "/knowledge/vocabulary/vocab_" + "b".repeat(64),
+      knowledgeLang: "zh",
+      privateHandoff: false,
+    },
+    {
+      pathname: "/preview/vocabulary",
+      knowledgeLang: "user",
+      privateHandoff: true,
+    },
+    {
+      pathname: "/preview/vocabulary",
+      knowledgeLang: "zh",
+      privateHandoff: true,
+    },
+  ];
+  const handoff = "a".repeat(32);
+  const sourceOrigin = "https://listen-to-chinese-staging.vercel.app";
+  for (const { pathname, knowledgeLang, privateHandoff } of cases) {
+    let current = "vi";
+    let query = "uiLang=vi&lang=vi&knowledgeLang=" + knowledgeLang
+      + "&levelSystem=gf0025_2021&level=2&cursor=legacy"
+      + (privateHandoff
+        ? "&handoff=" + handoff + "&sourceOrigin=" + encodeURIComponent(sourceOrigin)
+        : "");
+    for (let transition = 0; transition < 8; transition += 1) {
+      const next = current === "vi" ? "en" : "vi";
+      const navigations = runHeaderLocaleSwitch(header, {
+        pathname, from: current, to: next, query,
+      });
+      assert.equal(navigations.length, 1, pathname + ": exactly one navigation");
+      // The real Header handler must request scroll preservation each time;
+      // viewport-pixel fidelity remains a separate browser acceptance check.
+      assert.equal(navigations[0].scroll, false, pathname + ": switch " + transition);
+      const url = new URL(navigations[0].href, "https://learner.example");
+      assert.equal(url.pathname, pathname);
+      assert.equal(url.searchParams.get("uiLang"), next);
+      assert.equal(url.searchParams.get("lang"), next);
+      assert.equal(url.searchParams.get("knowledgeLang"), knowledgeLang);
+      assert.equal(url.searchParams.get("levelSystem"), "gf0025_2021");
+      assert.equal(url.searchParams.get("level"), "2");
+      assert.equal(url.searchParams.has("cursor"), false);
+      if (privateHandoff) {
+        assert.equal(url.searchParams.get("handoff"), handoff);
+        assert.equal(url.searchParams.get("sourceOrigin"), sourceOrigin);
+      } else {
+        assert.equal(url.searchParams.has("handoff"), false);
+        assert.equal(url.searchParams.has("sourceOrigin"), false);
+      }
+      current = next;
+      query = url.searchParams.toString();
+    }
+    assert.equal(current, "vi", "Eight switches must return to the starting language");
+  }
+});
+
 test("Vocabulary-only scroll preservation leaves all other Header navigation unchanged", async () => {
   const header = await read("components/Header.tsx");
   const notDetail = [
@@ -257,6 +358,8 @@ test("Vocabulary-only scroll preservation leaves all other Header navigation unc
     "/knowledge",
     "/knowledge/vocabulary",
     "/knowledge/vocabulary/search",
+    "/preview",
+    "/preview/vocabulary/other",
     "/knowledge/vocabulary/vocab_" + "a".repeat(63),
     "/knowledge/vocabulary/vocab_" + "a".repeat(64) + "/extra",
     "/practice",
