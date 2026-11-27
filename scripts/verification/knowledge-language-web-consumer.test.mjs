@@ -250,6 +250,43 @@ test("Vocabulary detail VI/EN switching preserves current scroll without losing 
   );
 });
 
+test("Owner Vocabulary Draft Preview VI/EN switch preserves scroll and private handoff context", async () => {
+  const header = await read("components/Header.tsx");
+  const previewPath = "/preview/vocabulary";
+  const handoff = "a".repeat(32);
+  for (const [from, to, knowledgeLang] of [
+    ["vi", "en", "user"],
+    ["en", "vi", "zh"],
+  ]) {
+    const navigations = runHeaderLocaleSwitch(header, {
+      pathname: previewPath,
+      from,
+      to,
+      query: "uiLang=" + from + "&lang=" + from
+        + "&knowledgeLang=" + knowledgeLang
+        + "&sourceOrigin=https%3A%2F%2Flisten-to-chinese-staging.vercel.app"
+        + "&handoff=" + handoff + "&levelSystem=gf0025_2021&level=2&cursor=legacy",
+    });
+    assert.equal(navigations.length, 1);
+    assert.equal(navigations[0].scroll, false, from + " → " + to + ": retain Draft Preview scroll");
+    const url = new URL(navigations[0].href, "https://learner.example");
+    assert.equal(url.pathname, previewPath);
+    assert.equal(url.searchParams.get("uiLang"), to);
+    assert.equal(url.searchParams.get("lang"), to);
+    assert.equal(url.searchParams.get("knowledgeLang"), knowledgeLang);
+    assert.equal(url.searchParams.get("sourceOrigin"), "https://listen-to-chinese-staging.vercel.app");
+    assert.equal(url.searchParams.get("handoff"), handoff);
+    assert.equal(url.searchParams.get("levelSystem"), "gf0025_2021");
+    assert.equal(url.searchParams.get("level"), "2");
+    assert.equal(url.searchParams.has("cursor"), false);
+  }
+  // The same Header handler drives both desktop and mobile language selectors.
+  assert.equal(
+    (header.match(/onChange=\{\(event\) => onLanguageChange\?\.\(event\.target\.value\)\}/gu) ?? []).length,
+    2,
+  );
+});
+
 test("Vocabulary-only scroll preservation leaves all other Header navigation unchanged", async () => {
   const header = await read("components/Header.tsx");
   const notDetail = [
@@ -257,6 +294,8 @@ test("Vocabulary-only scroll preservation leaves all other Header navigation unc
     "/knowledge",
     "/knowledge/vocabulary",
     "/knowledge/vocabulary/search",
+    "/preview",
+    "/preview/vocabulary/other",
     "/knowledge/vocabulary/vocab_" + "a".repeat(63),
     "/knowledge/vocabulary/vocab_" + "a".repeat(64) + "/extra",
     "/practice",
