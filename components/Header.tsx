@@ -330,11 +330,15 @@ function LocalizedHeader() {
 
   function handleLanguageChange(nextInterfaceLocaleCode: string) {
     if (!visibleInterfaceLocales.some((locale) => locale.code === nextInterfaceLocaleCode)) return;
+    const pathParts = pathname.split("/");
+    const isVocabularyDraftPreview = pathParts.length === 3
+      && pathParts[1] === "preview"
+      && pathParts[2] === "vocabulary";
     const nextSearchParams = new URLSearchParams(searchParams.toString());
     nextSearchParams.set(INTERFACE_LOCALE_PARAM, nextInterfaceLocaleCode);
     nextSearchParams.set("lang", nextInterfaceLocaleCode);
     if (
-      !(pathname.startsWith("/knowledge") || pathname === "/preview/vocabulary")
+      !(pathname.startsWith("/knowledge") || isVocabularyDraftPreview)
       || !isKnowledgeLanguageValue(nextSearchParams.get(KNOWLEDGE_LANGUAGE_PARAM))
     ) {
       nextSearchParams.delete(KNOWLEDGE_LANGUAGE_PARAM);
@@ -345,12 +349,10 @@ function LocalizedHeader() {
     // Both public Vocabulary Detail and its shared-renderer Owner Draft Preview
     // retain the current reading position when switching between VI and EN.
     // Other destinations keep the established scroll-to-top behavior.
-    const pathParts = pathname.split("/");
     const isVocabularyDetail = pathParts.length === 4
       && pathParts[1] === "knowledge"
       && pathParts[2] === "vocabulary"
       && /^vocab_[a-f0-9]{64}$/u.test(pathParts[3]);
-    const isVocabularyDraftPreview = pathname === "/preview/vocabulary";
     const isViEnSwitch =
       (interfaceLocale.code === "vi" || interfaceLocale.code === "en")
       && (nextInterfaceLocaleCode === "vi" || nextInterfaceLocaleCode === "en");
